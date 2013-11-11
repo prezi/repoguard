@@ -1,0 +1,41 @@
+#!/bin/sh -ex
+
+# Jenkins script that creates a tarball of your service to be uploaded and written to placement. #build#deploy#idoc
+
+set -e
+
+. $(dirname $0)/common
+
+RELEASE_ID=$1; shift
+
+[ -z "$RELEASE_ID" ] && exit 1
+
+bash -x `dirname $0`/setup.sh >&2
+
+temp=$($mktemp -d)
+
+### PUT YOUR STUFF HERE ###
+### files you want in
+### production goes to
+### the $temp directory
+### for example:
+
+# rsync -a --exclude=.git/ --exclude=.gitignore . $temp/
+
+### EDITME
+
+# scripts directory has to be there:
+[ -d "$temp/scripts" ] || cp -r ${root}/scripts $temp/scripts
+cat >$temp/scripts/meta_version <<EOF
+#!/bin/sh
+echo $RELEASE_ID
+EOF
+chmod +x $temp/scripts/meta_version
+
+tarball=$PROJECT_NAME-$RELEASE_ID.tar.bz2
+
+tar cjf $tarball --transform "s/^\./$PROJECT_NAME-$RELEASE_ID/" -C $temp .
+
+rm -rf $temp
+
+echo $tarball

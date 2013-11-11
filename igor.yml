@@ -1,0 +1,18 @@
+name: "prezi_repoguard"
+description: "Security code review helper whatever"
+owner:
+  email: "security@prezi.com"
+  hipchat: "security team"
+# Build section is used for your Jenkins jobs. By default it creates prezi_repoguard-build # EDITME
+build:
+  test-and-build:
+    run: |
+      ./scripts/test.sh ${BUILD_NUMBER}-${GIT_COMMIT}
+      # ./scripts/build ${BUILD_NUMBER}-${GIT_COMMIT}
+    pinned: precise
+# Deploy section is used by igor cook, it will use this information to setup Chef.
+deploy:
+  app:
+    run: "scripts/run_prezi_repoguard.sh"
+    port: "8000"
+generated_by: igor 1.2.15-AwesomeAwesome

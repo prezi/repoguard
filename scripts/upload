@@ -1,0 +1,19 @@
+#!/bin/sh -ex
+
+# Jenkins script that uploads your tarball to s3. AWS keys/secrets/bucket need to be configured. #build#aws#deploy#idoc
+
+set -e
+
+. $(dirname $0)/common
+
+TARBALL=$1; shift
+
+[ -e "$TARBALL" ] || exit 1
+
+which aws > /dev/null || exit 2
+
+target=${BUCKET_NAME}/${PROJECT_NAME}/$TARBALL
+
+aws put $target $TARBALL
+
+echo $target

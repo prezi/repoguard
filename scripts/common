@@ -1,0 +1,35 @@
+#!/usr/bin/env false
+# -*- mode: sh -*-
+# this script is not to be run directly.
+
+# Jenkins script that initializes common shell variables and commands. #build#tests#deploy#idoc
+
+case $OSTYPE in
+    darwin*)
+        which greadlink >/dev/null || brew install coreutils
+        readlink=greadlink
+        mktemp=gmktemp
+        ;;
+    *)
+        readlink=readlink
+        mktemp=mktemp
+        ;;
+esac
+
+PROJECT_NAME="prezi_repoguard"
+BUCKET_NAME=prezireleases
+
+root=$($readlink -f $0 | xargs dirname | xargs dirname)
+
+
+## Virtualenv magic, uncomment to use it
+# setup_virtualenv() {
+#     [ -d "${root}/virtualenv" ] || virtualenv --distribute --no-site-packages -p python2.6 "${root}/virtualenv"
+#     . "${root}/virtualenv/bin/activate"
+#     command -v sb >/dev/null 2>/dev/null || curl -ssL http://href.prezi.com/snakebasket | /bin/sh
+#     sb install --prefer-pinned-revision --exists-action w -q -r "${root}/requirements.txt"
+# }
+
+# ensure_virtualenv() {
+#     [ -z "$VIRTUAL_ENV" ] && setup_virtualenv
+# }

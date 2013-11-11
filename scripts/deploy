@@ -1,0 +1,20 @@
+#!/bin/bash -e
+
+# Placement daemon script that deploys/sets up your service on the server. #placement#deploy#idoc
+
+set -e
+
+. $(dirname $0)/common
+
+revno=$1; shift
+
+scriptdir=$(dirname $0)
+basedir=$($scriptdir/meta_base_dir $revno)
+currentlink=$(echo $basedir | xargs dirname | xargs dirname)/current
+
+mkdir -p $basedir
+cp -rf $scriptdir/../* $basedir/
+
+ln -s $basedir ${currentlink}_tmp && mv -Tf ${currentlink}{_tmp,}
+
+sudo /usr/bin/supervisorctl restart ${PROJECT_NAME}-app

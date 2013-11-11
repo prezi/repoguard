@@ -1,0 +1,22 @@
+#!/bin/sh -e
+
+# Jenkins script that packages, uploads and releases (write to placement) your service. #build#deploy#aws#idoc
+
+. $(dirname $0)/common
+
+RELEASE_ID=$1; shift
+
+export AWS_ACCESS_KEY_ID=`< /etc/prezi/${PROJECT_NAME}/deployment_keys.json jq .PRODUCTION.aws_access_key_id -r`
+export AWS_SECRET_ACCESS_KEY=`< /etc/prezi/${PROJECT_NAME}/deployment_keys.json jq .PRODUCTION.aws_secret_access_key -r`
+
+error() { echo "$@"; exit 1; }
+
+[ -z "$RELEASE_ID" ] && error "Give me a release id as first argument"
+
+root=$(dirname $0 | xargs dirname)
+
+package=$(${root}/scripts/package ${RELEASE_ID})
+uploaded_package=$(${root}/scripts/upload ${package})
+${root}/scripts/release ${RELEASE_ID} ${uploaded_package}
+
+echo "Released ${PROJECT_NAME} version ${RELEASE_ID}"

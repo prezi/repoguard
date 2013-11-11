@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# Placement daemon script that returns/establishes current revision directory. #placement#deploy#idoc
+
+. $(dirname $0)/common
+
+revno=$1; shift
+echo /opt/prezi/$PROJECT_NAME/versions/$revno
