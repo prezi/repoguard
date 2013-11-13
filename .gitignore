@@ -2,3 +2,4 @@
 *~
 .#*
 virtualenv
+repoguard/etc/secret.ini
