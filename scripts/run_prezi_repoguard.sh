@@ -10,4 +10,4 @@
 
 # EDITME
 
-exec python -m SimpleHTTPServer 8000
+#exec python -m SimpleHTTPServer 8000

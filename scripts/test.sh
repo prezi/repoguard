@@ -8,10 +8,12 @@ RELEASE_ID=$1; shift
 
 cd "${root}"
 
-${root}/setup.sh
+${root}/scripts/setup.sh
 
 ## Example below is for Python project using virtualenv and nosetests for testing
 
-# ensure_virtualenv
-# sb install -q -r "${root}/requirements-test.txt"
-# nosetests
+ensure_virtualenv
+sb install -q -r "${root}/requirements-test.txt"
+cd repoguard
+python run_unit_tests.py
+deactivate

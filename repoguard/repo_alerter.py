@@ -5,40 +5,13 @@ import os
 import subprocess
 import datetime
 import argparse
-import sys
 import smtplib
-
 import ConfigParser
-
-import subprocess
-
-#subprocess.check_output not existing in python 2.6... ugly hack
-def _check_output(*popenargs, **kwargs):
-	r"""Run command with arguments and return its output as a byte string.
-
-	Backported from Python 2.7 as it's implemented as pure python on stdlib.
-
-	>>> check_output(['/usr/bin/python', '--version'])
-	Python 2.6.2
-	"""
-	process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
-	output, unused_err = process.communicate()
-	retcode = process.poll()
-	if retcode:
-	    cmd = kwargs.get("args")
-	    if cmd is None:
-	        cmd = popenargs[0]
-	    error = subprocess.CalledProcessError(retcode, cmd)
-	    error.output = output
-	    raise error
-	return output
-
-subprocess.check_output = _check_output
 
 class RepoAlerter:
 	def __init__(self):
 		parser = ConfigParser.ConfigParser()
-		parser.read('etc/secret.ini')
+		parser.read('/Users/woFF/.prezi/repoguard/repoguard/etc/secret.ini')
 
 		self.TOKEN = parser.get('github-api','token')
 		self.PREZI_URL = 'https://api.github.com/orgs/prezi/repos'
@@ -298,7 +271,7 @@ class RepoAlerter:
 			commit_id = issue[2]
 			matching_line = issue[3]
 			repo_name = issue[4]
-			repo_id = issue[5]
+			#repo_id = issue[5]
 			alert_data = self.alertConfig[check_id]
 
 			if alert_data['notify'] not in alert_per_notify_person:

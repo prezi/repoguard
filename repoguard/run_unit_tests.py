@@ -1,12 +1,8 @@
 import unittest
 import repo_alerter
 import sys
-
-from mock import patch, Mock, MagicMock
-
-from httpretty import HTTPretty
-from httpretty import httprettified
-
+from mock import patch
+from httpretty import HTTPretty,httprettified
 from StringIO import StringIO
 
 class GithubConnectionTestCase(unittest.TestCase):
