@@ -23,13 +23,13 @@ root=$($readlink -f $0 | xargs dirname | xargs dirname)
 
 
 ## Virtualenv magic, uncomment to use it
-# setup_virtualenv() {
-#     [ -d "${root}/virtualenv" ] || virtualenv --distribute --no-site-packages -p python2.6 "${root}/virtualenv"
-#     . "${root}/virtualenv/bin/activate"
-#     command -v sb >/dev/null 2>/dev/null || curl -ssL http://href.prezi.com/snakebasket | /bin/sh
-#     sb install --prefer-pinned-revision --exists-action w -q -r "${root}/requirements.txt"
-# }
+setup_virtualenv() {
+    [ -d "${root}/virtualenv" ] || virtualenv --distribute --no-site-packages -p python2.6 "${root}/virtualenv"
+    . "${root}/virtualenv/bin/activate"
+    command -v sb >/dev/null 2>/dev/null || curl -ssL http://href.prezi.com/snakebasket | /bin/sh
+    sb install --prefer-pinned-revision --exists-action w -q -r "${root}/requirements.txt"
+}
 
-# ensure_virtualenv() {
-#     [ -z "$VIRTUAL_ENV" ] && setup_virtualenv
-# }
+ensure_virtualenv() {
+    [ -z "$VIRTUAL_ENV" ] && setup_virtualenv
+}

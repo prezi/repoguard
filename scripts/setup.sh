@@ -5,3 +5,5 @@
 set -e
 
 . $(dirname $0)/common
+
+ensure_virtualenv
