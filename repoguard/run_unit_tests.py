@@ -1,10 +1,13 @@
 #!/usr/bin/env python
+import os
 import unittest
 import repoguard
 import sys
 from mock import patch
 from httpretty import HTTPretty,httprettified
 from StringIO import StringIO
+
+APPDIR = "%s/" % os.path.dirname(os.path.realpath(__file__))
 
 class GithubConnectionTestCase(unittest.TestCase):
 	def setUp(self):
@@ -22,7 +25,7 @@ class GithubConnectionTestCase(unittest.TestCase):
 	@httprettified
 	def test_fetch_repo_list_one_site_only(self):
 		HTTPretty.register_uri(HTTPretty.GET, "https://api.github.com/orgs/prezi/repos",
-			body=open('tests/test_response_01.json').read(),
+			body=open(APPDIR+'tests/test_response_01.json').read(),
 			status=200)
 		self.ra.refreshRepoList()
 		self.assertEqual(len(self.ra.repoList), 2)
@@ -33,15 +36,15 @@ class GithubConnectionTestCase(unittest.TestCase):
 		HTTPretty.register_uri(HTTPretty.GET, "https://api.github.com/orgs/prezi/repos",
 			responses = [
 				HTTPretty.Response(
-					body=open('tests/test_response_01.json').read(),
+					body=open(APPDIR+'tests/test_response_01.json').read(),
 					status=200,
 					link='<https://api.github.com/organizations/1989101/repos?access_token=sdsadfdsadfadfadsfsdf&page=2>; rel="next", <https://api.github.com/organizations/1989101/repos?access_token=sdsadfdsadfadfadsfsdf&page=3>; rel="last"'),
 				HTTPretty.Response(
-					body=open('tests/test_response_02.json').read(),
+					body=open(APPDIR+'tests/test_response_02.json').read(),
 					status=200,
 					link='<https://api.github.com/organizations/1989101/reposaccess_token=sdsadfdsadfadfadsfsdf&page=3>; rel="next", <https://api.github.com/organizations/1989101/reposaccess_token=sdsadfdsadfadfadsfsdf&page=3>; rel="last"'),
 				HTTPretty.Response(
-					body=open('tests/test_response_03.json').read(),
+					body=open(APPDIR+'tests/test_response_03.json').read(),
 					status=200,
 					link='<https://api.github.com/organizations/1989101/repos?access_token=sdsadfdsadfadfadsfsdf&page=3>; rel="last"'),
 			])
@@ -62,7 +65,7 @@ class GithubConnectionTestCase(unittest.TestCase):
 class LocalRepoTestCase(unittest.TestCase):
 	def setUp(self):
 		self.ra = repoguard.RepoAlerter()
-		self.ra.loadRepoListFromFile('tests/test_repo_list.json')
+		self.ra.loadRepoListFromFile(APPDIR+'tests/test_repo_list.json')
 		self.ra.resetRepoLimits()
 
 	def mock_os_listdir(self):
@@ -170,9 +173,9 @@ class LocalRepoTestCase(unittest.TestCase):
 class CheckNewCodeTest(unittest.TestCase):
 	def setUp(self):
 		self.ra = repoguard.RepoAlerter()
-		self.ra.readAlertConfigFromFile('tests/test_alert_config.json')
-		self.ra.loadRepoListFromFile('tests/test_repo_list.json')
-		self.ra.readRepoStatusFromFile('tests/test_repo_status.json')
+		self.ra.readAlertConfigFromFile(APPDIR+'tests/test_alert_config.json')
+		self.ra.loadRepoListFromFile(APPDIR+'tests/test_repo_list.json')
+		self.ra.readRepoStatusFromFile(APPDIR+'tests/test_repo_status.json')
 		self.ra.resetRepoLimits()
 		self.output = StringIO()
 		self.saved_stdout = sys.stdout
@@ -201,7 +204,7 @@ class CheckNewCodeTest(unittest.TestCase):
 
 	@patch('subprocess.check_output')
 	def test_check_by_rev_hash(self, *mocks):
-		mocks[0].return_value = open('tests/test_git_show.txt','r').read()
+		mocks[0].return_value = open(APPDIR+'tests/test_git_show.txt','r').read()
 		res = self.ra.checkByRevHash('de74d131fbcca4bacac02523ef8d45c1dc8e2bde', 'testdir', '123123')
 		expected_res = [
 			(	u'file_modified', 

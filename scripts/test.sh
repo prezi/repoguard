@@ -10,8 +10,6 @@ cd "${root}"
 
 ${root}/scripts/setup.sh
 
-## Example below is for Python project using virtualenv and nosetests for testing
-
 ensure_virtualenv
 sb install -q -r "${root}/requirements-test.txt"
 cd repoguard

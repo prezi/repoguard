@@ -9,10 +9,12 @@ import argparse
 import smtplib
 import ConfigParser
 
+APPDIR = "%s/" % os.path.dirname(os.path.realpath(__file__))
+
 class RepoAlerter:
 	def __init__(self):
 		parser = ConfigParser.ConfigParser()
-		parser.read('/Users/woFF/.prezi/repoguard/repoguard/etc/secret.ini')
+		parser.read(APPDIR+'etc/secret.ini')
 
 		self.TOKEN = parser.get('github-api','token')
 		self.PREZI_URL = 'https://api.github.com/orgs/prezi/repos'
@@ -192,7 +194,7 @@ class RepoAlerter:
 					"last_hash" : self.getCurrentHash(repoId, repoData["name"])
 				}
 
-	def readRepoStatusFromFile(self, filename='repo_status.json'):
+	def readRepoStatusFromFile(self, filename=APPDIR+'repo_status.json'):
 		try:
 			with open(filename) as repo_status:
 				self.repoStatus = json.load(repo_status)
@@ -202,12 +204,12 @@ class RepoAlerter:
 		except IOError:
 			print "repo_status.json not existing, no cache to load..."
 
-	def checkRepoStatusFile(self, filename='repo_status.json'):
+	def checkRepoStatusFile(self, filename=APPDIR+'repo_status.json'):
 		if not os.path.isfile(filename):
 			return False
 		return True
 
-	def writeNewRepoStatusToFile(self, filename='repo_status.json'):
+	def writeNewRepoStatusToFile(self, filename=APPDIR+'repo_status.json'):
 		with open(filename, 'w') as repo_status:
 			json.dump(self.repoStatusNew, repo_status)
 
@@ -351,18 +353,18 @@ class RepoAlerter:
 
 		return matches_in_rev
 
-	def loadRepoListFromFile(self, filename='repo_list.json'):
+	def loadRepoListFromFile(self, filename=APPDIR+'repo_list.json'):
 		try:
 			with open(filename) as repo_file:
 				self.repoList = json.load(repo_file)
 		except IOError:
 			print "repo_list.json not existing"
 
-	def writeRepoListToFile(self, filename='repo_list.json'):
+	def writeRepoListToFile(self, filename=APPDIR+'repo_list.json'):
 		with open(filename,'w') as repo_file:
 			json.dump(self.repoList, repo_file)
 
-	def readAlertConfigFromFile(self, filename='alert_config.json'):
+	def readAlertConfigFromFile(self, filename=APPDIR+'alert_config.json'):
 		with open(filename) as alert_config:
 			self.alertConfig_o = json.load(alert_config)
 
@@ -398,17 +400,18 @@ class RepoAlerter:
 					continue
 			if alert_data['pattern_compiled'].match(line):
 				return(alert_id)
+
 	def putLock(self):
-		lockfile = open("repoguard.pid", "w")
+		lockfile = open(APPDIR+"repoguard.pid", "w")
 		lockfile.write(str(os.getpid()))
 		lockfile.close()
 
 	def releaseLock(self):
-		os.remove("repoguard.pid")
+		os.remove(APPDIR+"repoguard.pid")
 
 	def isLocked(self):
-		if os.path.isfile("repoguard.pid"):
-			lockfile = open("repoguard.pid","r")
+		if os.path.isfile(APPDIR+"repoguard.pid"):
+			lockfile = open(APPDIR+"repoguard.pid","r")
 			pid = lockfile.readline().strip()
 			lockfile.close()
 
@@ -430,12 +433,12 @@ class RepoAlerter:
 			return False
 
 	def setAborted(self):
-		aborted_state_file = open("aborted_state.lock","w")
+		aborted_state_file = open(APPDIR+"aborted_state.lock","w")
 		aborted_state_file.write('1')
 		aborted_state_file.close()
 
 	def isAborted(self):
-		return os.path.isfile('aborted_state.lock')
+		return os.path.isfile(APPDIR+'aborted_state.lock')
 
 	def run(self):
 		now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
