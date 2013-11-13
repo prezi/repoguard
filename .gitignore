@@ -1,5 +1,7 @@
 *.py[co]
 *~
 .#*
+*.pid
 virtualenv
+repos
 repoguard/etc/secret.ini

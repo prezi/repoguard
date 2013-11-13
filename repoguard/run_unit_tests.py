@@ -1,5 +1,6 @@
+#!/usr/bin/env python
 import unittest
-import repo_alerter
+import repoguard
 import sys
 from mock import patch
 from httpretty import HTTPretty,httprettified
@@ -7,7 +8,7 @@ from StringIO import StringIO
 
 class GithubConnectionTestCase(unittest.TestCase):
 	def setUp(self):
-		self.ra = repo_alerter.RepoAlerter()
+		self.ra = repoguard.RepoAlerter()
 		self.ra.resetRepoLimits()
 
 	@httprettified
@@ -60,7 +61,7 @@ class GithubConnectionTestCase(unittest.TestCase):
 
 class LocalRepoTestCase(unittest.TestCase):
 	def setUp(self):
-		self.ra = repo_alerter.RepoAlerter()
+		self.ra = repoguard.RepoAlerter()
 		self.ra.loadRepoListFromFile('tests/test_repo_list.json')
 		self.ra.resetRepoLimits()
 
@@ -98,7 +99,7 @@ class LocalRepoTestCase(unittest.TestCase):
 
 	@patch('os.listdir', return_value=[])
 	@patch('subprocess.check_output')
-	@patch('repo_alerter.RepoAlerter.getCurrentHash', return_value='1163bec4351413be354f7c88317647815b2e9812')
+	@patch('repoguard.RepoAlerter.getCurrentHash', return_value='1163bec4351413be354f7c88317647815b2e9812')
 	def test_update_repos_no_prev_dirs(self, *mocks):
 		self.ra.updateLocalRepos()
 		# check if git clone is called as required everywhere
@@ -112,7 +113,7 @@ class LocalRepoTestCase(unittest.TestCase):
 
 	@patch('os.listdir', return_value=[])
 	@patch('subprocess.check_output')
-	@patch('repo_alerter.RepoAlerter.getCurrentHash', return_value='1163bec4351413be354f7c88317647815b2e9812')
+	@patch('repoguard.RepoAlerter.getCurrentHash', return_value='1163bec4351413be354f7c88317647815b2e9812')
 	def test_update_repos_no_prev_dirs_skip_repo(self, *mocks):
 		self.ra.setSkipRepoList( ('project-startup') )
 		self.ra.updateLocalRepos()
@@ -125,7 +126,7 @@ class LocalRepoTestCase(unittest.TestCase):
 
 	@patch('os.listdir', return_value=[])
 	@patch('subprocess.check_output')
-	@patch('repo_alerter.RepoAlerter.getCurrentHash', return_value='1163bec4351413be354f7c88317647815b2e9812')
+	@patch('repoguard.RepoAlerter.getCurrentHash', return_value='1163bec4351413be354f7c88317647815b2e9812')
 	def test_update_repos_no_prev_dirs_limit_language(self, *mocks):
 		self.ra.setTestRepoLanguages( ('python') )
 		self.ra.updateLocalRepos()
@@ -139,7 +140,7 @@ class LocalRepoTestCase(unittest.TestCase):
 
 	@patch('os.listdir', return_value=['project-startup_7092651'])
 	@patch('subprocess.check_output')
-	@patch('repo_alerter.RepoAlerter.getCurrentHash', return_value='1163bec4351413be354f7c88317647815b2e9812')
+	@patch('repoguard.RepoAlerter.getCurrentHash', return_value='1163bec4351413be354f7c88317647815b2e9812')
 	def test_update_repos_both_clone_and_pull(self, *mocks):
 		self.ra.updateLocalRepos()
 		# check if git clones and pulls are called as required everywhere
@@ -154,7 +155,7 @@ class LocalRepoTestCase(unittest.TestCase):
 
 	@patch('os.listdir', return_value=['project-startup_7092651', 'object-library-service_6125572', 'data-research_7271766'])
 	@patch('subprocess.check_output')
-	@patch('repo_alerter.RepoAlerter.getCurrentHash', return_value='1163bec4351413be354f7c88317647815b2e9812')
+	@patch('repoguard.RepoAlerter.getCurrentHash', return_value='1163bec4351413be354f7c88317647815b2e9812')
 	def test_update_repos_only_pulls(self, *mocks):
 		self.ra.updateLocalRepos()
 		# check if git pull is called as required everywhere
@@ -168,7 +169,7 @@ class LocalRepoTestCase(unittest.TestCase):
 
 class CheckNewCodeTest(unittest.TestCase):
 	def setUp(self):
-		self.ra = repo_alerter.RepoAlerter()
+		self.ra = repoguard.RepoAlerter()
 		self.ra.readAlertConfigFromFile('tests/test_alert_config.json')
 		self.ra.loadRepoListFromFile('tests/test_repo_list.json')
 		self.ra.readRepoStatusFromFile('tests/test_repo_status.json')
@@ -184,7 +185,7 @@ class CheckNewCodeTest(unittest.TestCase):
 	@patch('os.listdir', return_value=['aaaa-test', 'bbbb_test', '.444444_test3'])
 	@patch('os.path.isdir', return_value=True)
 	@patch('subprocess.check_output')
-	@patch('repo_alerter.RepoAlerter.getCurrentHash', return_value='1163bec4351413be354f7c88317647815b2e9812')
+	@patch('repoguard.RepoAlerter.getCurrentHash', return_value='1163bec4351413be354f7c88317647815b2e9812')
 	def test_no_repo_dirs(self, *mocks):
 		self.ra.checkNewCode()
 		self.assertEqual(self.output.getvalue(), "skip aaaa-test (not repo directory)\nskip bbbb_test (not repo directory)\nskip .444444_test3 (not repo directory)\n")
@@ -192,7 +193,7 @@ class CheckNewCodeTest(unittest.TestCase):
 	@patch('os.listdir', return_value=['newrepo_123456'])
 	@patch('os.path.isdir', return_value=True)
 	@patch('subprocess.check_output')
-	@patch('repo_alerter.RepoAlerter.getCurrentHash', return_value='1163bec4351413be354f7c88317647815b2e9812')
+	@patch('repoguard.RepoAlerter.getCurrentHash', return_value='1163bec4351413be354f7c88317647815b2e9812')
 	def test_insert_new_repo(self, *mocks):
 		self.ra.checkNewCode()
 		self.assertIn('123456', self.ra.repoStatus)
@@ -218,7 +219,7 @@ class CheckNewCodeTest(unittest.TestCase):
 		self.assertEqual(res, expected_res)
 
 	@patch('subprocess.check_output', return_value='1163bec4351413be354f7c88317647815b000000\n')
-	@patch('repo_alerter.RepoAlerter.checkByRevHash', return_value=['test_alert', 'test_path/test_file.py', '1163bec4351413be354f7c88317647815b000000', 'matching line ...'])
+	@patch('repoguard.RepoAlerter.checkByRevHash', return_value=['test_alert', 'test_path/test_file.py', '1163bec4351413be354f7c88317647815b000000', 'matching line ...'])
 	def test_check_by_repo_id(self, *mocks):
 		tres = self.ra.checkByRepoId('8742897','zuisite')
 		self.assertEqual(mocks[1].call_args_list[0][0], (['git', 'rev-list', '--remotes', u'--since="2013-03-29 13:04:40"', 'HEAD'],))
