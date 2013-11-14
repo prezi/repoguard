@@ -1,4 +1,4 @@
-name: "prezi_repoguard"
+name: "repoguard"
 description: "Security code review helper whatever"
 owner:
   email: "security@prezi.com"
