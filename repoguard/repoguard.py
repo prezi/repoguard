@@ -19,12 +19,12 @@ class RepoAlerter:
 			self.running_on_prod = True
 
 		parser = ConfigParser.ConfigParser()
-		if self.running_on_prod:
+		if self.RUNNING_ON_PROD:
 			parser.read('/etc/prezi/repoguard/secret.ini')	
 			self.APP_DIR = '/opt/prezi/repoguard/'
 		else:
+			parser.read("%s/etc/secret.ini" % os.path.dirname(os.path.realpath(__file__)))
 			self.APP_DIR = '%s' % os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
-			parser.read(self.APP_DIR+'etc/secret.ini')
 			
 		
 		#ugly, but quick
