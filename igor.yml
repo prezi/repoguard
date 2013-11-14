@@ -15,4 +15,7 @@ deploy:
   app:
     run: "scripts/run_prezi_repoguard.sh"
     port: "8000"
+    packages:
+      s3cmd: install
+      python-virtualenv: install
 generated_by: igor 1.2.15-AwesomeAwesome
