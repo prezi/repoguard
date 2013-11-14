@@ -16,7 +16,7 @@ class RepoAlerter:
 		global APPDIR
 		self.RUNNING_ON_PROD = False
 		if os.path.isfile('/etc/prezi/repoguard/secret.ini'):
-			self.running_on_prod = True
+			self.RUNNING_ON_PROD = True
 
 		parser = ConfigParser.ConfigParser()
 		if self.RUNNING_ON_PROD:
