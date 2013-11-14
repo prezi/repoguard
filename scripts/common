@@ -16,7 +16,7 @@ case $OSTYPE in
         ;;
 esac
 
-PROJECT_NAME="prezi_repoguard"
+PROJECT_NAME="repoguard"
 BUCKET_NAME=prezireleases
 
 root=$($readlink -f $0 | xargs dirname | xargs dirname)

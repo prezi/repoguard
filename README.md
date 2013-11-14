@@ -1,4 +1,4 @@
-prezi_repoguard
+repoguard
 ===============
 
 Security code review helper whatever

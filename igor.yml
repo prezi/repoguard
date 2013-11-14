@@ -3,7 +3,7 @@ description: "Security code review helper whatever"
 owner:
   email: "security@prezi.com"
   hipchat: "security team"
-# Build section is used for your Jenkins jobs. By default it creates prezi_repoguard-build # EDITME
+# Build section is used for your Jenkins jobs. By default it creates repoguard-build # EDITME
 build:
   test-and-build:
     run: |
@@ -13,7 +13,7 @@ build:
 # Deploy section is used by igor cook, it will use this information to setup Chef.
 deploy:
   app:
-    run: "scripts/run_prezi_repoguard.sh"
+    run: "scripts/run_repoguard.sh"
     port: "8000"
     packages:
       s3cmd: install
