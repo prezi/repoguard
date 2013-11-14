@@ -65,7 +65,9 @@ class GithubConnectionTestCase(unittest.TestCase):
 class LocalRepoTestCase(unittest.TestCase):
 	def setUp(self):
 		self.ra = repoguard.RepoAlerter()
-		self.ra.loadRepoListFromFile(APPDIR+'tests/test_repo_list.json')
+		# patch test repo list
+		self.ra.REPO_LIST_PATH=APPDIR+'tests/test_repo_list.json'
+		self.ra.loadRepoListFromFile()
 		self.ra.resetRepoLimits()
 
 	def mock_os_listdir(self):
@@ -173,9 +175,12 @@ class LocalRepoTestCase(unittest.TestCase):
 class CheckNewCodeTest(unittest.TestCase):
 	def setUp(self):
 		self.ra = repoguard.RepoAlerter()
-		self.ra.readAlertConfigFromFile(APPDIR+'tests/test_alert_config.json')
-		self.ra.loadRepoListFromFile(APPDIR+'tests/test_repo_list.json')
-		self.ra.readRepoStatusFromFile(APPDIR+'tests/test_repo_status.json')
+		self.ra.ALERT_CONFIG_PATH=APPDIR+'tests/test_alert_config.json'
+		self.ra.readAlertConfigFromFile()
+		self.ra.REPO_LIST_PATH=APPDIR+'tests/test_repo_list.json'
+		self.ra.loadRepoListFromFile()
+		self.ra.REPO_STATUS_PATH=APPDIR+'tests/test_repo_status.json'
+		self.ra.readRepoStatusFromFile()
 		self.ra.resetRepoLimits()
 		self.output = StringIO()
 		self.saved_stdout = sys.stdout

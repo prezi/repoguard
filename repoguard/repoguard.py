@@ -9,11 +9,8 @@ import argparse
 import smtplib
 import ConfigParser
 
-APPDIR = "%s/" % os.path.dirname(os.path.realpath(__file__))
-
 class RepoAlerter:
 	def __init__(self):
-		global APPDIR
 		self.RUNNING_ON_PROD = False
 		if os.path.isfile('/etc/prezi/repoguard/secret.ini'):
 			self.RUNNING_ON_PROD = True
@@ -24,12 +21,14 @@ class RepoAlerter:
 			self.APP_DIR = '/opt/prezi/repoguard/'
 		else:
 			parser.read("%s/etc/secret.ini" % os.path.dirname(os.path.realpath(__file__)))
-			self.APP_DIR = '%s' % os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
-			
+			self.APP_DIR = '%s/' % os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
 		
-		#ugly, but quick
-		APPDIR = self.APP_DIR
-		self.WORKING_DIR = '%s/repos' % self.APP_DIR
+		
+		self.WORKING_DIR = '%srepos' % self.APP_DIR
+		self.REPO_LIST_PATH = self.APP_DIR+'repo_list.json'
+		self.REPO_STATUS_PATH = self.APP_DIR+'repo_status.json'
+		self.ALERT_CONFIG_PATH = '%s/alert_config.json' % os.path.dirname(os.path.realpath(__file__))
+
 		self.TOKEN = parser.get('github-api','token')
 		self.PREZI_URL = 'https://api.github.com/orgs/prezi/repos'
 
@@ -207,7 +206,8 @@ class RepoAlerter:
 					"last_hash" : self.getCurrentHash(repoId, repoData["name"])
 				}
 
-	def readRepoStatusFromFile(self, filename=APPDIR+'repo_status.json'):
+	def readRepoStatusFromFile(self):
+		filename = self.REPO_STATUS_PATH
 		try:
 			with open(filename) as repo_status:
 				self.repoStatus = json.load(repo_status)
@@ -217,12 +217,14 @@ class RepoAlerter:
 		except IOError:
 			print "repo_status.json not existing, no cache to load..."
 
-	def checkRepoStatusFile(self, filename=APPDIR+'repo_status.json'):
+	def checkRepoStatusFile(self):
+		filename = self.REPO_STATUS_PATH
 		if not os.path.isfile(filename):
 			return False
 		return True
 
-	def writeNewRepoStatusToFile(self, filename=APPDIR+'repo_status.json'):
+	def writeNewRepoStatusToFile(self):
+		filename = self.REPO_STATUS_PATH
 		with open(filename, 'w') as repo_status:
 			json.dump(self.repoStatusNew, repo_status)
 
@@ -366,18 +368,21 @@ class RepoAlerter:
 
 		return matches_in_rev
 
-	def loadRepoListFromFile(self, filename=APPDIR+'repo_list.json'):
+	def loadRepoListFromFile(self):
+		filename = self.REPO_LIST_PATH
 		try:
 			with open(filename) as repo_file:
 				self.repoList = json.load(repo_file)
 		except IOError:
 			print "repo_list.json not existing"
 
-	def writeRepoListToFile(self, filename=APPDIR+'repo_list.json'):
+	def writeRepoListToFile(self):
+		filename = self.REPO_LIST_PATH
 		with open(filename,'w') as repo_file:
 			json.dump(self.repoList, repo_file)
 
-	def readAlertConfigFromFile(self, filename=APPDIR+'alert_config.json'):
+	def readAlertConfigFromFile(self):
+		filename = self.ALERT_CONFIG_PATH
 		with open(filename) as alert_config:
 			self.alertConfig_o = json.load(alert_config)
 
@@ -415,16 +420,16 @@ class RepoAlerter:
 				return(alert_id)
 
 	def putLock(self):
-		lockfile = open(APPDIR+"repoguard.pid", "w")
+		lockfile = open(self.APP_DIR+"repoguard.pid", "w")
 		lockfile.write(str(os.getpid()))
 		lockfile.close()
 
 	def releaseLock(self):
-		os.remove(APPDIR+"repoguard.pid")
+		os.remove(self.APP_DIR+"repoguard.pid")
 
 	def isLocked(self):
-		if os.path.isfile(APPDIR+"repoguard.pid"):
-			lockfile = open(APPDIR+"repoguard.pid","r")
+		if os.path.isfile(self.APP_DIR+"repoguard.pid"):
+			lockfile = open(self.APP_DIR+"repoguard.pid","r")
 			pid = lockfile.readline().strip()
 			lockfile.close()
 
@@ -446,12 +451,12 @@ class RepoAlerter:
 			return False
 
 	def setAborted(self):
-		aborted_state_file = open(APPDIR+"aborted_state.lock","w")
+		aborted_state_file = open(self.APP_DIR+"aborted_state.lock","w")
 		aborted_state_file.write('1')
 		aborted_state_file.close()
 
 	def isAborted(self):
-		return os.path.isfile(APPDIR+'aborted_state.lock')
+		return os.path.isfile(self.APP_DIR+'aborted_state.lock')
 
 	def run(self):
 		now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
