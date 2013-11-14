@@ -18,5 +18,6 @@ deploy:
     dependencies:
       - recipe[python]
       - recipe[python::virtualenv]
-      - recipe[aws::s3cmd]
+      - recipe[python::pip]
+      - recipe[prezi_aws::s3cmd]
 generated_by: igor 1.2.15-AwesomeAwesome

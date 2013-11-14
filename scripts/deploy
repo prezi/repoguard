@@ -17,4 +17,4 @@ cp -rf $scriptdir/../* $basedir/
 
 ln -s $basedir ${currentlink}_tmp && mv -Tf ${currentlink}{_tmp,}
 
-sudo /usr/bin/supervisorctl restart ${PROJECT_NAME}-app
+#sudo /usr/bin/supervisorctl restart ${PROJECT_NAME}-app
