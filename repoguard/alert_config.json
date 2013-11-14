@@ -224,5 +224,14 @@
 		"notify": "security@prezi.com",
 		"description": "jsonp usage, check if no sensitive info is given back",
 		"href": "" 
+	},
+	"jsonp_usage": {
+		"pattern" : "\\+.*externalinterface.*",
+		"repo_pattern" : "",
+		"file_pattern" : ".*\\.(as)",
+		"language_pattern" :"",
+		"notify": "security@prezi.com",
+		"description": "possibly vulnerable external interface call, user supplied input concatenated -> bad",
+		"href": "" 
 	}
 }
