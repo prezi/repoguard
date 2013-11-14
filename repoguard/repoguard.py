@@ -19,12 +19,13 @@ class RepoAlerter:
 		if self.RUNNING_ON_PROD:
 			parser.read('/etc/prezi/repoguard/secret.ini')	
 			self.APP_DIR = '/opt/prezi/repoguard/'
+			self.WORKING_DIR = '/mnt/prezi/repoguard/repos/'
 		else:
 			parser.read("%s/etc/secret.ini" % os.path.dirname(os.path.realpath(__file__)))
 			self.APP_DIR = '%s/' % os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
+			self.WORKING_DIR = '%srepos' % self.APP_DIR
 		
-		
-		self.WORKING_DIR = '%srepos' % self.APP_DIR
+
 		self.REPO_LIST_PATH = self.APP_DIR+'repo_list.json'
 		self.REPO_STATUS_PATH = self.APP_DIR+'repo_status.json'
 		self.ALERT_CONFIG_PATH = '%s/alert_config.json' % os.path.dirname(os.path.realpath(__file__))
