@@ -14,7 +14,10 @@ APPDIR = "%s/" % os.path.dirname(os.path.realpath(__file__))
 class RepoAlerter:
 	def __init__(self):
 		parser = ConfigParser.ConfigParser()
-		parser.read(APPDIR+'etc/secret.ini')
+		if os.path.isfile('/etc/prezi/repoguard/secret.ini'):
+			parser.read('/etc/prezi/repoguard/secret.ini')	
+		else:
+			parser.read(APPDIR+'etc/secret.ini')
 
 		self.TOKEN = parser.get('github-api','token')
 		self.PREZI_URL = 'https://api.github.com/orgs/prezi/repos'

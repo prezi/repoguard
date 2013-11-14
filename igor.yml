@@ -19,5 +19,4 @@ deploy:
       - recipe[python]
       - recipe[python::virtualenv]
       - recipe[python::pip]
-      - recipe[prezi_aws::s3cmd]
 generated_by: igor 1.2.15-AwesomeAwesome
