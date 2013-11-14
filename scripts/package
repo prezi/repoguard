@@ -20,7 +20,7 @@ temp=$($mktemp -d)
 ### the $temp directory
 ### for example:
 
-# rsync -a --exclude=.git/ --exclude=.gitignore . $temp/
+rsync -a --exclude=.git/ --exclude=.gitignore . $temp/
 
 ### EDITME
 
