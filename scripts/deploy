@@ -15,6 +15,9 @@ currentlink=$(echo $basedir | xargs dirname | xargs dirname)/current
 mkdir -p $basedir
 cp -rf $scriptdir/../* $basedir/
 
+cd $basedir/virtualenv
+virtualenv-tools --update-path=auto
+
 ln -s $basedir ${currentlink}_tmp && mv -Tf ${currentlink}{_tmp,}
 
 #sudo /usr/bin/supervisorctl restart ${PROJECT_NAME}-app
