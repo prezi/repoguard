@@ -5,12 +5,4 @@
 fail() { echo "BAD $@"; exit 0; }
 ok() { echo "OK $@"; exit 0; }
 
-# EDITME
-
-response=$(curl -Lsf http://localhost:8000/healthcheck/ -w '%{http_code}' -o /dev/null) || fail "unable to curl"
-
-if [ "$response" = "200" ]; then
-    ok "$response"
-else
-    fail "$response"
-fi
+ok "we should be fine, no real healthcheck for repoguard"
