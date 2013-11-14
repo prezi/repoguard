@@ -15,7 +15,8 @@ deploy:
   app:
     run: "scripts/run_repoguard.sh"
     port: "8000"
-    packages:
-      s3cmd: install
-      python-virtualenv: install
+    dependencies:
+      - recipe[python]
+      - recipe[python::virtualenv]
+      - recipe[aws::s3cmd]
 generated_by: igor 1.2.15-AwesomeAwesome
