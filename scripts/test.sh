@@ -13,4 +13,4 @@ ${root}/scripts/setup.sh
 ensure_virtualenv
 sb install -q -r "${root}/requirements-test.txt"
 cd repoguard
-python run_unit_tests.py
+nosetests

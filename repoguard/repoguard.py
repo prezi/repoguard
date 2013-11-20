@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import requests
 import json
 import re
 import os
@@ -7,21 +6,21 @@ import subprocess
 import datetime
 import argparse
 import smtplib
-import ConfigParser
 
-class RepoAlerter:
+import git_repo_updater
+
+class RepoGuard:
 	def __init__(self):
 		self.RUNNING_ON_PROD = False
 		if os.path.isfile('/etc/prezi/repoguard/secret.ini'):
 			self.RUNNING_ON_PROD = True
 
-		parser = ConfigParser.ConfigParser()
 		if self.RUNNING_ON_PROD:
-			parser.read('/etc/prezi/repoguard/secret.ini')	
+			self.SECRET_CONFIG_PATH='/etc/prezi/repoguard/secret.ini'
 			self.APP_DIR = '/opt/prezi/repoguard/'
 			self.WORKING_DIR = '/mnt/prezi/repoguard/repos/'
 		else:
-			parser.read("%s/etc/secret.ini" % os.path.dirname(os.path.realpath(__file__)))
+			self.SECRET_CONFIG_PATH="%s/etc/secret.ini" % os.path.dirname(os.path.realpath(__file__))
 			self.APP_DIR = '%s/' % os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
 			self.WORKING_DIR = '%srepos' % self.APP_DIR
 		
@@ -30,8 +29,7 @@ class RepoAlerter:
 		self.REPO_STATUS_PATH = self.APP_DIR+'repo_status.json'
 		self.ALERT_CONFIG_PATH = '%s/alert_config.json' % os.path.dirname(os.path.realpath(__file__))
 
-		self.TOKEN = parser.get('github-api','token')
-		self.PREZI_URL = 'https://api.github.com/orgs/prezi/repos'
+		
 
 # removed from history
 # removed from history
@@ -51,13 +49,9 @@ class RepoAlerter:
 
 # removed from history
 
-		self.url = self.PREZI_URL + "?access_token=" + self.TOKEN
-		self.actpage = 1
-		self.lastpage = 1
 		self.repoList = {}
 		self.repoStatus = {}
 		self.repoStatusNew = {}
-		self.stop = False
 		self.alertConfig = {}
 		self.checkLastFile = ''
 		self.checkResults = []
@@ -90,40 +84,9 @@ class RepoAlerter:
 		self.setTestRepoLanguages( () )
 		self.setSkipRepoList( () )
 
-	def fetchRepoList(self):
-		r = requests.get(self.url, verify=True)
-		print self.url
-		if (r.status_code ==200):
-			if 'X-RateLimit-Remaining' in r.headers:
-				if int(r.headers['X-RateLimit-Remaining']) == 0:
-					print 'OUT OF RATELIMIT'
-					self.stop = True
-					return
-			try:
-				lasturl_re = re.compile('.*<([\w\:\/\.]+)\?access_token=%s&page=([0-9]+)>; rel="last"' % self.TOKEN)
-				lasturl = lasturl_re.match(r.headers['link']).groups()
-				self.lastpage = int(lasturl[1])
-				print "PAGE %s/%s" % (self.actpage, self.lastpage)
-			except:
-				print "... finished"
-				print "(rate limit: %s / %s)" % (r.headers['X-RateLimit-Remaining'], r.headers['X-RateLimit-Limit'])
-			repoItems = json.loads(r.text or r.content)
-			for rItem in repoItems:
-				if rItem["name"] not in self.repoList or self.args.forcerefresh:
-					self.repoList[rItem["id"]] = {"name": rItem["name"], "ssh_url": rItem["ssh_url"], "language": rItem["language"]}
-		else:
-			print "REQUEST ERROR!"
-			self.stop = True
-
 	def printRepoData(self):
 		for repoId, repoData in self.repoList.iteritems():
 			print "%s -> (id: %s, ssh_url: %s) " % (repoId, repoData["name"], repoData["ssh_url"])
-
-	def refreshRepoList(self):
-		while self.actpage <= self.lastpage and not self.stop:
-			self.fetchRepoList()
-			self.actpage+=1
-			self.url = "%s?access_token=%s&page=%s" % (self.PREZI_URL, self.TOKEN, self.actpage)
 
 	def searchRepoDir(self,directory_contents, name, repo_id):
 		dirname = '%s_%s' % (name, repo_id)
@@ -377,10 +340,6 @@ class RepoAlerter:
 		except IOError:
 			print "repo_list.json not existing"
 
-	def writeRepoListToFile(self):
-		filename = self.REPO_LIST_PATH
-		with open(filename,'w') as repo_file:
-			json.dump(self.repoList, repo_file)
 
 	def readAlertConfigFromFile(self):
 		filename = self.ALERT_CONFIG_PATH
@@ -462,20 +421,24 @@ class RepoAlerter:
 	def run(self):
 		now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 		print '* run started at %s' % now
-		if self.isAborted():
-			print 'Aborted state, quiting!'
-			return
 
-		if self.isLocked():
-			print 'Locked, script running... waiting.'
-			return
+		# only struggle with locking if running on prod env
+		if self.RUNNING_ON_PROD:
+			if self.isAborted():
+				print 'Aborted state, quiting!'
+				return
 
-		self.putLock()
-		
+			if self.isLocked():
+				print 'Locked, script running... waiting.'
+				return
+
+			self.putLock()
+			
 		# skip online update by default (only if --refresh specified or status cache json files not exist)
 		if self.args.refresh or not self.checkRepoStatusFile():
-			self.refreshRepoList()
-			self.writeRepoListToFile()
+			git_repo_updater_obj = git_repo_updater.GitRepoUpdater(self)
+			git_repo_updater_obj.refreshRepoList()
+			git_repo_updater_obj.writeRepoListToFile()
 
 		# read repo status json file
 		self.readRepoStatusFromFile()
@@ -492,18 +455,21 @@ class RepoAlerter:
 		# check for new code
 		self.checkNewCode()
 
-		# send alert mail
+		# send alert mail (only if prod)
 		if self.args.notify:
 			self.sendResults()
 
 		# save repo status changes
 		self.writeNewRepoStatusToFile()
-		self.releaseLock()
+		
+		if self.RUNNING_ON_PROD:
+			self.releaseLock()
+		
 		now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 		print "* run finished at %s" % now
 
 if __name__ == '__main__':
 
-	ra = RepoAlerter()
-	ra.run()
+	rg = RepoGuard()
+	rg.run()
 	
