@@ -6,48 +6,16 @@ import subprocess
 import datetime
 import argparse
 import smtplib
-
+import ConfigParser
+import sys
 import git_repo_updater
 
 class RepoGuard:
 	def __init__(self):
 		self.RUNNING_ON_PROD = False
-		if os.path.isfile('/etc/prezi/repoguard/secret.ini'):
-			self.RUNNING_ON_PROD = True
 
-		if self.RUNNING_ON_PROD:
-			self.SECRET_CONFIG_PATH='/etc/prezi/repoguard/secret.ini'
-			self.APP_DIR = '/opt/prezi/repoguard/'
-			self.WORKING_DIR = '/mnt/prezi/repoguard/repos/'
-		else:
-			self.SECRET_CONFIG_PATH="%s/etc/secret.ini" % os.path.dirname(os.path.realpath(__file__))
-			self.APP_DIR = '%s/' % os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
-			self.WORKING_DIR = '%srepos' % self.APP_DIR
-		
-
-		self.REPO_LIST_PATH = self.APP_DIR+'repo_list.json'
-		self.REPO_STATUS_PATH = self.APP_DIR+'repo_status.json'
-		self.ALERT_CONFIG_PATH = '%s/alert_config.json' % os.path.dirname(os.path.realpath(__file__))
-
-		
-
-# removed from history
-# removed from history
-# removed from history
-# removed from history
-# removed from history
-# removed from history
-# removed from history
-# removed from history
-# removed from history
-# removed from history
-# removed from history
-# removed from history
-# removed from history
-# removed from history
-		self.TEST_REPO_LANGUAGES = ( ) # empty = no language based limitation
-
-# removed from history
+		self.detectPaths()
+		self.readCommonConfig()
 
 		self.repoList = {}
 		self.repoStatus = {}
@@ -74,14 +42,40 @@ class RepoGuard:
 		if self.args.alerts:
 			self.args.alerts = self.args.alerts.split(',')
 
-	def setTestRepoLanguages(self, value):
-		self.TEST_REPO_LANGUAGES = value
+	def detectPaths(self):
+		if os.path.isfile('/etc/prezi/repoguard/secret.ini'):
+			self.RUNNING_ON_PROD = True
+
+		if self.RUNNING_ON_PROD:
+			self.SECRET_CONFIG_PATH='/etc/prezi/repoguard/secret.ini'
+			self.APP_DIR = '/opt/prezi/repoguard/'
+			self.WORKING_DIR = '/mnt/prezi/repoguard/repos/'
+		else:
+			self.SECRET_CONFIG_PATH="%s/etc/secret.ini" % os.path.dirname(os.path.realpath(__file__))
+			self.APP_DIR = '%s/' % os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
+			self.WORKING_DIR = '%srepos' % self.APP_DIR
+		
+		self.COMMON_CONFIG_PATH="%s/etc/common.cfg" % os.path.dirname(os.path.realpath(__file__))
+
+		self.REPO_LIST_PATH = self.APP_DIR+'repo_list.json'
+		self.REPO_STATUS_PATH = self.APP_DIR+'repo_status.json'
+		self.ALERT_CONFIG_PATH = '%s/alert_config.json' % os.path.dirname(os.path.realpath(__file__))
+
+	def readCommonConfig(self):
+		parser = ConfigParser.ConfigParser()
+		parser.read(self.COMMON_CONFIG_PATH)
+		self.SKIP_REPO_LIST = parser.get('__main__','skip_repo_list').replace(' ','').split(',')
+		self.REPO_LANGUAGE_LIMITATION = parser.get('__main__','repo_language_limitation').replace(' ','').split(',')
+		self.OVERRIDE_SKIP_LIST = parser.get('__main__','override_language_limitation').replace(' ','').split(',')
+
+	def setRepoLanguageLimitation(self, value):
+		self.REPO_LANGUAGE_LIMITATION = value
 
 	def setSkipRepoList(self, value):
 		self.SKIP_REPO_LIST = value
 
 	def resetRepoLimits(self):
-		self.setTestRepoLanguages( () )
+		self.setRepoLanguageLimitation( () )
 		self.setSkipRepoList( () )
 
 	def printRepoData(self):
@@ -119,8 +113,8 @@ class RepoGuard:
 		skip_due_repo_name = False
 
 		# if test list empty --> skip nothing, else skip if not listed
-		if len(self.TEST_REPO_LANGUAGES) > 0:
-			skip_due_language = str(repo_data["language"]).lower() not in self.TEST_REPO_LANGUAGES
+		if len(self.REPO_LANGUAGE_LIMITATION) > 0:
+			skip_due_language = str(repo_data["language"]).lower() not in self.REPO_LANGUAGE_LIMITATION
 
 		if len(self.SKIP_REPO_LIST) > 0:
 			skip_due_repo_name = repo_data["name"] in self.SKIP_REPO_LIST

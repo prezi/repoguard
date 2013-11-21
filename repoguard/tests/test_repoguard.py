@@ -81,7 +81,7 @@ class LocalRepoTestCase(unittest.TestCase):
 	@patch('subprocess.check_output')
 	@patch('repoguard.repoguard.RepoGuard.getCurrentHash', return_value='1163bec4351413be354f7c88317647815b2e9812')
 	def test_update_repos_no_prev_dirs_limit_language(self, *mocks):
-		self.ra.setTestRepoLanguages( ('python') )
+		self.ra.setRepoLanguageLimitation( ('python') )
 		self.ra.updateLocalRepos()
 		# check if git clone is called as required everywhere
 		self.assertEqual(mocks[1].call_args_list[0][0], ([u'git', u'clone', u'git@github.com:prezi/object-library-service.git', u'%s/object-library-service_6125572' % self.ra.WORKING_DIR],))
