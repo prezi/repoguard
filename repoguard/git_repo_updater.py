@@ -4,8 +4,9 @@ import ConfigParser
 import re
 
 class GitRepoUpdater:
-	def __init__(self, repo_alerter_obj):
-		self.repo_alerter_obj = repo_alerter_obj
+	def __init__(self, secret_config_path, repo_list_path):
+		self.REPO_LIST_PATH = repo_list_path
+		self.SECRET_CONFIG_PATH = secret_config_path
 		self.PREZI_URL = 'https://api.github.com/orgs/prezi/repos'
 		self.parseSecretConfig()
 
@@ -24,7 +25,7 @@ class GitRepoUpdater:
 
 	def parseSecretConfig(self):
 		parser = ConfigParser.ConfigParser()
-		parser.read(self.repo_alerter_obj.SECRET_CONFIG_PATH)
+		parser.read(self.SECRET_CONFIG_PATH)
 		self.TOKEN = parser.get('github-api','token')
 
 	def refreshRepoList(self):
@@ -59,6 +60,6 @@ class GitRepoUpdater:
 			self.stop = True
 
 	def writeRepoListToFile(self):
-		filename = self.repo_alerter_obj.REPO_LIST_PATH
+		filename = self.REPO_LIST_PATH
 		with open(filename,'w') as repo_file:
 			json.dump(self.repo_list_cache, repo_file)

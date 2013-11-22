@@ -12,7 +12,7 @@ class GithubConnectionTestCase(unittest.TestCase):
 	def setUp(self):
 		self.ra = repoguard.repoguard.RepoGuard()
 
-		self.git_repo_updater_obj = repoguard.git_repo_updater.GitRepoUpdater(self.ra)
+		self.git_repo_updater_obj = repoguard.git_repo_updater.GitRepoUpdater(self.ra.SECRET_CONFIG_PATH, self.ra.REPO_LIST_PATH)
 		self.ra.resetRepoLimits()
 
 	@httprettified

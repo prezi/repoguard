@@ -7,7 +7,6 @@ import datetime
 import argparse
 import smtplib
 import ConfigParser
-import sys
 import git_repo_updater
 
 class RepoGuard:
@@ -24,7 +23,10 @@ class RepoGuard:
 		self.checkLastFile = ''
 		self.checkResults = []
 		self.last_run = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+		self.parseArgs()
+		self.readAlertConfigFromFile()
 
+	def parseArgs(self):
 		parser = argparse.ArgumentParser(description='Watch git repos for changes...')
 		parser.add_argument('--since','-s', default=False, help='Search for alerts in older git commits (git rev-list since, e.g. 2013-05-05 01:00)')
 		parser.add_argument('--refresh','-r', action='store_true', default=False, help='Refresh repo list and locally stored repos from github api')
@@ -36,7 +38,6 @@ class RepoGuard:
 
 		self.args = parser.parse_args()
 
-		self.readAlertConfigFromFile()
 		if self.args.limit:
 			self.args.limit = self.args.limit.split(',')
 		if self.args.alerts:
@@ -97,16 +98,6 @@ class RepoGuard:
 		if commit_match:
 			return commit_match.groups()[0]
 		return False
-
-	#def getHashBefore(self, repo_id, repo_name, before):
-	#	hash_re = re.compile('^([a-zA-Z0-9]{40})')
-	#	cwd = '%s/%s_%s/' % (self.WORKING_DIR, repo_name, repo_id)
-	#	output = subprocess.check_output( ["git","rev-list", "--remotes", "-n1", "--before=\"%s\"" % before, "HEAD"], cwd=cwd)
-	#	hash_match = hash_re.match(str(output))
-	#	if hash_match:
-	#		return hash_match.groups()[0]
-	#	return False
-	#	#
 
 	def shouldSkip(self, repo_data):
 		skip_due_language = False
@@ -187,14 +178,6 @@ class RepoGuard:
 			json.dump(self.repoStatusNew, repo_status)
 
 	def checkNewCode(self):
-		#sampleData = {
-		#	"8742897" : {
-		#		"name" 			: "zuisite",
-		#		"last_run"	: False,
-		#		"last_hash" : False
-		#	}
-		#}
-
 		working_dir = os.listdir(self.WORKING_DIR)
 		repodir_re = re.compile('^([\w\_-]+)\_([0-9]+)$')
 		# go through local repo directories
@@ -430,7 +413,7 @@ class RepoGuard:
 			
 		# skip online update by default (only if --refresh specified or status cache json files not exist)
 		if self.args.refresh or not self.checkRepoStatusFile():
-			git_repo_updater_obj = git_repo_updater.GitRepoUpdater(self)
+			git_repo_updater_obj = git_repo_updater.GitRepoUpdater(self.SECRET_CONFIG_PATH, self.REPO_LIST_PATH)
 			git_repo_updater_obj.refreshRepoList()
 			git_repo_updater_obj.writeRepoListToFile()
 
