@@ -65,9 +65,9 @@ class RepoGuard:
 	def readCommonConfig(self):
 		parser = ConfigParser.ConfigParser()
 		parser.read(self.COMMON_CONFIG_PATH)
-		self.SKIP_REPO_LIST = parser.get('__main__','skip_repo_list').replace(' ','').split(',')
-		self.REPO_LANGUAGE_LIMITATION = parser.get('__main__','repo_language_limitation').replace(' ','').split(',')
-		self.OVERRIDE_SKIP_LIST = parser.get('__main__','override_language_limitation').replace(' ','').split(',')
+		self.SKIP_REPO_LIST = parser.get('__main__','skip_repo_list').strip().split(',')
+		self.REPO_LANGUAGE_LIMITATION = parser.get('__main__','repo_language_limitation').strip().split(',')
+		self.OVERRIDE_SKIP_LIST = parser.get('__main__','override_language_limitation').strip().split(',')
 
 	def setRepoLanguageLimitation(self, value):
 		self.REPO_LANGUAGE_LIMITATION = value
@@ -102,10 +102,10 @@ class RepoGuard:
 		skip_due_repo_name = False
 
 		# if test list empty --> skip nothing, else skip if not listed
-		if len(self.REPO_LANGUAGE_LIMITATION) > 0:
+		if self.REPO_LANGUAGE_LIMITATION != ['']:
 			skip_due_language = str(repo_data["language"]).lower() not in self.REPO_LANGUAGE_LIMITATION
 
-		if len(self.SKIP_REPO_LIST) > 0:
+		if self.SKIP_REPO_LIST != ['']:
 			skip_due_repo_name = repo_data["name"] in self.SKIP_REPO_LIST
 
 		if repo_data["name"] in self.OVERRIDE_SKIP_LIST:
