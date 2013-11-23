@@ -145,6 +145,7 @@ class RepoGuard:
 				cmd = "git clone %s %s/%s_%s" % (repoData["ssh_url"], self.WORKING_DIR, repoData["name"], repoId)
 				subprocess.check_output(cmd.split())
  				self.setInitialRepoStatusById(repoId, repoData["name"])
+ 				self.updateRepoStatusById(repoId, repoData["name"])
 
 	def readRepoStatusFromFile(self):
 		filename = self.REPO_STATUS_PATH
@@ -186,6 +187,7 @@ class RepoGuard:
 				if repo_id not in self.repoStatus:
 					print "%s (%s) not yet in status, initializing" % (repo_name, repo_id)
 					self.setInitialRepoStatusById(repo_id, repo_name)
+					self.updateRepoStatusById(repo_id,repo_name)
 
 				if repo_id in self.repoList:
 					if self.shouldSkip(self.repoList[repo_id]):
