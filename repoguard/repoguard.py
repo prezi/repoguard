@@ -90,14 +90,12 @@ class RepoGuard:
 		else:
 			return False
 
-	def getCurrentHash(self, repo_id, repo_name):
-		commit_re = re.compile('^commit ([\w]+)\n')
+	def getLastCommitHashes(self, repo_id, repo_name):
 		cwd = '%s/%s_%s/' % (self.WORKING_DIR, repo_name, repo_id)
-		output = subprocess.check_output("git log --remotes -1".split(), cwd=cwd)
-		commit_match = commit_re.match(str(output))
-		if commit_match:
-			return commit_match.groups()[0]
-		return False
+		output = subprocess.check_output("git rev-list --remotes --max-count=100".split(), cwd=cwd)
+		output = output.strip().split('\n')
+		return output
+		
 
 	def shouldSkip(self, repo_data):
 		skip_due_language = False
@@ -113,6 +111,10 @@ class RepoGuard:
 		if repo_data["name"] in self.OVERRIDE_SKIP_LIST:
 			return False
 
+		if self.args.limit:
+			if repo_data["name"] not in self.args.limit:
+				return False
+
 		return skip_due_language or skip_due_repo_name
 
 
@@ -127,16 +129,11 @@ class RepoGuard:
 				#print '... skipping %s ' % repoData["name"]
 				continue
 
-			if self.args.limit:
-					if repoData["name"] not in self.args.limit:
-						continue
-			
 			if repoDir:
 				print 'Updating *** %s (%s) ***' % (repoData["name"], repoId)
 				# DIRECTORY EXISTING --> git pull
 				cwd = "%s/%s/" % (self.WORKING_DIR, repoDir)
 				cmd = "git pull"
-				# print cmd
 				try:
 					subprocess.check_output(cmd.split(), cwd=cwd)
 					self.updateRepoStatusById(repoId, repoData["name"])
@@ -146,14 +143,8 @@ class RepoGuard:
 				# DIRECTORY NOT EXISTING --> git clone
 				#print 'Cloning *** %s (%s) ***' % (repoData["name"], repoId)
 				cmd = "git clone %s %s/%s_%s" % (repoData["ssh_url"], self.WORKING_DIR, repoData["name"], repoId)
-				# print cmd
 				subprocess.check_output(cmd.split())
-				#  update repo status  --> last_hash should be False if configured for historical review...
-				self.repoStatus[repoId] = {
-					"name" : repoData["name"],
-					"last_rum" : False,
-					"last_hash" : self.getCurrentHash(repoId, repoData["name"])
-				}
+ 				self.setInitialRepoStatusById(repoId, repoData["name"])
 
 	def readRepoStatusFromFile(self):
 		filename = self.REPO_STATUS_PATH
@@ -193,8 +184,8 @@ class RepoGuard:
 						continue
 
 				if repo_id not in self.repoStatus:
-					print "%s (%s) not yet in status, inserting current hash" % (repo_name, repo_id)
-					self.updateRepoStatusById(repo_id, repo_name, True)
+					print "%s (%s) not yet in status, initializing" % (repo_name, repo_id)
+					self.setInitialRepoStatusById(repo_id, repo_name)
 
 				if repo_id in self.repoList:
 					if self.shouldSkip(self.repoList[repo_id]):
@@ -260,41 +251,47 @@ class RepoGuard:
 	    smtp.sendmail(email_from, email_to, body)
 	    smtp.quit()
 
-	def updateRepoStatusById(self, repo_id, repo_name, update_current=False):
+	def setInitialRepoStatusById(self, repo_id, repo_name):
+		self.repoStatus[repo_id] = {
+			"name" : repo_name,
+			"last_run" : False,
+			"last_checked_hashes" : []
+		}
+
+	def updateRepoStatusById(self, repo_id, repo_name):
 		self.repoStatusNew[repo_id] = {
 			"name" : repo_name,
 			"last_run" : datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-			"last_hash" : self.getCurrentHash(repo_id, repo_name)
+			"last_checked_hashes" : self.getLastCommitHashes(repo_id, repo_name)
 		}
-		if update_current:
-			self.repoStatus[repo_id] = self.repoStatusNew[repo_id]
-		#print self.repoStatus[repo_id]
+
+	def getNewHashes(self, repo_id):
+		ret_arr = []
+		for commit in self.repoStatusNew[repo_id]["last_checked_hashes"]:
+			if commit not in self.repoStatus[repo_id]["last_checked_hashes"]:
+				ret_arr.append(commit)
+		return ret_arr
 
 	def checkByRepoId(self, repo_id, repo_name):
 		matches_in_repo = []
 		cwd = "%s/%s_%s/" % (self.WORKING_DIR, repo_name, repo_id)
-		#print "Get rev-list since the previous check *** %s (%s) ***" % (repo_name, repo_id)
 		
-		# check if before arg should be used instead of the last_hash
-		last_run = False
+		# check by timestamp if --since specified, otherwise check for new commits
 		if self.args.since:
 			last_run = self.args.since
-		elif "last_run" in self.repoStatus[repo_id]:
-			# bugfix: cheating, but always check since 2 minues before the last run...
-			last_run = datetime.datetime.strptime(self.repoStatus[repo_id]["last_run"],"%Y-%m-%d %H:%M:%S") - datetime.timedelta(minutes=2)
-		
-		if last_run:
-			#cmd = "git rev-list --remotes --since=\"%s\" HEAD" % last_run
 			rev_list_output = subprocess.check_output(["git","rev-list", "--remotes", "--since=\"%s\"" % last_run, "HEAD"], cwd=cwd)
 			rev_list = rev_list_output.split("\n")[:-1]
-			for rev_hash in rev_list:
-				rev_result = self.checkByRevHash(rev_hash, repo_name, repo_id)
-				if rev_result:
-					matches_in_repo = matches_in_repo + rev_result
-			if len(rev_list)>0:
-				print "checked commits %s %s" % (repo_name, len(rev_list))
 		else:
-			print "alert: no github hash found that should be checked, maybe try with smaller time frame"
+			rev_list = self.getNewHashes(repo_id)
+
+		for rev_hash in rev_list:
+			rev_result = self.checkByRevHash(rev_hash, repo_name, repo_id)
+			if rev_result:
+				matches_in_repo = matches_in_repo + rev_result
+		if len(rev_list)>0:
+			print "checked commits %s %s" % (repo_name, len(rev_list))
+		else:
+			print "alert: no github hash found that should be checked"
 		return matches_in_repo
 
 	def checkByRevHash(self, rev_hash, repo_name, repo_id):

@@ -6,4 +6,4 @@ virtualenv
 repos
 repoguard/etc/secret.ini
 repo_list.json
-repo_status.json
+repo_status*.json
