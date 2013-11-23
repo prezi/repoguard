@@ -65,9 +65,9 @@ class RepoGuard:
 	def readCommonConfig(self):
 		parser = ConfigParser.ConfigParser()
 		parser.read(self.COMMON_CONFIG_PATH)
-		self.SKIP_REPO_LIST = parser.get('__main__','skip_repo_list').strip().split(',')
-		self.REPO_LANGUAGE_LIMITATION = parser.get('__main__','repo_language_limitation').strip().split(',')
-		self.OVERRIDE_SKIP_LIST = parser.get('__main__','override_language_limitation').strip().split(',')
+		self.SKIP_REPO_LIST = parser.get('__main__','skip_repo_list').replace(' ','').split(',')
+		self.REPO_LANGUAGE_LIMITATION = parser.get('__main__','repo_language_limitation').replace(' ','').split(',')
+		self.OVERRIDE_SKIP_LIST = parser.get('__main__','override_language_limitation').replace(' ','').split(',')
 
 	def setRepoLanguageLimitation(self, value):
 		self.REPO_LANGUAGE_LIMITATION = value

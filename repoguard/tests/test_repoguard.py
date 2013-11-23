@@ -69,7 +69,7 @@ class LocalRepoTestCase(unittest.TestCase):
 		rd["name"] = "reponame"
 		rd["language"] = "python"
 		self.ra.resetRepoLimits()
-		self.ra.setSkipRepoList(['reponame'])
+		self.ra.setSkipRepoList(['a', 'reponame', 'b'])
 		self.assertTrue(self.ra.shouldSkip(rd))
 
 	def test_should_skip_due_name_false(self):
