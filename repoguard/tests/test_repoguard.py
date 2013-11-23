@@ -48,7 +48,37 @@ class LocalRepoTestCase(unittest.TestCase):
 		self.assertEqual(mocks[0].call_args_list[0][0], (['git', 'rev-list', '--remotes', '--max-count=100'],))
 		self.assertEqual(retVal, ['1163bec4351413be354f7c88317647815b000000','AAAAbec4351413be354f7c88317647815b009999'])
 
-	#TODO: write tests for ra.shouldSkip()
+	def test_should_skip_due_language(self):
+		rd = {}
+		rd["name"] = "to_skip"
+		rd["language"] = "python"
+		self.ra.resetRepoLimits()
+		self.ra.REPO_LANGUAGE_LIMITATION = ["notpython"]
+		self.assertTrue(self.ra.shouldSkip(rd))
+
+	def test_should_skip_due_language_false(self):
+		rd = {}
+		rd["name"] = "to_skip"
+		rd["language"] = "python"
+		self.ra.resetRepoLimits()
+		self.ra.REPO_LANGUAGE_LIMITATION = ["python"]
+		self.assertFalse(self.ra.shouldSkip(rd))
+
+	def test_should_skip_due_name(self):
+		rd = {}
+		rd["name"] = "reponame"
+		rd["language"] = "python"
+		self.ra.resetRepoLimits()
+		self.ra.setSkipRepoList(['reponame'])
+		self.assertTrue(self.ra.shouldSkip(rd))
+
+	def test_should_skip_due_name_false(self):
+		rd = {}
+		rd["name"] = "reponame"
+		rd["language"] = "python"
+		self.ra.resetRepoLimits()
+		self.ra.setSkipRepoList(['notreponame'])
+		self.assertFalse(self.ra.shouldSkip(rd))
 
 	def test_get_new_hashes(self):
 		self.ra.repoStatusNew["8742897"]["last_checked_hashes"] = ["d","c","b","a"]
@@ -56,6 +86,7 @@ class LocalRepoTestCase(unittest.TestCase):
 		ret_arr = self.ra.getNewHashes("8742897")
 		self.assertEqual(ret_arr, ["d","c"])
 
+	@patch('repoguard.repoguard.RepoGuard.shouldSkip', return_value=False)
 	@patch('os.listdir', return_value=[])
 	@patch('subprocess.check_output')
 	@patch('repoguard.repoguard.RepoGuard.updateRepoStatusById')
@@ -97,6 +128,7 @@ class LocalRepoTestCase(unittest.TestCase):
 		self.assertEqual(len(mocks[1].call_args_list), 2)
 
 
+	@patch('repoguard.repoguard.RepoGuard.shouldSkip', return_value=False)
 	@patch('os.listdir', return_value=['project-startup_7092651'])
 	@patch('subprocess.check_output')
 	@patch('repoguard.repoguard.RepoGuard.updateRepoStatusById')
@@ -112,6 +144,7 @@ class LocalRepoTestCase(unittest.TestCase):
 		self.assertEqual(len(mocks[1].call_args_list), 3)
 
 
+	@patch('repoguard.repoguard.RepoGuard.shouldSkip', return_value=False)
 	@patch('os.listdir', return_value=['project-startup_7092651', 'object-library-service_6125572', 'data-research_7271766'])
 	@patch('subprocess.check_output')
 	@patch('repoguard.repoguard.RepoGuard.updateRepoStatusById')

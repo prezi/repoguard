@@ -76,8 +76,8 @@ class RepoGuard:
 		self.SKIP_REPO_LIST = value
 
 	def resetRepoLimits(self):
-		self.setRepoLanguageLimitation( () )
-		self.setSkipRepoList( () )
+		self.setRepoLanguageLimitation( [''] )
+		self.setSkipRepoList( [''] )
 
 	def printRepoData(self):
 		for repoId, repoData in self.repoList.iteritems():
@@ -101,7 +101,6 @@ class RepoGuard:
 		skip_due_language = False
 		skip_due_repo_name = False
 
-		# if test list empty --> skip nothing, else skip if not listed
 		if self.REPO_LANGUAGE_LIMITATION != ['']:
 			skip_due_language = str(repo_data["language"]).lower() not in self.REPO_LANGUAGE_LIMITATION
 
