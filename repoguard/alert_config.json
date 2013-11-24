@@ -269,5 +269,14 @@
 		"notify": "security@prezi.com",
 		"description": "Please check if safe script is invoked.",
 		"href": ""
+	},
+	"csharp_storage": {
+		"pattern" : "\\+.*Windows\\.Storage.*",
+		"repo_pattern" : "",
+		"file_pattern" : ".*\\.(cs)",
+		"language_pattern" :"",
+		"notify": "security@prezi.com",
+		"description": "New windows storage, please check if no sensitive/encrypted",
+		"href": ""
 	}
 }
