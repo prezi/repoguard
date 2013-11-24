@@ -291,8 +291,7 @@ class RepoGuard:
 				matches_in_repo = matches_in_repo + rev_result
 		if len(rev_list)>0:
 			print "checked commits %s %s" % (repo_name, len(rev_list))
-		else:
-			print "alert: no github hash found that should be checked"
+		
 		return matches_in_repo
 
 	def checkByRevHash(self, rev_hash, repo_name, repo_id):

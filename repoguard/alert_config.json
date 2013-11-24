@@ -233,5 +233,42 @@
 		"notify": "security@prezi.com",
 		"description": "possibly vulnerable external interface call, user supplied input concatenated -> bad",
 		"href": "" 
-	}
+	},
+	"csharp_sql_command": {
+		"pattern" : "\\+.*\\.CommandText.*",
+		"repo_pattern" : "",
+		"file_pattern" : ".*\\.(cs)",
+		"language_pattern" :"",
+		"notify": "security@prezi.com",
+		"description": "possible SQL query, please check it for user supplied input and hardcoded connection creds",
+		"href": "" 
+	},
+	"csharp_base64": {
+		"pattern" : "\\+.*\\.ToBase64String.*",
+		"repo_pattern" : "",
+		"file_pattern" : ".*\\.(cs)",
+		"language_pattern" :"",
+		"notify": "security@prezi.com",
+		"description": "using base64, please check if not used for enCRAPtion",
+		"href": "" 
+	},
+	"csharp_request": {
+		"pattern" : "\\+.*client\\.(Post|Get).*",
+		"repo_pattern" : "",
+		"file_pattern" : ".*\\.(cs)",
+		"language_pattern" :"",
+		"notify": "security@prezi.com",
+		"description": "new http request from C#",
+		"href": ""
+	},
+	"csharp_storage": {
+		"pattern" : "\\+.*WebBrowser\\.InvokeScript.*",
+		"repo_pattern" : "",
+		"file_pattern" : ".*\\.(cs)",
+		"language_pattern" :"",
+		"notify": "security@prezi.com",
+		"description": "Please check if safe script is invoked.",
+		"href": ""
+	},
+	"csharp_invokescript"
 }
