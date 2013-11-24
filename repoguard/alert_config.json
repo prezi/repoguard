@@ -261,7 +261,7 @@
 		"description": "new http request from C#",
 		"href": ""
 	},
-	"csharp_storage": {
+	"csharp_invokescript": {
 		"pattern" : "\\+.*WebBrowser\\.InvokeScript.*",
 		"repo_pattern" : "",
 		"file_pattern" : ".*\\.(cs)",
@@ -269,6 +269,5 @@
 		"notify": "security@prezi.com",
 		"description": "Please check if safe script is invoked.",
 		"href": ""
-	},
-	"csharp_invokescript"
+	}
 }
