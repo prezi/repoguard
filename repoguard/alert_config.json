@@ -278,5 +278,16 @@
 		"notify": "security@prezi.com",
 		"description": "New windows storage, please check if no sensitive/encrypted",
 		"href": ""
+	},
+	"urlopen": {
+		"pattern" : "\\+.*urlopen\\(.*",
+		"repo_pattern" : "",
+		"file_pattern" : ".*\\.(py)",
+		"language_pattern" :"",
+		"notify": "security@prezi.com",
+		"description": "urlopen can open local files, please watch for it",
+		"href": ""
 	}
+
+
 }
