@@ -22,7 +22,6 @@ class RepoGuard:
 		self.alertConfig = {}
 		self.checkLastFile = ''
 		self.checkResults = []
-		self.last_run = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 		self.parseArgs()
 		self.readAlertConfigFromFile()
 
@@ -421,8 +420,6 @@ class RepoGuard:
 		# working from cached repo list file
 		self.loadRepoListFromFile()
 		
-		self.last_run = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
 		# updating local repos (and repo status files if necessary)
 		if not self.args.nopull:
 			self.updateLocalRepos()

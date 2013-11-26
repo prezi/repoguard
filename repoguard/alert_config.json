@@ -225,15 +225,6 @@
 		"description": "jsonp usage, check if no sensitive info is given back",
 		"href": "" 
 	},
-	"jsonp_usage": {
-		"pattern" : "\\+.*externalinterface.*",
-		"repo_pattern" : "",
-		"file_pattern" : ".*\\.(as)",
-		"language_pattern" :"",
-		"notify": "security@prezi.com",
-		"description": "possibly vulnerable external interface call, user supplied input concatenated -> bad",
-		"href": "" 
-	},
 	"csharp_sql_command": {
 		"pattern" : "\\+.*\\.CommandText.*",
 		"repo_pattern" : "",
@@ -286,6 +277,24 @@
 		"language_pattern" :"",
 		"notify": "security@prezi.com",
 		"description": "urlopen can open local files, please watch for it",
+		"href": ""
+	},
+	"new_vhost": {
+		"pattern" : "\\+.*(apache|nginx)\\_vhost.*",
+		"repo_pattern" : "",
+		"file_pattern" : ".*\\.(rb)",
+		"language_pattern" :"",
+		"notify": "security@prezi.com",
+		"description": "new vhost in chef, please check if not sensitive, has default vhost and properly protected by godauth",
+		"href": ""
+	},
+	"unsafe_as_calls": {
+		"pattern" : "\\+.*(externalinterface|htmlText|loadVariables|navigateToURL|loadMovie|getURL|FScrollPane\\.loadScrollContent|LoadVars\\.load|LoadVars\\.send|XML\\.load|Sound\\.loadSound|NetStream\\.play|asFunction|clickTAG|).*",
+		"repo_pattern" : "",
+		"file_pattern" : ".*\\.(as)",
+		"language_pattern" :"",
+		"notify": "security@prezi.com",
+		"description": "possibly malicious AS function call, please check if user supplied input is used (https://code.google.com/p/doctype-mirror/wiki/ArticleFlashSecurityLoadMovie, https://www.owasp.org/index.php/Testing_for_Cross_site_flashing_(OWASP-DV-004))",
 		"href": ""
 	}
 
