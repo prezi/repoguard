@@ -100,7 +100,7 @@
 		"href": ""
 	},
 	"basic_auth_in_source": {
-		"pattern" : "\\+.*(Authorization.*Basic|auth_header\\s*=\\s*\").*",
+		"pattern" : "\\+.*((Authorization|auth).*Basic|auth_header\\s*=\\s*\").*",
 		"repo_pattern" : "",
 		"file_pattern" : "",
 		"language_pattern" :"",
