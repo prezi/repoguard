@@ -289,7 +289,7 @@
 		"href": ""
 	},
 	"unsafe_as_calls": {
-		"pattern" : "\\+.*(externalinterface|htmlText|loadVariables|navigateToURL|loadMovie|getURL|FScrollPane\\.loadScrollContent|LoadVars\\.load|LoadVars\\.send|XML\\.load|Sound\\.loadSound|NetStream\\.play|asFunction|clickTAG|).*",
+		"pattern" : "\\+.*(externalinterface|htmlText|loadVariables|navigateToURL|loadMovie|getURL|FScrollPane\\.loadScrollContent|LoadVars\\.load|LoadVars\\.send|XML\\.load|Sound\\.loadSound|NetStream\\.play|asFunction|clickTAG).*",
 		"repo_pattern" : "",
 		"file_pattern" : ".*\\.(as)",
 		"language_pattern" :"",
