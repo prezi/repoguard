@@ -128,7 +128,7 @@ class RepoGuard:
 				continue
 
 			if repoDir:
-				print 'Updating *** %s (%s) ***' % (repoData["name"], repoId)
+				#print 'Updating *** %s (%s) ***' % (repoData["name"], repoId)
 				# DIRECTORY EXISTING --> git pull
 				cwd = "%s/%s/" % (self.WORKING_DIR, repoDir)
 				cmd = "git pull"
@@ -136,7 +136,7 @@ class RepoGuard:
 					subprocess.check_output(cmd.split(), cwd=cwd)
 					self.updateRepoStatusById(repoId, repoData["name"])
 				except subprocess.CalledProcessError, e:
-					print e
+					print "Error when updating %s (%s)" % (repoData["name"], e)
 			else:
 				# DIRECTORY NOT EXISTING --> git clone
 				#print 'Cloning *** %s (%s) ***' % (repoData["name"], repoId)
@@ -201,7 +201,7 @@ class RepoGuard:
 					if not self.args.notify:
 						for issue in check_results:
 							#print '### id: %s\nfile:\t%s\ncommit:\thttps://github.com/prezi/%s/commit/%s\nmatch:\t%s\n\n' % (issue[0],issue[1],issue[4],issue[2],issue[3])
-							print '%s\t%s\thttps://github.com/prezi/%s/commit/%s\t%s' % (issue[0],issue[1],issue[4],issue[2],issue[3][0:200].decode('utf-8'))
+							print '%s\t%s\t%s\thttps://github.com/prezi/%s/commit/%s\t%s' % (repo_name, issue[0],issue[1],issue[4],issue[2],issue[3][0:200].replace("\t"," ").decode('utf-8'))
 
 			else:
 				print 'skip %s (not repo directory)' % repo_dir
