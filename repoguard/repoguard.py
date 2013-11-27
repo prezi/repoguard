@@ -236,7 +236,7 @@ class RepoGuard:
 			print "sending mail to: %s" % mail_addr
 			now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 			#print "mail content: %s\n\n" % alert_per_notify_person[mail_addr]
-			self.send_email("security@prezi.com", [mail_addr], "[repoguard] possibly vulnerable changes - %s" % now, alert_per_notify_person[mail_addr])
+			self.send_email("mihaly.zagon+repoguard@prezi.com", [mail_addr], "[repoguard] possibly vulnerable changes - %s" % now, alert_per_notify_person[mail_addr])
 
 	def send_email(self, email_from, email_to, subject, txt):
 	    recipients = ", ".join(email_to)
