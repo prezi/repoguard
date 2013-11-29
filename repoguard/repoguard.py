@@ -249,7 +249,7 @@ class RepoGuard:
 		msg['From'] = email_from
 		msg['To'] = recipients
 
-		msg.attach(MIMEText(txt, "plain"))
+		msg.attach(MIMEText(txt.encode("utf-8"), "plain"))
 		
 		smtp = smtplib.SMTP('localhost')
 		smtp.sendmail(email_from, email_to, msg.as_string())
