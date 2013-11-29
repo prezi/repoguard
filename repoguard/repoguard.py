@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#coding: utf-8
 import json
 import re
 import os
@@ -8,6 +9,8 @@ import argparse
 import smtplib
 import ConfigParser
 import git_repo_updater
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 class RepoGuard:
 	def __init__(self):
@@ -227,7 +230,7 @@ class RepoGuard:
 			if alert_data['notify'] not in alert_per_notify_person:
 				alert_per_notify_person[alert_data['notify']] = "The following change(s) might introduce new security risks:\n\n"
 			
-			alert_per_notify_person[alert_data['notify']] += ("check_id: %s \n"
+			alert_per_notify_person[alert_data['notify']] += (u"check_id: %s \n"
 																	"path: %s \n"
 																	"commit: https://github.com/prezi/%s/commit/%s\n"
 																	"matching line: %s\n"
@@ -239,18 +242,18 @@ class RepoGuard:
 			self.send_email("mihaly.zagon+repoguard@prezi.com", [mail_addr], "[repoguard] possibly vulnerable changes - %s" % now, alert_per_notify_person[mail_addr])
 
 	def send_email(self, email_from, email_to, subject, txt):
-	    recipients = ", ".join(email_to)
-	    body = "\r\n".join(
-	        [
-	        "From: %s" % email_from,
-	        "To: %s" % recipients,
-	        "Subject: %s" % subject,
-	        "",
-	        txt
-	        ])
-	    smtp = smtplib.SMTP('localhost')
-	    smtp.sendmail(email_from, email_to, body)
-	    smtp.quit()
+		recipients = ", ".join(email_to)
+		
+		msg = MIMEMultipart()
+		msg["Subject"] = subject
+		msg['From'] = email_from
+		msg['To'] = recipients
+
+		msg.attach(MIMEText(txt, "plain"))
+		
+		smtp = smtplib.SMTP('localhost')
+		smtp.sendmail(email_from, email_to, msg.as_string())
+		smtp.quit()
 
 	def setInitialRepoStatusById(self, repo_id, repo_name):
 		self.repoStatus[repo_id] = {
