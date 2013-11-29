@@ -219,7 +219,7 @@ class RepoGuard:
 			check_id = issue[0]
 			filename = issue[1]
 			commit_id = issue[2]
-			matching_line = issue[3][0:200]
+			matching_line = issue[3][0:200].decode('utf-8')
 			repo_name = issue[4]
 			#repo_id = issue[5]
 			alert_data = self.alertConfig[check_id]
