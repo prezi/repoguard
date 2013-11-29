@@ -296,6 +296,51 @@
 		"notify": "security@prezi.com",
 		"description": "possibly malicious AS function call, please check if user supplied input is used (https://code.google.com/p/doctype-mirror/wiki/ArticleFlashSecurityLoadMovie, https://www.owasp.org/index.php/Testing_for_Cross_site_flashing_(OWASP-DV-004))",
 		"href": ""
+	},
+	"cpp_system_popen_calls": {
+		"pattern" : "\\+.*(system|popen)\\(.*",
+		"repo_pattern" : "",
+		"file_pattern" : ".*\\.(cpp)",
+		"language_pattern" :"",
+		"notify": "security@prezi.com",
+		"description": "the affected function will spawn a new 'shell', please check if no unvalidated user input is used",
+		"href": ""
+	},
+	"cpp_bof_calls": {
+		"pattern" : "\\+.*(strcpy|strcat|sprintf|scanf|gets)\\(.*",
+		"repo_pattern" : "",
+		"file_pattern" : ".*\\.(cpp)",
+		"language_pattern" :"",
+		"notify": "security@prezi.com",
+		"description": "the affected function doesn't check destination buffer boundaries, therefore they can lead to BOF vulns",
+		"href": ""
+	},
+	"cpp_bof_wsize_calls": {
+		"pattern" : "\\+.*(strncpy|strncat|snprintf)\\(.*",
+		"repo_pattern" : "",
+		"file_pattern" : ".*\\.(cpp)",
+		"language_pattern" :"",
+		"notify": "security@prezi.com",
+		"description": "please check the size parameter if it is not bigger than the destination (which would lead to BOF)",
+		"href": ""
+	},
+	"cpp_malloc_calls": {
+		"pattern" : "\\+.*(malloc)\\(.*",
+		"repo_pattern" : "",
+		"file_pattern" : ".*\\.(cpp)",
+		"language_pattern" :"",
+		"notify": "security@prezi.com",
+		"description": "please check the size, if external unsanitized input is used, please check for DoS conditions",
+		"href": ""
+	},
+	"cpp_format_string": {
+		"pattern" : "\\+.*(printf|fprintf|sprintf|snprintf|vfprintf|vprintf|vsprintf|vsnprintf|syslog)\\(.*",
+		"repo_pattern" : "",
+		"file_pattern" : ".*\\.(cpp)",
+		"language_pattern" :"",
+		"notify": "security@prezi.com",
+		"description": "please check the fn call if user data is read directly and it is possible to include format strings...",
+		"href": ""
 	}
 
 
