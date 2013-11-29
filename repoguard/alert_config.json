@@ -244,7 +244,7 @@
 		"href": "" 
 	},
 	"csharp_request": {
-		"pattern" : "\\+.*client\\.(Post|Get).*",
+		"pattern" : "\\+.*client\\.(Post|Get).*(Request).*",
 		"repo_pattern" : "",
 		"file_pattern" : ".*\\.(cs)",
 		"language_pattern" :"",
