@@ -28,6 +28,9 @@ class RepoGuard:
 		self.parseArgs()
 		self.readAlertConfigFromFile()
 
+		self.script_begin_re = re.compile(r'<script[^>]*>')
+		self.script_end_re = re.compile(r'</script\s*>')
+
 	def parseArgs(self):
 		parser = argparse.ArgumentParser(description='Watch git repos for changes...')
 		parser.add_argument('--since','-s', default=False, help='Search for alerts in older git commits (git rev-list since, e.g. 2013-05-05 01:00)')
@@ -299,11 +302,21 @@ class RepoGuard:
 
 	def checkByRevHash(self, rev_hash, repo_name, repo_id):
 		matches_in_rev = []
+		inside_script_tag = False
 		cwd = "%s/%s_%s/" % (self.WORKING_DIR, repo_name, repo_id)
 		cmd = "git show --function-context %s" % rev_hash
 		diff_output = subprocess.check_output(cmd.split(), cwd=cwd)
+
+		# we ignore the first 3 lines which are commit info for sure
 		for diff_line in diff_output.split("\n")[3:]:
-			check_res = self.checkLine(diff_line)
+			script_pairs = len(self.script_begin_re.findall(diff_line)) - len(self.script_end_re.findall(diff_line))
+			# if equals, do not change inside_script_tag
+			if script_pairs > 0:
+				inside_script_tag = True
+			elif script_pairs < 0:
+				inside_script_tag = False
+
+			check_res = self.checkLine(diff_line, inside_script_tag=inside_script_tag)
 			if check_res:
 				matches_in_rev.append( (check_res, self.checkLastFile, rev_hash, diff_line, repo_name, repo_id) )
 
@@ -337,18 +350,29 @@ class RepoGuard:
 				if tc in alert_data:
 					if len(alert_data[tc])>0:
 						#print 'creating compiled pattern for %s (%s)' % (tc, alert_data[tc])
-						self.alertConfig[alert_id]['%s_compiled' % tc] = re.compile(alert_data[tc], flags=re.IGNORECASE)
+						try:
+							self.alertConfig[alert_id]['%s_compiled' % tc] = re.compile(alert_data[tc], flags=re.IGNORECASE)
+						except Exception as e:
+							print 'Got exception during parsing alert_data:', alert_data
+							print 'Error:', e
 
 
 
-	def checkLine(self, line):
-		# check only added lines
+	def checkLine(self, line, inside_script_tag=False):
+		# only check non-empty lines
 		if len(line)==0:
 			return False
 		# store the file actually modified (line starting with diff --git a/ until b/)
 		if line[0:13]=='diff --git a/':
 			self.checkLastFile = line[12:line.find(' b/')]
 		for alert_id, alert_data in self.alertConfig.iteritems():
+			# skip if the rule is an inside_script_tag check
+			# TODO: refactor to an alert property?
+			if not inside_script_tag and 'inside_script_tag' in alert_id:
+				continue
+			# skip test files
+			if '/test/' in self.checkLastFile or '/tests/' in self.checkLastFile:
+				return
 			# skip if file pattern set
 			if "file_pattern_compiled" in alert_data:
 				if not alert_data['file_pattern_compiled'].match(self.checkLastFile) and self.checkLastFile:

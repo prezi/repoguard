@@ -17,6 +17,15 @@
 		"description": "Disabled autoescape might lead to cross-site scripting vulnerabilities. Please review if input comes only from trusted sources (e.g. not from the user).",
 		"href": ""
 	},
+	"template_variable_inside_script_tag" : {
+		"pattern" : "\\+.*{{((?!urlencode).)+}}.*",
+		"repo_pattern" : "",
+		"file_pattern" : "",
+		"language_pattern" :"",
+		"notify": "security@prezi.com",
+		"description": "Template variables without encoding inside SCRIPT tags might lead to cross-site scripting vulnerabilities. Please ensure that input can only come from trusted sources (e.g. not from the user).",
+		"href": ""
+	},
 	"raw_query" : {
 		"pattern" : "\\+.*\\.raw\\(.*",
 		"repo_pattern" : "",
@@ -81,10 +90,10 @@
 		"description": "Simple HTTP response, might worth a look...",
 		"href": ""
 	},
-	"os_code_exec_functions" : {
-		"pattern" : "\\+.*(os.system|subprocess.Popen|subprocess.call).*",
+	"python_os_code_exec_functions" : {
+		"pattern" : "\\+.*(system\\(|Popen\\(|subprocess.call\\(|subprocess\\.|import subprocess|from subprocess).*",
 		"repo_pattern" : "",
-		"file_pattern" : "",
+		"file_pattern" : ".*\\.(py)",
 		"language_pattern" :"",
 		"notify": "security@prezi.com",
 		"description": "Possibly dangerous function calls.",
@@ -117,13 +126,13 @@
 		"description": "allow-access-from possibly set too permissive",
 		"href": "" 
 	},
-	"new_http_variable_send": {
-		"pattern" : "\\+.*(request\\.(GET|POST)(\\[|\\.get)).*",
+	"http_variable_used": {
+		"pattern" : "\\+.*(request\\.(GET|POST|FILES|META)(\\[|\\.get)).*",
 		"repo_pattern" : "",
 		"file_pattern" : "",
 		"language_pattern" :"",
 		"notify": "security@prezi.com",
-		"description": "new http GET or POST variable set",
+		"description": "HTTP variable (GET, POST, FILES, META) used",
 		"href": "" 
 	},
 	"new_token_related_method": {
@@ -136,9 +145,9 @@
 		"href": "" 
 	},
 	"new_url_endpoint": {
-		"pattern" : "\\+\\s+\\(r'\\^.*\\$', .*",
+		"pattern" : ".*url\\(.+\\).*",
 		"repo_pattern" : "",
-		"file_pattern" : "",
+		"file_pattern" : ".*/urls\\.py",
 		"language_pattern" :"",
 		"notify": "security@prezi.com",
 		"description": "possible new url endpoint",
@@ -208,7 +217,7 @@
 		"href": "" 
 	},
 	"jsonp_middleware": {
-		"pattern" : "\\+.*middleware.*jsonp.*",
+		"pattern" : "\\+.*middleware.*(JSONP|jsonp).*",
 		"repo_pattern" : "",
 		"file_pattern" : "",
 		"language_pattern" :"",
@@ -298,16 +307,16 @@
 		"href": ""
 	},
 	"cpp_system_popen_calls": {
-		"pattern" : "\\+.*(system|popen)\\(.*",
+		"pattern" : "\\+.*(system|popen|exec(ve)?|execvp?|execlp?)\\(.*",
 		"repo_pattern" : "",
 		"file_pattern" : ".*\\.(cpp)",
 		"language_pattern" :"",
 		"notify": "security@prezi.com",
-		"description": "the affected function will spawn a new 'shell', please check if no unvalidated user input is used",
+		"description": "the affected function will run a command, please check if no unvalidated user input is used",
 		"href": ""
 	},
 	"cpp_bof_calls": {
-		"pattern" : "\\+.*(strcpy|strcat|sprintf|scanf|gets)\\(.*",
+		"pattern" : "\\+.*(strcpy|strcat|f?gets|memcpy)\\(.*",
 		"repo_pattern" : "",
 		"file_pattern" : ".*\\.(cpp)",
 		"language_pattern" :"",
@@ -334,7 +343,7 @@
 		"href": ""
 	},
 	"cpp_format_string": {
-		"pattern" : "\\+.*(printf|fprintf|sprintf|snprintf|vfprintf|vprintf|vsprintf|vsnprintf|syslog)\\(.*",
+		"pattern" : "\\+.*(v?s?n?f?printf|syslog|f?s?scanf)\\(.*",
 		"repo_pattern" : "",
 		"file_pattern" : ".*\\.(cpp)",
 		"language_pattern" :"",
