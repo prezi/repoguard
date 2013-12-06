@@ -8,6 +8,7 @@ class GitRepoUpdater:
 		self.REPO_LIST_PATH = repo_list_path
 		self.SECRET_CONFIG_PATH = secret_config_path
 		self.PREZI_URL = 'https://api.github.com/orgs/prezi/repos'
+		self.TOKEN = 'invalid_initial_token'
 		self.parseSecretConfig()
 
 		self.setToken(self.TOKEN)

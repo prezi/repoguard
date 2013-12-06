@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import unittest
+from mock import patch
 from httpretty import HTTPretty,httprettified
 
 import repoguard.git_repo_updater
@@ -9,7 +10,8 @@ import repoguard.repoguard
 APPDIR = "%s/" % os.path.dirname(os.path.realpath(__file__))
 
 class GithubConnectionTestCase(unittest.TestCase):
-	def setUp(self):
+	@patch('repoguard.git_repo_updater.GitRepoUpdater.parseSecretConfig')
+	def setUp(self, *mocks):
 		self.ra = repoguard.repoguard.RepoGuard()
 
 		self.git_repo_updater_obj = repoguard.git_repo_updater.GitRepoUpdater(self.ra.SECRET_CONFIG_PATH, self.ra.REPO_LIST_PATH)
