@@ -145,7 +145,7 @@
 		"href": "" 
 	},
 	"new_url_endpoint": {
-		"pattern" : ".*url\\(.+\\).*",
+		"pattern" : "\\+.*url\\(.+\\).*",
 		"repo_pattern" : "",
 		"file_pattern" : ".*/urls\\.py",
 		"language_pattern" :"",
