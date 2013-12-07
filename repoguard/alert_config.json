@@ -280,7 +280,7 @@
 		"href": ""
 	},
 	"urlopen": {
-		"pattern" : "\\+.*(urlopen\\(|pycurl\\.Curl|_make_call\\()).*",
+		"pattern" : "\\+.*(urlopen\\(|pycurl\\.Curl|_make_call\\().*",
 		"repo_pattern" : "",
 		"file_pattern" : ".*\\.(py)",
 		"language_pattern" :"",
@@ -369,7 +369,4 @@
 		"description": "file access / cmd exec is interesting (big false positive ratio, but it is OK now)",
 		"href": ""
 	}
-	
-	
-
 }
