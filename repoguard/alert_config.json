@@ -280,12 +280,12 @@
 		"href": ""
 	},
 	"urlopen": {
-		"pattern" : "\\+.*urlopen\\(.*",
+		"pattern" : "\\+.*(urlopen\\(|pycurl\\.Curl|_make_call\\()).*",
 		"repo_pattern" : "",
 		"file_pattern" : ".*\\.(py)",
 		"language_pattern" :"",
 		"notify": "security@prezi.com",
-		"description": "urlopen can open local files, please watch for it",
+		"description": "urlopen/pycurl can open local files (and a lot more, e.g. telnet), please watch for it, _make_call is a wrapper we use",
 		"href": ""
 	},
 	"new_vhost": {
@@ -350,7 +350,26 @@
 		"notify": "security@prezi.com",
 		"description": "please check the fn call if user data is read directly and it is possible to include format strings...",
 		"href": ""
+	},
+	"java_interesting_calls": {
+		"pattern" : "\\+.*(new FileInputStream\\(|java\\.sql\\.Statement|java\\.io).*",
+		"repo_pattern" : "",
+		"file_pattern" : ".*\\.(scala|java)",
+		"language_pattern" :"",
+		"notify": "security@prezi.com",
+		"description": "file reading / sql is always interesting",
+		"href": ""
+	},
+	"scala_interesting_calls": {
+		"pattern" : "\\+.*(scala\\.io\\.|scala\\.sys\\.process|new File|\\.(!|lines\\(|run\\()).*",
+		"repo_pattern" : "",
+		"file_pattern" : ".*\\.(scala)",
+		"language_pattern" :"",
+		"notify": "security@prezi.com",
+		"description": "file access / cmd exec is interesting (big false positive ratio, but it is OK now)",
+		"href": ""
 	}
-
+	
+	
 
 }
