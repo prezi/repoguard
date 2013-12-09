@@ -163,10 +163,7 @@ class RepoGuard:
 			print "repo_status.json not existing, no cache to load..."
 
 	def checkRepoStatusFile(self):
-		filename = self.REPO_STATUS_PATH
-		if not os.path.isfile(filename):
-			return False
-		return True
+		return os.path.isfile(self.REPO_STATUS_PATH)
 
 	def writeNewRepoStatusToFile(self):
 		filename = self.REPO_STATUS_PATH
