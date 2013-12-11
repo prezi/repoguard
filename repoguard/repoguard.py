@@ -15,6 +15,7 @@ from email.mime.text import MIMEText
 class RepoGuard:
 	def __init__(self):
 		self.RUNNING_ON_PROD = False
+		self.PATTERNS = ['line', 'repo', 'file', 'language', 'inscripttag'] #what to check
 
 		self.detectPaths()
 		self.readCommonConfig()
@@ -23,13 +24,13 @@ class RepoGuard:
 		self.repoStatus = {}
 		self.repoStatusNew = {}
 		self.alertConfig = {}
-		self.checkLastFile = ''
 		self.checkResults = []
 		self.parseArgs()
 		self.readAlertConfigFromFile()
 
 		self.script_begin_re = re.compile(r'<script[^>]*>')
 		self.script_end_re = re.compile(r'</script\s*>')
+
 
 	def parseArgs(self):
 		parser = argparse.ArgumentParser(description='Watch git repos for changes...')
@@ -304,20 +305,46 @@ class RepoGuard:
 		cmd = "git show --function-context %s" % rev_hash
 		diff_output = subprocess.check_output(cmd.split(), cwd=cwd)
 
+		# initial setup:
+		line_info = {"filename": None, "inside_script_tag": "0"}
+
 		# we ignore the first 3 lines which are commit info for sure
 		for diff_line in diff_output.split("\n")[3:]:
-			script_pairs = len(self.script_begin_re.findall(diff_line)) - len(self.script_end_re.findall(diff_line))
-			# if equals, do not change inside_script_tag
-			if script_pairs > 0:
-				inside_script_tag = True
-			elif script_pairs < 0:
-				inside_script_tag = False
+			line_info = {
+				"line": diff_line,
+				"filename": self.__findOrLeaveFilename(diff_line, line_info["filename"]),
+				"inside_script_tag": self.__findOrLeaveScript(diff_line, line_info["inside_script_tag"]),
+				"repo": repo_name,
+				"languange": None
+			}
 
-			check_res = self.checkLine(diff_line, inside_script_tag=inside_script_tag)
+			check_res = self.checkLine(line_info)
 			if check_res:
-				matches_in_rev.append( (check_res, self.checkLastFile, rev_hash, diff_line, repo_name, repo_id) )
+				matches_in_rev.append( (check_res, line_info["filename"], rev_hash, diff_line, repo_name, repo_id) )
 
 		return matches_in_rev
+
+
+	def __findOrLeaveFilename(self, line, fallback):
+		if line[0:13]=='diff --git a/':
+			return line[12:line.find(' b/')]
+		else:
+			return fallback
+
+
+	def __findOrLeaveScript(self, line, fallback):
+		# reset at new file
+		if line[0:13]=='diff --git a/':
+			return "0"
+		else:
+			script_pairs = len(self.script_begin_re.findall(line)) - len(self.script_end_re.findall(line))
+
+			if script_pairs > 0:
+				return "1"
+			elif script_pairs < 0:
+				return "1"
+			else:
+				return fallback
 
 	def loadRepoListFromFile(self):
 		filename = self.REPO_LIST_PATH
@@ -333,49 +360,90 @@ class RepoGuard:
 		with open(filename) as alert_config:
 			self.alertConfig_o = json.load(alert_config)
 
-		for alert_id, alert_data in self.alertConfig_o.iteritems():
-			if self.args.alerts:
-				if alert_id not in self.args.alerts:
-					continue
-				else:
-					print "%s alert enabled" % alert_id
-
-			self.alertConfig[alert_id] = self.alertConfig_o[alert_id]
-			to_compile = ('pattern', 'repo_pattern', 'file_pattern', 'language_pattern')
+		# filter for items in --alerts parameter
+		applied_alerts = [(aid, adata) for aid, adata 
+			in self.alertConfig_o.iteritems() 
+			if not self.args.alerts or aid in self.args.alerts ]
+		
+		self.alertConfig = {}
+		to_compile = reduce(list.__add__, map(lambda e: [e, "-%s" % e], self.PATTERNS)) #negative matches
+		for alert_id, alert_data in applied_alerts:
 			for tc in to_compile:
-				self.alertConfig[alert_id]['%s_compiled'] = False
-				if tc in alert_data:
-					if len(alert_data[tc])>0:
-						#print 'creating compiled pattern for %s (%s)' % (tc, alert_data[tc])
-						try:
-							self.alertConfig[alert_id]['%s_compiled' % tc] = re.compile(alert_data[tc], flags=re.IGNORECASE)
-						except Exception as e:
-							print 'Got exception during parsing alert_data:', alert_data
-							print 'Error:', e
+				alert_data['%s_compiled' % tc] = self.__tryCompilePattern(alert_data[tc], tc, alert_id) \
+					if tc in alert_data and len(alert_data[tc])>0 \
+					else None
+			self.alertConfig[alert_id] = alert_data
 
 
+	def __tryCompilePattern(self, pattern, name=None, rule=None):
+		try:
+			return re.compile(pattern, flags=re.IGNORECASE)
+		except Exception as e:
+			print 'Failure during parsing "%s" as %s in rule %s' % (pattern, name, rule)
+			print 'Error:', e
+			return None
 
-	def checkLine(self, line, inside_script_tag=False):
-		# only check non-empty lines
-		if len(line)==0:
+
+	def checkLine(self, line_info):
+		# a bit dirty here, but don't check line if it's 
+		if line_info["line"] is None or len(line_info["line"].strip()) == 0:
 			return False
-		# store the file actually modified (line starting with diff --git a/ until b/)
-		if line[0:13]=='diff --git a/':
-			self.checkLastFile = line[12:line.find(' b/')]
+
+		# run checks
+		from functools import partial
 		for alert_id, alert_data in self.alertConfig.iteritems():
-			# skip if the rule is an inside_script_tag check
-			# TODO: refactor to an alert property?
-			if not inside_script_tag and 'inside_script_tag' in alert_id:
-				continue
-			# skip test files
-			if '/test/' in self.checkLastFile or '/tests/' in self.checkLastFile:
-				return
-			# skip if file pattern set
-			if "file_pattern_compiled" in alert_data:
-				if not alert_data['file_pattern_compiled'].match(self.checkLastFile) and self.checkLastFile:
-					continue
-			if alert_data['pattern_compiled'].match(line):
-				return(alert_id)
+			checkConstraint = partial(self.__checkConstraint, linfo=line_info, adata=alert_data)
+			allRulesMatched = reduce(lambda a,b: a and b, map(checkConstraint, self.PATTERNS))
+
+			if allRulesMatched:
+				return alert_id
+
+		return False
+
+
+	def __checkConstraint(self, constraint, linfo, adata):
+		pos_match = self.__doPatternCheck(constraint, "%s_compiled" % constraint, adata, linfo) 
+		neg_match = self.__doPatternCheck(constraint, "-%s_compiled" % constraint, adata, linfo) 
+		if pos_match is None and neg_match is None:
+			return False
+		elif pos_match is None and neg_match is not None:
+			return not neg_match
+		elif pos_match is not None and neg_match is None:
+			return pos_match
+		else:
+			return pos_match and not neg_match
+
+
+	def __doPatternCheck(self, constraint, key, adata, linfo):
+		if key in adata and adata[key] is not None:
+			return getattr(self, "eval_%s" % constraint)(adata[key], linfo)
+		else:
+			return None
+
+	
+	def eval_line(self, pattern, linfo):
+		print "---"
+		print linfo["line"]
+		print pattern.pattern
+		print pattern.match(linfo["line"]) is not None
+		return pattern.match(linfo["line"]) is not None
+
+
+	def eval_repo(self, pattern, linfo):
+		return pattern.match(linfo["repo"])
+
+
+	def eval_file(self, pattern, linfo):
+		return linfo["filename"] is not None and pattern.match(linfo["filename"])
+
+
+	def eval_language(self, pattern, linfo):
+		return pattern.match(linfo["repo"])
+
+
+	def eval_inscripttag(self, pattern, linfo):
+		return pattern.match(str(linfo["inside_script_tag"]))
+
 
 	def putLock(self):
 		lockfile = open(self.APP_DIR+"repoguard.pid", "w")
