@@ -629,9 +629,12 @@ class InScriptEvalFactory(EvaluatorFactoryBase):
 			return None if value is None else value > 0
 
 
-if __name__ == '__main__':
+def createInitializedRepoguardInstance():
 	baseEvaluators = [LineEvalFactory(), FileEvalFactory(), RepoEvalFactory(), InScriptEvalFactory()]
 	evaluators = reduce(list.__add__, map(lambda e: [e, NegateFactory(e)], baseEvaluators))
-	rg = RepoGuard(evaluators)
-	rg.run()
+	return RepoGuard(evaluators)
+
+
+if __name__ == '__main__':
+	createInitializedRepoguardInstance().run()
 	

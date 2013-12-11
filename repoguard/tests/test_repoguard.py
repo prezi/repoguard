@@ -12,7 +12,7 @@ APPDIR = "%s/" % os.path.dirname(os.path.realpath(__file__))
 
 class LocalRepoTestCase(unittest.TestCase):
 	def setUp(self):
-		self.ra = repoguard.repoguard.RepoGuard()
+		self.ra = repoguard.repoguard.createInitializedRepoguardInstance()
 		# patch test repo list
 		self.ra.REPO_LIST_PATH=APPDIR+'test_data/test_repo_list.json'
 		self.ra.REPO_STATUS_PATH=APPDIR+'test_data/test_repo_status.json'
@@ -161,7 +161,7 @@ class LocalRepoTestCase(unittest.TestCase):
 
 class CheckNewCodeTest(unittest.TestCase):
 	def setUp(self):
-		self.ra = repoguard.repoguard.RepoGuard()
+		self.ra = repoguard.repoguard.createInitializedRepoguardInstance()
 		self.ra.ALERT_CONFIG_PATH=APPDIR+'test_data/test_alert_config.json'
 		self.ra.readAlertConfigFromFile()
 		self.ra.REPO_LIST_PATH=APPDIR+'test_data/test_repo_list.json'
@@ -209,6 +209,7 @@ class CheckNewCodeTest(unittest.TestCase):
 				'de74d131fbcca4bacac02523ef8d45c1dc8e2bde', 
 				'+                    "expired": True if group_license_expiry < datetime.date.today() else False,', 'testdir', '123123')
 		]
+		print res
 		self.assertEqual(res, expected_res)
 
 	@patch('subprocess.check_output', return_value='1163bec4351413be354f7c88317647815b000000\n')

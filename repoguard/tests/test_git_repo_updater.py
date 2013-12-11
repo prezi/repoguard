@@ -12,7 +12,7 @@ APPDIR = "%s/" % os.path.dirname(os.path.realpath(__file__))
 class GithubConnectionTestCase(unittest.TestCase):
 	@patch('repoguard.git_repo_updater.GitRepoUpdater.parseSecretConfig')
 	def setUp(self, *mocks):
-		self.ra = repoguard.repoguard.RepoGuard()
+		self.ra = repoguard.repoguard.createInitializedRepoguardInstance()
 
 		self.git_repo_updater_obj = repoguard.git_repo_updater.GitRepoUpdater(self.ra.SECRET_CONFIG_PATH, self.ra.REPO_LIST_PATH)
 		self.ra.resetRepoLimits()

@@ -1,24 +1,18 @@
 {
 	"file_modified" : {
-		"pattern" : "diff \\-\\-git a/zuisite/my/views\\.py.*",
-		"repo_exception_pattern" : "",
-		"file_exception_pattern" : "",
+		"line" : "diff \\-\\-git a/zuisite/my/views\\.py.*",
 		"notify": "mihaly.zagon@prezi.com",
 		"description": "zuisite/my/views.py is modified",
 		"href": ""
 	},
 	"function_modified" : {
-		"pattern" : ".*def settings_and_license.*",
-		"repo_exception_pattern" : "",
-		"file_exception_pattern" : "",
+		"line" : ".*def settings_and_license.*",
 		"notify": "mihaly.zagon@prezi.com",
 		"description": "settings_and_license function modified",
 		"href": ""
 	},
 	"string_matches" : {
-		"pattern" : "\\+.*datetime\\.date\\.today\\(\\).*",
-		"repo_exception_pattern" : "",
-		"file_exception_pattern" : "",
+		"line" : "\\+.*datetime\\.date\\.today\\(\\).*",
 		"notify": "mihaly.zagon@prezi.com",
 		"description": "datetime.date.today() called",
 		"href": ""
