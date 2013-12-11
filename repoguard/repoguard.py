@@ -15,7 +15,7 @@ from email.mime.text import MIMEText
 class RepoGuard:
 	def __init__(self):
 		self.RUNNING_ON_PROD = False
-		self.PATTERNS = ['line', 'repo', 'file', 'language', 'inscripttag'] #what to check
+		self.PATTERNS = ['line', 'file', 'language', 'inscripttag', 'repo'] #what to check
 
 		self.detectPaths()
 		self.readCommonConfig()
@@ -370,7 +370,7 @@ class RepoGuard:
 		for alert_id, alert_data in applied_alerts:
 			for tc in to_compile:
 				alert_data['%s_compiled' % tc] = self.__tryCompilePattern(alert_data[tc], tc, alert_id) \
-					if tc in alert_data and len(alert_data[tc])>0 \
+					if tc in alert_data and len(str(alert_data[tc]))>0 \
 					else None
 			self.alertConfig[alert_id] = alert_data
 
@@ -393,13 +393,20 @@ class RepoGuard:
 		from functools import partial
 		for alert_id, alert_data in self.alertConfig.iteritems():
 			checkConstraint = partial(self.__checkConstraint, linfo=line_info, adata=alert_data)
-			allRulesMatched = reduce(lambda a,b: a and b, map(checkConstraint, self.PATTERNS))
+			allRulesMatched = self.__allFilterMatches(checkConstraint)
 
 			if allRulesMatched:
 				return alert_id
 
 		return False
 
+
+	## faster than reduce(lambda a,b: a and b, map(predicate, self.PATTERS))
+	def __allFilterMatches(self, predicate):
+		for p in self.PATTERNS:
+			if not predicate(p):
+				return False
+		return True
 
 	def __checkConstraint(self, constraint, linfo, adata):
 		pos_match = self.__doPatternCheck(constraint, "%s_compiled" % constraint, adata, linfo) 
@@ -426,15 +433,24 @@ class RepoGuard:
 
 
 	def eval_repo(self, pattern, linfo):
-		return pattern.match(linfo["repo"])
+		if linfo["repo"] is not None:
+			return pattern.match(linfo["repo"])
+		else:
+			return None
 
 
 	def eval_file(self, pattern, linfo):
-		return linfo["filename"] is not None and pattern.match(linfo["filename"])
+		if linfo["filename"] is not None:
+			return pattern.match(linfo["filename"]) is not None
+		else:
+			return None
 
 
 	def eval_language(self, pattern, linfo):
-		return pattern.match(linfo["languange"])
+		if linfo["languange"] is not None:
+			return pattern.match(linfo["languange"])
+		else:
+			return None
 
 
 	def eval_inscripttag(self, pattern, linfo):
