@@ -626,7 +626,7 @@ class InScriptEvalFactory(EvaluatorFactoryBase):
 
 
 def createInitializedRepoguardInstance():
-	baseEvaluators = [LineEvalFactory(), FileEvalFactory(), RepoEvalFactory(), InScriptEvalFactory()]
+	baseEvaluators = [InScriptEvalFactory(), LineEvalFactory(), FileEvalFactory(), RepoEvalFactory()]
 	evaluators = reduce(list.__add__, map(lambda e: [e, NegateFactory(e)], baseEvaluators))
 	return RepoGuard(evaluators)
 
