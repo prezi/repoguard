@@ -13,9 +13,9 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 class RepoGuard:
-	def __init__(self):
+	def __init__(self, evaluatorFactories):
 		self.RUNNING_ON_PROD = False
-		self.PATTERNS = ['line', 'file', 'language', 'inscripttag', 'repo'] #what to check
+		self.evaluatorFactories = evaluatorFactories
 
 		self.detectPaths()
 		self.readCommonConfig()
@@ -27,9 +27,6 @@ class RepoGuard:
 		self.checkResults = []
 		self.parseArgs()
 		self.readAlertConfigFromFile()
-
-		self.script_begin_re = re.compile(r'<script[^>]*>')
-		self.script_end_re = re.compile(r'</script\s*>')
 
 
 	def parseArgs(self):
@@ -306,17 +303,11 @@ class RepoGuard:
 		diff_output = subprocess.check_output(cmd.split(), cwd=cwd)
 
 		# initial setup:
-		line_info = {"filename": None, "inside_script_tag": 0}
+		line_info = {"filename": None, "inside_script_tag": 0, "repo": repo_name, "languange": None}
 
 		# we ignore the first 3 lines which are commit info for sure
 		for diff_line in diff_output.split("\n")[3:]:
-			line_info = {
-				"line": diff_line,
-				"filename": self.__findOrLeaveFilename(diff_line, line_info["filename"]),
-				"inside_script_tag": self.__findOrLeaveScript(diff_line, line_info["inside_script_tag"]),
-				"repo": repo_name,
-				"languange": None
-			}
+			line_info = reduce(lambda linfo, ef: ef.processLineInfo(diff_line, linfo), self.evaluatorFactories, line_info)
 
 			check_res = self.checkLine(line_info)
 			if check_res:
@@ -324,27 +315,6 @@ class RepoGuard:
 
 		return matches_in_rev
 
-
-	def __findOrLeaveFilename(self, line, fallback):
-		if line[0:13]=='diff --git a/':
-			return line[12:line.find(' b/')]
-		else:
-			return fallback
-
-
-	def __findOrLeaveScript(self, line, fallback):
-		# reset at new file
-		if line[0:13]=='diff --git a/':
-			return 0
-		else:
-			script_pairs = len(self.script_begin_re.findall(line)) - len(self.script_end_re.findall(line))
-
-			if script_pairs > 0:
-				return 1
-			elif script_pairs < 0:
-				return 0
-			else:
-				return fallback
 
 	def loadRepoListFromFile(self):
 		filename = self.REPO_LIST_PATH
@@ -366,95 +336,25 @@ class RepoGuard:
 			if not self.args.alerts or aid in self.args.alerts ]
 		
 		self.alertConfig = {}
-		to_compile = reduce(list.__add__, map(lambda e: [e, "-%s" % e], self.PATTERNS)) #negative matches
 		for alert_id, alert_data in applied_alerts:
-			for tc in to_compile:
-				alert_data['%s_compiled' % tc] = self.__tryCompilePattern(alert_data[tc], tc, alert_id) \
-					if tc in alert_data and len(str(alert_data[tc]))>0 \
-					else None
+			alert_data['evaluators'] = [fact.create(alert_data[fact.key]) for fact 
+				in self.evaluatorFactories
+				if fact.key in alert_data]
 			self.alertConfig[alert_id] = alert_data
 
 
-	def __tryCompilePattern(self, pattern, name=None, rule=None):
-		try:
-			return re.compile(pattern, flags=re.IGNORECASE)
-		except Exception as e:
-			print 'Failure during parsing "%s" as %s in rule %s' % (pattern, name, rule)
-			print 'Error:', e
-			return None
-
-
 	def checkLine(self, line_info):
-		# a bit dirty here, but don't check line if it's 
+		# a bit dirty here, but don't check line if it's empty
 		if line_info["line"] is None or len(line_info["line"].strip()) == 0:
 			return False
 
 		# run checks
-		from functools import partial
+		from itertools import imap
 		for alert_id, alert_data in self.alertConfig.iteritems():
-			checkConstraint = partial(self.__checkConstraint, linfo=line_info, adata=alert_data)
-			allRulesMatched = self.__allFilterMatches(checkConstraint)
-
-			if allRulesMatched:
+			if all(imap(lambda e: e.evaluate(line_info), alert_data['evaluators'])):
 				return alert_id
 
 		return False
-
-
-	## faster than reduce(lambda a,b: a and b, map(predicate, self.PATTERS))
-	def __allFilterMatches(self, predicate):
-		for p in self.PATTERNS:
-			if not predicate(p):
-				return False
-		return True
-
-	def __checkConstraint(self, constraint, linfo, adata):
-		pos_match = self.__doPatternCheck(constraint, "%s_compiled" % constraint, adata, linfo) 
-		neg_match = self.__doPatternCheck(constraint, "-%s_compiled" % constraint, adata, linfo) 
-		if pos_match is None and neg_match is None:
-			return True
-		elif pos_match is None and neg_match is not None:
-			return not neg_match
-		elif pos_match is not None and neg_match is None:
-			return pos_match
-		else:
-			return pos_match and not neg_match
-
-
-	def __doPatternCheck(self, constraint, key, adata, linfo):
-		if key in adata and adata[key] is not None:
-			return getattr(self, "eval_%s" % constraint)(adata[key], linfo)
-		else:
-			return None
-
-	
-	def eval_line(self, pattern, linfo):
-		return pattern.match(linfo["line"]) is not None
-
-
-	def eval_repo(self, pattern, linfo):
-		if linfo["repo"] is not None:
-			return pattern.match(linfo["repo"])
-		else:
-			return None
-
-
-	def eval_file(self, pattern, linfo):
-		if linfo["filename"] is not None:
-			return pattern.match(linfo["filename"]) is not None
-		else:
-			return None
-
-
-	def eval_language(self, pattern, linfo):
-		if linfo["languange"] is not None:
-			return pattern.match(linfo["languange"])
-		else:
-			return None
-
-
-	def eval_inscripttag(self, pattern, linfo):
-		return int(linfo["inside_script_tag"]) != 0
 
 
 	def putLock(self):
@@ -544,8 +444,170 @@ class RepoGuard:
 		now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 		print "* run finished at %s" % now
 
+
+
+class EvaluatorBase(object):
+	def __init__(self):
+		super(EvaluatorBase, self).__init__()
+
+
+	def evaluate(self, line_info):
+		from exceptions import NotImplementedError
+		raise NotImplementedError()
+		
+
+class EvaluatorFactoryBase(object):
+	def __init__(self, key):
+		super(EvaluatorFactoryBase, self).__init__()
+		self.key = key
+
+
+	def key(self):
+		return self.key
+
+
+	def processLineInfo(self, line, line_info):
+		return line_info
+
+
+	def create(self, configuration):
+		from exceptions import NotImplementedError
+		raise NotImplementedError()
+		
+
+	def tryCompilePattern(self, pattern, name=None, rule=None):
+		try:
+			return re.compile(pattern, flags=re.IGNORECASE)
+		except Exception as e:
+			print 'Failure during parsing "%s" as %s in rule %s' % (pattern, name, rule)
+			print 'Error:', e
+			raise
+
+
+class NegateFactory(EvaluatorFactoryBase):
+	def __init__(self, ef):
+		super(NegateFactory, self).__init__("-%s" % ef.key)
+		self.ef = ef
+
+
+	def create(self, configuration):
+		return self.NegateEvaluator(self.ef.create(configuration))
+
+
+	class NegateEvaluator(EvaluatorBase):
+		def __init__(self, evaluator):
+			super(NegateFactory.NegateEvaluator, self).__init__()
+			self.evaluator = evaluator
+
+		def evaluate(self, line_info):
+			orig = self.evaluator.evaluate(line_info)
+			return not orig if orig is not None else None
+
+
+class LineEvalFactory(EvaluatorFactoryBase):
+	def __init__(self):
+		super(LineEvalFactory, self).__init__("line")
+
+
+	def processLineInfo(self, line, line_info):
+		line_info["line"] = line
+		return line_info
+
+
+	def create(self, configuration):
+		return self.LineEvaluator(re.compile(configuration, flags=re.IGNORECASE))
+
+
+	class LineEvaluator(EvaluatorBase):
+		def __init__(self, pattern):
+			super(LineEvalFactory.LineEvaluator, self).__init__()
+			self.pattern = pattern
+
+
+		def evaluate(self, line_info):
+			return self.pattern.match(line_info["line"]) is not None
+
+
+class FileEvalFactory(EvaluatorFactoryBase):
+	def __init__(self):
+		super(FileEvalFactory, self).__init__("file")
+
+
+	def processLineInfo(self, line, line_info):
+		if line[0:13]=='diff --git a/':
+			line_info["filename"] = line[12:line.find(' b/')]
+		
+		return line_info
+
+
+	def create(self, configuration):
+		return self.FileEvaluator(re.compile(configuration, flags=re.IGNORECASE))
+
+
+	class FileEvaluator(EvaluatorBase):
+		def __init__(self, pattern):
+			super(FileEvalFactory.FileEvaluator, self).__init__()
+			self.pattern = pattern
+
+
+		def evaluate(self, line_info):
+			value = line_info["filename"]
+			return None if value is None else self.pattern.match(value) is not None
+
+
+class RepoEvalFactory(EvaluatorFactoryBase):
+	def __init__(self):
+		super(RepoEvalFactory, self).__init__("repo")
+
+
+	def create(self, configuration):
+		return self.RepoEvaluator(re.compile(configuration, flags=re.IGNORECASE))
+
+
+	class RepoEvaluator(EvaluatorBase):
+		def __init__(self, pattern):
+			super(RepoEvalFactory.RepoEvaluator, self).__init__()
+			self.pattern = pattern
+
+		def evaluate(self, line_info):
+			value = line_info["repo"]
+			return None if value is None else self.pattern.match(value) is not None
+
+
+class InScriptEvalFactory(EvaluatorFactoryBase):
+	def __init__(self):
+		super(InScriptEvalFactory, self).__init__("inscripttag")
+		self.script_begin_re = re.compile(r'<script[^>]*>')
+		self.script_end_re = re.compile(r'</script\s*>')
+
+
+	def processLineInfo(self, line, line_info):
+		if line[0:13]=='diff --git a/':
+			line_info["inside_script_tag"] = 0
+		else:
+			line_info["inside_script_tag"] += len(self.script_begin_re.findall(line)) - len(self.script_end_re.findall(line))
+
+		return line_info
+
+
+	def create(self, configuration):
+		return self.InScriptEvaluator(re.compile(configuration, flags=re.IGNORECASE))
+
+
+	class InScriptEvaluator(EvaluatorBase):
+		def __init__(self, pattern):
+			super(InScriptEvalFactory.InScriptEvaluator, self).__init__()
+			self.pattern = pattern
+
+		def evaluate(self, line_info):
+			value = line_info["inside_script_tag"]
+			return None if value is None else value > 0
+
+
 if __name__ == '__main__':
 
-	rg = RepoGuard()
+	baseEvaluators = [LineEvalFactory(), FileEvalFactory(), RepoEvalFactory(), InScriptEvalFactory()]
+	evaluators = reduce(list.__add__, map(lambda e: [e, NegateFactory(e)], baseEvaluators))
+	rg = RepoGuard(evaluators)
 	rg.run()
 	
