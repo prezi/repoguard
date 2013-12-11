@@ -213,16 +213,6 @@
 		"description": "oauth string appeared, check it plz",
 		"href": "" 
 	},
-	"debug_log": {
-		"line" : "\\+.*debug_log.*",
-		"repo" : "",
-		"file" : "",
-		"-file": "test_.*\\.py",
-		"language" :"",
-		"notify": "security@prezi.com",
-		"description": "oauth string appeared, check it plz",
-		"href": "" 
-	},
 	"interesting_object_get": {
 		"line" : "\\+.*objects\\.get\\(.*request\\..*",
 		"repo" : "",
