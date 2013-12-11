@@ -306,7 +306,7 @@ class RepoGuard:
 		diff_output = subprocess.check_output(cmd.split(), cwd=cwd)
 
 		# initial setup:
-		line_info = {"filename": None, "inside_script_tag": "0"}
+		line_info = {"filename": None, "inside_script_tag": 0}
 
 		# we ignore the first 3 lines which are commit info for sure
 		for diff_line in diff_output.split("\n")[3:]:
@@ -335,14 +335,14 @@ class RepoGuard:
 	def __findOrLeaveScript(self, line, fallback):
 		# reset at new file
 		if line[0:13]=='diff --git a/':
-			return "0"
+			return 0
 		else:
 			script_pairs = len(self.script_begin_re.findall(line)) - len(self.script_end_re.findall(line))
 
 			if script_pairs > 0:
-				return "1"
+				return 1
 			elif script_pairs < 0:
-				return "1"
+				return 0
 			else:
 				return fallback
 
@@ -405,7 +405,7 @@ class RepoGuard:
 		pos_match = self.__doPatternCheck(constraint, "%s_compiled" % constraint, adata, linfo) 
 		neg_match = self.__doPatternCheck(constraint, "-%s_compiled" % constraint, adata, linfo) 
 		if pos_match is None and neg_match is None:
-			return False
+			return True
 		elif pos_match is None and neg_match is not None:
 			return not neg_match
 		elif pos_match is not None and neg_match is None:
@@ -422,10 +422,6 @@ class RepoGuard:
 
 	
 	def eval_line(self, pattern, linfo):
-		print "---"
-		print linfo["line"]
-		print pattern.pattern
-		print pattern.match(linfo["line"]) is not None
 		return pattern.match(linfo["line"]) is not None
 
 
@@ -438,11 +434,11 @@ class RepoGuard:
 
 
 	def eval_language(self, pattern, linfo):
-		return pattern.match(linfo["repo"])
+		return pattern.match(linfo["languange"])
 
 
 	def eval_inscripttag(self, pattern, linfo):
-		return pattern.match(str(linfo["inside_script_tag"]))
+		return int(linfo["inside_script_tag"]) != 0
 
 
 	def putLock(self):
