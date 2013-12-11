@@ -46,6 +46,7 @@ class RepoGuard:
 		if self.args.alerts:
 			self.args.alerts = self.args.alerts.split(',')
 
+
 	def detectPaths(self):
 		if os.path.isfile('/etc/prezi/repoguard/secret.ini'):
 			self.RUNNING_ON_PROD = True
@@ -65,6 +66,7 @@ class RepoGuard:
 		self.REPO_STATUS_PATH = self.APP_DIR+'repo_status.json'
 		self.ALERT_CONFIG_PATH = '%s/alert_config.json' % os.path.dirname(os.path.realpath(__file__))
 
+
 	def readCommonConfig(self):
 		parser = ConfigParser.ConfigParser()
 		parser.read(self.COMMON_CONFIG_PATH)
@@ -72,19 +74,24 @@ class RepoGuard:
 		self.REPO_LANGUAGE_LIMITATION = parser.get('__main__','repo_language_limitation').replace(' ','').split(',')
 		self.OVERRIDE_SKIP_LIST = parser.get('__main__','override_language_limitation').replace(' ','').split(',')
 
+
 	def setRepoLanguageLimitation(self, value):
 		self.REPO_LANGUAGE_LIMITATION = value
 
+
 	def setSkipRepoList(self, value):
 		self.SKIP_REPO_LIST = value
+
 
 	def resetRepoLimits(self):
 		self.setRepoLanguageLimitation( [''] )
 		self.setSkipRepoList( [''] )
 
+
 	def printRepoData(self):
 		for repoId, repoData in self.repoList.iteritems():
 			print "%s -> (id: %s, ssh_url: %s) " % (repoId, repoData["name"], repoData["ssh_url"])
+
 
 	def searchRepoDir(self,directory_contents, name, repo_id):
 		dirname = '%s_%s' % (name, repo_id)
@@ -92,6 +99,7 @@ class RepoGuard:
 			return dirname
 		else:
 			return False
+
 
 	def getLastCommitHashes(self, repo_id, repo_name):
 		cwd = '%s/%s_%s/' % (self.WORKING_DIR, repo_name, repo_id)
@@ -149,6 +157,7 @@ class RepoGuard:
  				self.setInitialRepoStatusById(repoId, repoData["name"])
  				self.updateRepoStatusById(repoId, repoData["name"])
 
+
 	def readRepoStatusFromFile(self):
 		filename = self.REPO_STATUS_PATH
 		try:
@@ -160,13 +169,16 @@ class RepoGuard:
 		except IOError:
 			print "repo_status.json not existing, no cache to load..."
 
+
 	def checkRepoStatusFile(self):
 		return os.path.isfile(self.REPO_STATUS_PATH)
+
 
 	def writeNewRepoStatusToFile(self):
 		filename = self.REPO_STATUS_PATH
 		with open(filename, 'w') as repo_status:
 			json.dump(self.repoStatusNew, repo_status)
+
 
 	def checkNewCode(self):
 		working_dir = os.listdir(self.WORKING_DIR)
@@ -207,6 +219,7 @@ class RepoGuard:
 			else:
 				print 'skip %s (not repo directory)' % repo_dir
 
+
 	# TODO: test
 	def sendResults(self):
 		alert_per_notify_person = {}
@@ -239,6 +252,7 @@ class RepoGuard:
 			#print "mail content: %s\n\n" % alert_per_notify_person[mail_addr]
 			self.send_email("mihaly.zagon+repoguard@prezi.com", [mail_addr], "[repoguard] possibly vulnerable changes - %s" % now, alert_per_notify_person[mail_addr])
 
+
 	def send_email(self, email_from, email_to, subject, txt):
 		recipients = ", ".join(email_to)
 		
@@ -253,12 +267,14 @@ class RepoGuard:
 		smtp.sendmail(email_from, email_to, msg.as_string())
 		smtp.quit()
 
+
 	def setInitialRepoStatusById(self, repo_id, repo_name):
 		self.repoStatus[repo_id] = {
 			"name" : repo_name,
 			"last_run" : False,
 			"last_checked_hashes" : []
 		}
+
 
 	def updateRepoStatusById(self, repo_id, repo_name):
 		self.repoStatusNew[repo_id] = {
@@ -267,12 +283,14 @@ class RepoGuard:
 			"last_checked_hashes" : self.getLastCommitHashes(repo_id, repo_name)
 		}
 
+
 	def getNewHashes(self, repo_id):
 		ret_arr = []
 		for commit in self.repoStatusNew[repo_id]["last_checked_hashes"]:
 			if commit not in self.repoStatus[repo_id]["last_checked_hashes"]:
 				ret_arr.append(commit)
 		return ret_arr
+
 
 	def checkByRepoId(self, repo_id, repo_name):
 		matches_in_repo = []
@@ -294,6 +312,7 @@ class RepoGuard:
 			print "checked commits %s %s" % (repo_name, len(rev_list))
 		
 		return matches_in_repo
+
 
 	def checkByRevHash(self, rev_hash, repo_name, repo_id):
 		matches_in_rev = []
@@ -362,8 +381,10 @@ class RepoGuard:
 		lockfile.write(str(os.getpid()))
 		lockfile.close()
 
+
 	def releaseLock(self):
 		os.remove(self.APP_DIR+"repoguard.pid")
+
 
 	def isLocked(self):
 		if os.path.isfile(self.APP_DIR+"repoguard.pid"):
@@ -388,13 +409,16 @@ class RepoGuard:
 			print "pid file not found, not locked..."
 			return False
 
+
 	def setAborted(self):
 		aborted_state_file = open(self.APP_DIR+"aborted_state.lock","w")
 		aborted_state_file.write('1')
 		aborted_state_file.close()
 
+
 	def isAborted(self):
 		return os.path.isfile(self.APP_DIR+'aborted_state.lock')
+
 
 	def run(self):
 		now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -443,7 +467,6 @@ class RepoGuard:
 		
 		now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 		print "* run finished at %s" % now
-
 
 
 class EvaluatorBase(object):
@@ -569,6 +592,7 @@ class RepoEvalFactory(EvaluatorFactoryBase):
 			super(RepoEvalFactory.RepoEvaluator, self).__init__()
 			self.pattern = pattern
 
+
 		def evaluate(self, line_info):
 			value = line_info["repo"]
 			return None if value is None else self.pattern.match(value) is not None
@@ -599,13 +623,13 @@ class InScriptEvalFactory(EvaluatorFactoryBase):
 			super(InScriptEvalFactory.InScriptEvaluator, self).__init__()
 			self.pattern = pattern
 
+
 		def evaluate(self, line_info):
 			value = line_info["inside_script_tag"]
 			return None if value is None else value > 0
 
 
 if __name__ == '__main__':
-
 	baseEvaluators = [LineEvalFactory(), FileEvalFactory(), RepoEvalFactory(), InScriptEvalFactory()]
 	evaluators = reduce(list.__add__, map(lambda e: [e, NegateFactory(e)], baseEvaluators))
 	rg = RepoGuard(evaluators)
