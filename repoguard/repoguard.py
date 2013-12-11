@@ -356,10 +356,15 @@ class RepoGuard:
 		
 		self.alertConfig = {}
 		for alert_id, alert_data in applied_alerts:
-			alert_data['evaluators'] = [fact.create(alert_data[fact.key]) for fact 
-				in self.evaluatorFactories
-				if fact.key in alert_data]
-			self.alertConfig[alert_id] = alert_data
+			try:
+				alert_data['evaluators'] = [fact.create(alert_data[fact.key]) for fact 
+					in self.evaluatorFactories
+					if fact.key in alert_data]
+				self.alertConfig[alert_id] = alert_data
+			except Exception as e:
+				print '!! Failure during configuring rule "%s"' % alert_id
+				raise
+			
 
 
 	def checkLine(self, line_info):
@@ -496,15 +501,6 @@ class EvaluatorFactoryBase(object):
 	def create(self, configuration):
 		from exceptions import NotImplementedError
 		raise NotImplementedError()
-		
-
-	def tryCompilePattern(self, pattern, name=None, rule=None):
-		try:
-			return re.compile(pattern, flags=re.IGNORECASE)
-		except Exception as e:
-			print 'Failure during parsing "%s" as %s in rule %s' % (pattern, name, rule)
-			print 'Error:', e
-			raise
 
 
 class NegateFactory(EvaluatorFactoryBase):
