@@ -303,10 +303,16 @@
 		"href": ""
 	},
 	"unsafe_as_calls": {
-		"line" : "\\+.*(externalinterface|htmlText|loadVariables|navigateToURL|loadMovie|getURL|FScrollPane\\.loadScrollContent|LoadVars\\.load|LoadVars\\.send|XML\\.load|Sound\\.loadSound|NetStream\\.play|asFunction|clickTAG).*",
-		"repo" : "",
+		"line" : "\\+.*(externalinterface|loadVariables|navigateToURL|loadMovie|getURL|FScrollPane\\.loadScrollContent|LoadVars\\.load|LoadVars\\.send|XML\\.load|Sound\\.loadSound|NetStream\\.play|asFunction|clickTAG).*",
 		"file" : ".*\\.(as)",
-		"language" :"",
+		"notify": "security@prezi.com",
+		"description": "possibly malicious AS function call, please check if user supplied input is used (https://code.google.com/p/doctype-mirror/wiki/ArticleFlashSecurityLoadMovie, https://www.owasp.org/index.php/Testing_for_Cross_site_flashing_(OWASP-DV-004))",
+		"href": ""
+	},
+	"unsafe_as_htmlText": {
+		"line" : "\\+.*\\.htmlText.*=.*",
+		"-line" : ".*=.*htmlEscape.*",
+		"file" : ".*\\.(as)",
 		"notify": "security@prezi.com",
 		"description": "possibly malicious AS function call, please check if user supplied input is used (https://code.google.com/p/doctype-mirror/wiki/ArticleFlashSecurityLoadMovie, https://www.owasp.org/index.php/Testing_for_Cross_site_flashing_(OWASP-DV-004))",
 		"href": ""
