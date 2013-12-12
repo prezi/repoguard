@@ -74,7 +74,7 @@
 		"href": ""
 	},
 	"dangerous_redirect" : {
-		"line" : "\\+.*(HttpResponseRedirect|HttpResponsePermanentRedirect).*",
+		"line" : "\\+.*(HttpResponseRedirect|HttpResponsePermanentRedirect)(?!\\([\"'][^\"']+[\"']\\)).*",
 		"repo" : "",
 		"-file" : ".*/test_.+\\.py",
 		"language" :"",
