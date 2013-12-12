@@ -316,45 +316,22 @@
 	},
 	"cpp_system_popen_calls": {
 		"line" : "\\+.*(system|popen|exec(ve)?|execvp?|execlp?)\\(.*",
-		"repo" : "",
-		"file" : ".*\\.(cpp)",
-		"language" :"",
+		"file" : ".*\\.(cpp|cxx|h|hpp|c)",
 		"notify": "security@prezi.com",
 		"description": "the affected function will run a command, please check if no unvalidated user input is used",
 		"href": ""
 	},
 	"cpp_bof_calls": {
 		"line" : "\\+.*(strcpy|strcat|f?gets|memcpy)\\(.*",
-		"repo" : "",
-		"file" : ".*\\.(cpp)",
-		"language" :"",
+		"file" : ".*\\.(cpp|cxx|h|hpp|c)",
 		"notify": "security@prezi.com",
 		"description": "the affected function doesn't check destination buffer boundaries, therefore they can lead to BOF vulns",
 		"href": ""
 	},
-	"cpp_bof_wsize_calls": {
-		"line" : "\\+.*(strncpy|strncat|snprintf)\\(.*",
-		"repo" : "",
-		"file" : ".*\\.(cpp)",
-		"language" :"",
-		"notify": "security@prezi.com",
-		"description": "please check the size parameter if it is not bigger than the destination (which would lead to BOF)",
-		"href": ""
-	},
-	"cpp_malloc_calls": {
-		"line" : "\\+.*(malloc)\\(.*",
-		"repo" : "",
-		"file" : ".*\\.(cpp)",
-		"language" :"",
-		"notify": "security@prezi.com",
-		"description": "please check the size, if external unsanitized input is used, please check for DoS conditions",
-		"href": ""
-	},
 	"cpp_format_string": {
 		"line" : "\\+.*(v?s?n?f?printf|syslog|f?s?scanf)\\(.*",
-		"repo" : "",
-		"file" : ".*\\.(cpp)",
-		"language" :"",
+		"-line" : ".+\\((stderr|stdout)+.+",
+		"file" : ".*\\.(cpp|cxx|h|hpp|c)",
 		"notify": "security@prezi.com",
 		"description": "please check the fn call if user data is read directly and it is possible to include format strings...",
 		"href": ""
