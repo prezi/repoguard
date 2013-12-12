@@ -163,7 +163,7 @@
 		"href": "" 
 	},
 	"new_url_endpoint": {
-		"line" : "\\+\\s+(url)+\\(r'\\^.*\\$',.*",
+		"line" : "\\+\\s+(url)*\\(r'\\^.*\\$',.*",
 		"repo" : "",
 		"file" : ".*/urls\\.py",
 		"language" :"",
@@ -348,7 +348,6 @@
 	},
 	"cpp_format_string": {
 		"line" : "\\+.*(v?s?n?f?printf|syslog|f?s?scanf)\\(.*",
-		"-line" : ".+\\((stderr|stdout)+.+",
 		"file" : ".*\\.(cpp|cxx|h|hpp|c)",
 		"notify": "security@prezi.com",
 		"description": "please check the fn call if user data is read directly and it is possible to include format strings...",
