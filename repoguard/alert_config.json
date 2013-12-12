@@ -204,11 +204,8 @@
 		"href": "" 
 	},
 	"oauth_string": {
-		"line" : "\\+.*oauth.*",
-		"repo" : "",
-		"file" : "",
+		"line" : "\\+.*[^N]oauth.*",
 		"-file" : ".*/test_.+\\.py",
-		"language" :"",
 		"notify": "security@prezi.com",
 		"description": "oauth string appeared, check it plz",
 		"href": "" 
