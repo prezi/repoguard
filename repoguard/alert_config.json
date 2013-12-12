@@ -27,6 +27,24 @@
 		"description": "Template variables without encoding inside SCRIPT tags might lead to cross-site scripting vulnerabilities. Please ensure that input can only come from trusted sources (e.g. not from the user).",
 		"href": ""
 	},
+		"javascript_target" : {
+		"line" : "\\+.*javascript:.*",
+		"repo" : "",
+		"-file" : "/acceptance_tests/.*",
+		"language" :"",
+		"notify": "security@prezi.com",
+		"description": "'javascript:' is used to run Javascript code which might lead to cross-site scripting vulnerabilities. Please ensure that input can only come from trusted sources (e.g. not from the user).",
+		"href": ""
+	},
+	"dom_event_parameter" : {
+		"line" : "\\+.*\\son\\w+=\\s*('|\").*",
+		"repo" : "",
+		"-file" : "/acceptance_tests/.*",
+		"language" :"",
+		"notify": "security@prezi.com",
+		"description": "HTML DOM events run Javascript code which might lead to cross-site scripting vulnerabilities. Please ensure that input can only come from trusted sources (e.g. not from the user).",
+		"href": ""
+	},
 	"raw_query" : {
 		"line" : "\\+.*\\.raw\\(.*",
 		"repo" : "",
