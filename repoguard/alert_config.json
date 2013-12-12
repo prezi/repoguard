@@ -73,10 +73,7 @@
 		"href": ""
 	},
 	"json_no_content_type" : {
-		"line" : "\\+.*HttpResponse\\((simplejson|json)+[\\.\\(\\)\\w]*\\).*",
-		"repo" : "",
-		"file" : "",
-		"language" :"",
+		"line" : "\\+.*HttpResponse\\s*\\((simplejson|json)(?!.*application/json).*",
 		"notify": "security@prezi.com",
 		"description": "HTTP response containing possibly json data without content_type set",
 		"href": ""
@@ -92,7 +89,7 @@
 		"href": ""
 	},
 	"dangerous_redirect" : {
-		"line" : "\\+.*(HttpResponseRedirect|HttpResponsePermanentRedirect).*",
+		"line" : "\\+.*(HttpResponseRedirect|HttpResponsePermanentRedirect)(?!\\([\"'][^\"']+[\"']\\)).*",
 		"repo" : "",
 		"-file" : ".*/test_.+\\.py",
 		"language" :"",
@@ -120,10 +117,8 @@
 		"href": ""
 	},
 	"secret_in_source" : {
-		"line" : "\\+.*(secret|password|S3Connection)+[\\w_]*[\\s]*=.*",
-		"repo" : "",
-		"file" : "",
-		"language" :"",
+		"line" : "\\+.*(secret|password|S3Connection)+[\\w_]*[\\s]*=.*[\"']+.*",
+		"-line" : ".+=.*get_encrypted_data",
 		"notify": "security@prezi.com",
 		"description": "Row possibly contains secret",
 		"href": ""
@@ -168,7 +163,7 @@
 		"href": "" 
 	},
 	"new_url_endpoint": {
-		"line" : "\\+.*url\\(.+\\).*",
+		"line" : "\\+\\s+(url)+\\(r'\\^.*\\$',.*",
 		"repo" : "",
 		"file" : ".*/urls\\.py",
 		"language" :"",
@@ -224,11 +219,8 @@
 		"href": "" 
 	},
 	"oauth_string": {
-		"line" : "\\+.*oauth.*",
-		"repo" : "",
-		"file" : "",
+		"line" : "\\+.*[^N]oauth.*",
 		"-file" : ".*/test_.+\\.py",
-		"language" :"",
 		"notify": "security@prezi.com",
 		"description": "oauth string appeared, check it plz",
 		"href": "" 
@@ -326,55 +318,38 @@
 		"href": ""
 	},
 	"unsafe_as_calls": {
-		"line" : "\\+.*(externalinterface|htmlText|loadVariables|navigateToURL|loadMovie|getURL|FScrollPane\\.loadScrollContent|LoadVars\\.load|LoadVars\\.send|XML\\.load|Sound\\.loadSound|NetStream\\.play|asFunction|clickTAG).*",
-		"repo" : "",
+		"line" : "\\+.*(externalinterface|loadVariables|navigateToURL|loadMovie|getURL|FScrollPane\\.loadScrollContent|LoadVars\\.load|LoadVars\\.send|XML\\.load|Sound\\.loadSound|NetStream\\.play|asFunction|clickTAG).*",
 		"file" : ".*\\.(as)",
-		"language" :"",
+		"notify": "security@prezi.com",
+		"description": "possibly malicious AS function call, please check if user supplied input is used (https://code.google.com/p/doctype-mirror/wiki/ArticleFlashSecurityLoadMovie, https://www.owasp.org/index.php/Testing_for_Cross_site_flashing_(OWASP-DV-004))",
+		"href": ""
+	},
+	"unsafe_as_htmlText": {
+		"line" : "\\+.*\\.htmlText.*=.*",
+		"-line" : ".*=.*htmlEscape.*",
+		"file" : ".*\\.(as)",
 		"notify": "security@prezi.com",
 		"description": "possibly malicious AS function call, please check if user supplied input is used (https://code.google.com/p/doctype-mirror/wiki/ArticleFlashSecurityLoadMovie, https://www.owasp.org/index.php/Testing_for_Cross_site_flashing_(OWASP-DV-004))",
 		"href": ""
 	},
 	"cpp_system_popen_calls": {
 		"line" : "\\+.*(system|popen|exec(ve)?|execvp?|execlp?)\\(.*",
-		"repo" : "",
-		"file" : ".*\\.(cpp)",
-		"language" :"",
+		"file" : ".*\\.(cpp|cxx|h|hpp|c)",
 		"notify": "security@prezi.com",
 		"description": "the affected function will run a command, please check if no unvalidated user input is used",
 		"href": ""
 	},
 	"cpp_bof_calls": {
 		"line" : "\\+.*(strcpy|strcat|f?gets|memcpy)\\(.*",
-		"repo" : "",
-		"file" : ".*\\.(cpp)",
-		"language" :"",
+		"file" : ".*\\.(cpp|cxx|h|hpp|c)",
 		"notify": "security@prezi.com",
 		"description": "the affected function doesn't check destination buffer boundaries, therefore they can lead to BOF vulns",
 		"href": ""
 	},
-	"cpp_bof_wsize_calls": {
-		"line" : "\\+.*(strncpy|strncat|snprintf)\\(.*",
-		"repo" : "",
-		"file" : ".*\\.(cpp)",
-		"language" :"",
-		"notify": "security@prezi.com",
-		"description": "please check the size parameter if it is not bigger than the destination (which would lead to BOF)",
-		"href": ""
-	},
-	"cpp_malloc_calls": {
-		"line" : "\\+.*(malloc)\\(.*",
-		"repo" : "",
-		"file" : ".*\\.(cpp)",
-		"language" :"",
-		"notify": "security@prezi.com",
-		"description": "please check the size, if external unsanitized input is used, please check for DoS conditions",
-		"href": ""
-	},
 	"cpp_format_string": {
 		"line" : "\\+.*(v?s?n?f?printf|syslog|f?s?scanf)\\(.*",
-		"repo" : "",
-		"file" : ".*\\.(cpp)",
-		"language" :"",
+		"-line" : ".+\\((stderr|stdout)+.+",
+		"file" : ".*\\.(cpp|cxx|h|hpp|c)",
 		"notify": "security@prezi.com",
 		"description": "please check the fn call if user data is read directly and it is possible to include format strings...",
 		"href": ""
