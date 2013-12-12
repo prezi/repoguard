@@ -322,15 +322,14 @@ class RepoGuard:
 		diff_output = subprocess.check_output(cmd.split(), cwd=cwd)
 
 		# initial setup:
-		line_info = {"filename": None, "inside_script_tag": 0, "repo": repo_name, "languange": None}
+		lineCtx = {"filename": None, "inside_script_tag": 0, "repo": repo_name, "languange": None}
 
 		# we ignore the first 3 lines which are commit info for sure
 		for diff_line in diff_output.split("\n")[3:]:
-			line_info = reduce(lambda linfo, ef: ef.processLineInfo(diff_line, linfo), self.evaluatorFactories, line_info)
-
-			check_res = self.checkLine(line_info)
-			if check_res:
-				matches_in_rev.append( (check_res, line_info["filename"], rev_hash, diff_line, repo_name, repo_id) )
+			lineCtx = reduce(lambda ctx, ef: ef.processLineInfo(diff_line, ctx), self.evaluatorFactories, lineCtx)
+			alerts = self.checkLine(lineCtx)
+			matches_in_rev.extend(
+				[(alert, lineCtx["filename"], rev_hash, diff_line, repo_name, repo_id) for alert in alerts])
 
 		return matches_in_rev
 
@@ -366,19 +365,15 @@ class RepoGuard:
 				raise
 			
 
-
 	def checkLine(self, line_info):
 		# a bit dirty here, but don't check line if it's empty
 		if line_info["line"] is None or len(line_info["line"].strip()) == 0:
-			return False
+			return []
 
 		# run checks
 		from itertools import imap
-		for alert_id, alert_data in self.alertConfig.iteritems():
-			if all(imap(lambda e: e.evaluate(line_info), alert_data['evaluators'])):
-				return alert_id
-
-		return False
+		return [alert_id for alert_id, alert_data in self.alertConfig.iteritems()
+			if all(imap(lambda e: e.evaluate(line_info), alert_data['evaluators']))]
 
 
 	def putLock(self):
