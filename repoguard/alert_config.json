@@ -308,6 +308,22 @@
 		"description": "urlopen/pycurl can open local files (and a lot more, e.g. telnet), please watch for it, _make_call is a wrapper we use",
 		"href": ""
 	},
+	"direct_prezi_access": {
+		"line": "\\+.*Presentation\\.objects\\.(all|get_by_id_or_oid).*",
+		"file" : ".*\\.(py)",
+		"-file" : ".*/test_.+\\.py",
+		"notify": "security@prezi.com",
+		"description": "It is now allowed to leak prezi's database id",
+		"href": ""
+	},
+	"direct_prezi_access_helpers": {
+		"line": "\\+.*zuibackend\\.cache(\\.get_prezi|\\s+import\\s+get_prezi).*",
+		"file" : ".*\\.(py)",
+		"-file" : ".*/test_.+\\.py",
+		"notify": "security@prezi.com",
+		"description": "It is now allowed to leak prezi's database id",
+		"href": ""
+	},
 	"new_vhost": {
 		"line" : "\\+.*(apache|nginx)\\_vhost.*",
 		"repo" : "",
