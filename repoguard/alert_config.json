@@ -353,13 +353,31 @@
 		"description": "please check the fn call if user data is read directly and it is possible to include format strings...",
 		"href": ""
 	},
-	"java_interesting_calls": {
-		"line" : "\\+.*(new FileInputStream\\(|java\\.sql\\.Statement|java\\.io).*",
+	"java_interesting_io_calls": {
+		"line" : "\\+.*java\\.io\\.(File|\\*).*",
 		"repo" : "",
 		"file" : ".*\\.(scala|java)",
 		"language" :"",
 		"notify": "security@prezi.com",
-		"description": "file reading / sql is always interesting",
+		"description": "file reading or java.io.* import",
+		"href": ""
+	},
+	"java_interesting_sql_calls": {
+		"line" : "\\+.*java\\.sql\\..*",
+		"repo" : "",
+		"file" : ".*\\.(scala|java)",
+		"language" :"",
+		"notify": "security@prezi.com",
+		"description": "sql is always interesting",
+		"href": ""
+	},
+	"java_interesting_net_calls": {
+		"line" : "\\+.*java\\.net\\.URL.*",
+		"repo" : "",
+		"file" : ".*\\.(scala|java)",
+		"language" :"",
+		"notify": "security@prezi.com",
+		"description": "URL/URLConnection (check for internal network, etc)",
 		"href": ""
 	},
 	"scala_interesting_calls": {
