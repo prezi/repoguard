@@ -152,6 +152,15 @@
 		"description": "HTTP variable (GET, POST, FILES, META) used",
 		"href": "" 
 	},
+	"http_variable_used_js": {
+		"line" : "\\+.*(Node\\.url\\.parse|\\.query\\.).*",
+		"repo" : "",
+		"file" : ".*\\.(hx|js)",
+		"language" :"",
+		"notify": "security@prezi.com",
+		"description": "request variable used",
+		"href": "" 
+	},
 	"new_token_related_method": {
 		"line" : "\\+.*def .*\\_token\\(.*",
 		"repo" : "",
