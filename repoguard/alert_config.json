@@ -413,5 +413,32 @@
 		"notify": "security@prezi.com",
 		"description": "file access / cmd exec is interesting (big false positive ratio, but it is OK now)",
 		"href": ""
+	},
+	"godauth_whitelist": {
+		"line" : "\\+.*\"who\"\\: \"all\".*",
+		"repo" : "",
+		"file" : ".*\\.(json)",
+		"language" :"",
+		"notify": "security@prezi.com",
+		"description": "access to url allowed to anybody, please check if sensitive",
+		"href": ""
+	},
+	"chef_new_services": {
+		"line" : "\\+.*(prezi\\_django\\_app\\_base\\_placement|prezi\\_placement\\_deploy|supervisor\\_service|bind =|apache\\_vhost|Virtualhost ).*",
+		"repo" : "",
+		"file" : ".*\\.(rb|erb)",
+		"language" :"",
+		"notify": "security@prezi.com",
+		"description": "something new in chef, just wanted to let you know",
+		"href": ""
+	},
+	"chef_new_user_access": {
+		"line" : "\\+.*(assessment_weekers =|\"users\": |recipe\\[users\\:\\:).*",
+		"repo" : "",
+		"file" : ".*\\.(rb|json)",
+		"language" :"",
+		"notify": "security@prezi.com",
+		"description": "somebody got access to something, just wanted to let you know",
+		"href": ""
 	}
 }
