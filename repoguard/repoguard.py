@@ -316,20 +316,21 @@ class RepoGuard:
 
 	def checkByRevHash(self, rev_hash, repo_name, repo_id):
 		matches_in_rev = []
-		inside_script_tag = False
 		cwd = "%s/%s_%s/" % (self.WORKING_DIR, repo_name, repo_id)
 		cmd = "git show --function-context %s" % rev_hash
-		diff_output = subprocess.check_output(cmd.split(), cwd=cwd)
+		try:
+			diff_output = subprocess.check_output(cmd.split(), cwd=cwd)
+			# initial setup:
+			lineCtx = {"filename": None, "inside_script_tag": 0, "repo": repo_name, "languange": None}
 
-		# initial setup:
-		lineCtx = {"filename": None, "inside_script_tag": 0, "repo": repo_name, "languange": None}
-
-		# we ignore the first 3 lines which are commit info for sure
-		for diff_line in diff_output.split("\n")[3:]:
-			lineCtx = reduce(lambda ctx, ef: ef.processLineInfo(diff_line, ctx), self.evaluatorFactories, lineCtx)
-			alerts = self.checkLine(lineCtx)
-			matches_in_rev.extend(
-				[(alert, lineCtx["filename"], rev_hash, diff_line, repo_name, repo_id) for alert in alerts])
+			# we ignore the first 3 lines which are commit info for sure
+			for diff_line in diff_output.split("\n")[3:]:
+				lineCtx = reduce(lambda ctx, ef: ef.processLineInfo(diff_line, ctx), self.evaluatorFactories, lineCtx)
+				alerts = self.checkLine(lineCtx)
+				matches_in_rev.extend(
+					[(alert, lineCtx["filename"], rev_hash, diff_line, repo_name, repo_id) for alert in alerts])
+		except subprocess.CalledProcessError:
+			print 'CalledProcessError!'
 
 		return matches_in_rev
 
@@ -360,7 +361,7 @@ class RepoGuard:
 					in self.evaluatorFactories
 					if fact.key in alert_data]
 				self.alertConfig[alert_id] = alert_data
-			except Exception as e:
+			except Exception:
 				print '!! Failure during configuring rule "%s"' % alert_id
 				raise
 			
