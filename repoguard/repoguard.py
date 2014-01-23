@@ -107,7 +107,7 @@ class RepoGuard:
 			output = subprocess.check_output("git rev-list --remotes --max-count=100".split(), cwd=cwd)
 			output = output.strip().split('\n')
 		except subprocess.CalledProcessError:
-			return 'subprocess.CalledProcessError'
+			return []
 		return output
 		
 
