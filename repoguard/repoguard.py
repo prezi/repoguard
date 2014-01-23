@@ -102,9 +102,12 @@ class RepoGuard:
 
 
 	def getLastCommitHashes(self, repo_id, repo_name):
-		cwd = '%s/%s_%s/' % (self.WORKING_DIR, repo_name, repo_id)
-		output = subprocess.check_output("git rev-list --remotes --max-count=100".split(), cwd=cwd)
-		output = output.strip().split('\n')
+		try:
+			cwd = '%s/%s_%s/' % (self.WORKING_DIR, repo_name, repo_id)
+			output = subprocess.check_output("git rev-list --remotes --max-count=100".split(), cwd=cwd)
+			output = output.strip().split('\n')
+		except subprocess.CalledProcessError:
+			return 'subprocess.CalledProcessError'
 		return output
 		
 
