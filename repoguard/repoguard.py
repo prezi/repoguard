@@ -403,11 +403,11 @@ class RepoGuard:
 			if os.path.exists("/proc/%s" % pid):
 				return True
 			else:
-				print 'Lock there but script not running, removing lock and running script...'
-				self.send_email(	'security - repoguard', 
+				print 'Lock there but script not running, removing lock entering aborted state...'
+				self.send_email(	'mihaly.zagon+repoguard@prezi.com', 
 									['security@prezi.com'], 
-									'[repoguard] invalid lock, removed', 
-									'Found lock with PID %s, but process not found... script restarted.' % pid
+									'[repoguard] invalid lock, entering aborted state', 
+									'Found lock with PID %s, but process not found... entering aborted state (someone should check the logs and restart manually!)' % pid
 								)
 
 				self.releaseLock()
