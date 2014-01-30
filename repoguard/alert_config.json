@@ -342,13 +342,22 @@
 		"description": "It is now allowed to leak prezi's database id",
 		"href": ""
 	},
-	"new_vhost": {
+	"chef_new_vhost": {
 		"line" : "\\+.*(apache|nginx)\\_vhost.*",
 		"repo" : "",
 		"file" : ".*\\.(rb)",
 		"language" :"",
 		"notify": "security@prezi.com",
 		"description": "new vhost in chef, please check if not sensitive, has default vhost and properly protected by godauth",
+		"href": ""
+	},
+	"chef_directory_listing": {
+		"line" : "\\+.*Options Indexes.*",
+		"repo" : "",
+		"file" : ".*\\.(erb|conf)",
+		"language" :"",
+		"notify": "security@prezi.com",
+		"description": "directory listing enabled",
 		"href": ""
 	},
 	"unsafe_as_calls": {
