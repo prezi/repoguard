@@ -28,7 +28,6 @@ class RepoGuard:
 		self.parseArgs()
 		self.readAlertConfigFromFile()
 
-
 	def parseArgs(self):
 		parser = argparse.ArgumentParser(description='Watch git repos for changes...')
 		parser.add_argument('--since','-s', default=False, help='Search for alerts in older git commits (git rev-list since, e.g. 2013-05-05 01:00)')
@@ -154,11 +153,13 @@ class RepoGuard:
 					print "Error when updating %s (%s)" % (repoData["name"], e)
 			else:
 				# DIRECTORY NOT EXISTING --> git clone
-				#print 'Cloning *** %s (%s) ***' % (repoData["name"], repoId)
-				cmd = "git clone %s %s/%s_%s" % (repoData["ssh_url"], self.WORKING_DIR, repoData["name"], repoId)
-				subprocess.check_output(cmd.split())
- 				self.setInitialRepoStatusById(repoId, repoData["name"])
- 				self.updateRepoStatusById(repoId, repoData["name"])
+				try:
+					cmd = "git clone %s %s/%s_%s" % (repoData["ssh_url"], self.WORKING_DIR, repoData["name"], repoId)
+					subprocess.check_output(cmd.split())
+	 				self.setInitialRepoStatusById(repoId, repoData["name"])
+	 				self.updateRepoStatusById(repoId, repoData["name"])
+	 			except Exception as e:
+	 				print "Failed cloning %s: %s" % (repoData["name"], e)
 
 
 	def readRepoStatusFromFile(self):
@@ -301,9 +302,12 @@ class RepoGuard:
 		
 		# check by timestamp if --since specified, otherwise check for new commits
 		if self.args.since:
-			last_run = self.args.since
-			rev_list_output = subprocess.check_output(["git","rev-list", "--remotes", "--since=\"%s\"" % last_run, "HEAD"], cwd=cwd)
-			rev_list = rev_list_output.split("\n")[:-1]
+			try:
+				last_run = self.args.since
+				rev_list_output = subprocess.check_output(["git","rev-list", "--remotes", "--since=\"%s\"" % last_run, "HEAD"], cwd=cwd)
+				rev_list = rev_list_output.split("\n")[:-1]
+			except Exception as e:
+				print "Failed getting commits from a given timestamp (exception: %s)" % e
 		else:
 			rev_list = self.getNewHashes(repo_id)
 
@@ -332,8 +336,8 @@ class RepoGuard:
 				alerts = self.checkLine(lineCtx)
 				matches_in_rev.extend(
 					[(alert, lineCtx["filename"], rev_hash, diff_line, repo_name, repo_id) for alert in alerts])
-		except subprocess.CalledProcessError:
-			print 'CalledProcessError!'
+		except subprocess.CalledProcessError as e:
+			print 'Failed running %s (exception: %s)' % (cmd, e)
 
 		return matches_in_rev
 
