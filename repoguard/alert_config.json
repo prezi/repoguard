@@ -125,6 +125,15 @@
 		"description": "Possibly dangerous function calls.",
 		"href": ""
 	},
+	"js_code_exec_functions" : {
+		"line" : "\\+.*(eval\\(|child_process|var command =).*",
+		"repo" : "",
+		"file" : ".*\\.(hx|js)",
+		"language" :"",
+		"notify": "security@prezi.com",
+		"description": "JS calls with possible eval / os command injection vulns",
+		"href": ""
+	},
 	"secret_in_source" : {
 		"line" : "\\+.*(secret|password|S3Connection)+[\\w_]*[\\s]*=.*",
 		"-line" : ".+=.*get_encrypted_data",
@@ -432,7 +441,6 @@
 		"description": "network bind / file access / cmd exec is interesting (big false positive ratio, but it is OK now)",
 		"href": ""
 	},
-
 	"godauth_whitelist": {
 		"line" : "\\+.*\"who\"\\: \"all\".*",
 		"repo" : "",
