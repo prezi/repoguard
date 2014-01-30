@@ -27,7 +27,7 @@
 		"description": "Template variables without encoding inside SCRIPT tags might lead to cross-site scripting vulnerabilities. Please ensure that input can only come from trusted sources (e.g. not from the user).",
 		"href": ""
 	},
-		"javascript_target" : {
+	"javascript_target" : {
 		"line" : "\\+.*javascript:.*",
 		"repo" : "",
 		"-file" : "/acceptance_tests/.*",
@@ -101,6 +101,15 @@
 		"line" : "\\+.*HttpResponse\\(.*",
 		"repo" : "",
 		"-file" : ".*/test_.+\\.py",
+		"language" :"",
+		"notify": "security@prezi.com",
+		"description": "Simple HTTP response, might worth a look...",
+		"href": ""
+	},
+	"http_response_js" : {
+		"line" : "\\+.*(\\.end\\(.*req\\.).*",
+		"repo" : "",
+		"file": ".*\\.(hx|js)",
 		"language" :"",
 		"notify": "security@prezi.com",
 		"description": "Simple HTTP response, might worth a look...",
@@ -406,14 +415,15 @@
 		"href": ""
 	},
 	"scala_interesting_calls": {
-		"line" : "\\+.*(scala\\.io\\.|scala\\.sys\\.process|new File|\\.(!|lines\\(|run\\()).*",
+		"line" : "\\+.*(scala\\.io\\.|scala\\.sys\\.process|new File|\\.(!|lines\\(|run\\()|Http\\.Bind).*",
 		"repo" : "",
 		"file" : ".*\\.(scala)",
 		"language" :"",
 		"notify": "security@prezi.com",
-		"description": "file access / cmd exec is interesting (big false positive ratio, but it is OK now)",
+		"description": "network bind / file access / cmd exec is interesting (big false positive ratio, but it is OK now)",
 		"href": ""
 	},
+
 	"godauth_whitelist": {
 		"line" : "\\+.*\"who\"\\: \"all\".*",
 		"repo" : "",
