@@ -155,6 +155,7 @@
 	"secret_in_source" : {
 		"line" : "\\+.*(secret|password|S3Connection)+[\\w_]*[\\s]*=.*",
 		"-line" : ".+=.*get_encrypted_data",
+		"-file" : ".*/tests/.*",
 		"notify": "security@prezi.com",
 		"description": "Row possibly contains secret",
 		"href": ""
