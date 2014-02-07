@@ -199,13 +199,13 @@
 		"href": "" 
 	},
 	"new_token_related_method": {
-		"line" : "\\+.*def .*\\_token\\(.*",
+		"line" : "\\+.*(def .*\\_token|MacToken\\.generate)\\(.*",
 		"repo" : "",
 		"file" : "",
 		"-file" : ".*/test_.+\\.py",
 		"language" :"",
 		"notify": "security@prezi.com",
-		"description": "new token related method",
+		"description": "new token related method (please check if proper authorization is in place)",
 		"href": "" 
 	},
 	"new_url_endpoint": {
