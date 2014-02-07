@@ -73,7 +73,7 @@
 		"href": ""
 	},
 	"json_no_content_type" : {
-		"line" : "\\+.*HttpResponse\\s*\\((simplejson|json)(?!.*application/json).*",
+		"line" : "\\+.*(HttpResponse|render\\_to\\_response|render)\\s*\\((simplejson|json)(?!.*application/json).*",
 		"notify": "security@prezi.com",
 		"description": "HTTP response containing possibly json data without content_type set",
 		"href": ""
