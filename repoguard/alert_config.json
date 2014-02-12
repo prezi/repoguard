@@ -125,6 +125,7 @@
 		"description": "Possibly dangerous function calls.",
 		"href": ""
 	},
+
 	"js_code_exec_functions" : {
 		"line" : "\\+.*(eval\\(|child_process|var command =).*",
 		"repo" : "",
@@ -135,12 +136,12 @@
 		"href": ""
 	},
 	"js_network_listen" : {
-		"line" : "\\+.*(WebSocket|\\.listen\\().*",
+		"line" : "\\+.*(WebSocket|\\.listen\\(|http\\.request|socket\\.io).*",
 		"repo" : "",
 		"file" : ".*\\.(hx|js)",
 		"language" :"",
 		"notify": "security@prezi.com",
-		"description": "NodeJS websocket / other webserver listening",
+		"description": "NodeJS TCP connection funcions",
 		"href": ""
 	},
 	"js_file_access" : {
