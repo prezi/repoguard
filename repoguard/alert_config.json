@@ -135,6 +135,16 @@
 		"description": "Possibly dangerous remote python function calls.",
 		"href": ""
 	},
+	"python_object_enumeration" : {
+		"line" : "\\+.*(\\.get_by_secondary_key\\().*",
+		"repo" : "",
+		"file" : ".*\\.(py)",
+		"-file" : ".*/test_.+\\.py",
+		"language" :"",
+		"notify": "security@prezi.com",
+		"description": "Object enumeration might be possible.",
+		"href": ""
+	},
 
 	"js_code_exec_functions" : {
 		"line" : "\\+.*(eval\\(|child_process|var command =).*",
