@@ -125,6 +125,16 @@
 		"description": "Possibly dangerous function calls.",
 		"href": ""
 	},
+	"python_remote_objects" : {
+		"line" : "\\+.*(RemoteUserFactory).*",
+		"repo" : "",
+		"file" : ".*\\.(py)",
+		"-file" : ".*/test_.+\\.py",
+		"language" :"",
+		"notify": "security@prezi.com",
+		"description": "Possibly dangerous remote python function calls.",
+		"href": ""
+	},
 
 	"js_code_exec_functions" : {
 		"line" : "\\+.*(eval\\(|child_process|var command =).*",
