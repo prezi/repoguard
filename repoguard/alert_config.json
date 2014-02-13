@@ -152,7 +152,7 @@
 		"-file" : ".*/test_.+\\.py",
 		"language" :"",
 		"notify": "security@prezi.com",
-		"description": "Object enumeration might be possible.",
+		"description": "Password field in form, must serve via https.",
 		"href": ""
 	},
 	"js_code_exec_functions" : {
