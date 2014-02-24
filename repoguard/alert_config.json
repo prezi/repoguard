@@ -537,7 +537,7 @@
     },
     "unsecure_protocol": {
         "line" : "\\+.*(http|ftp)://.*",
-        "-file": ".*\\.(po|html|xml)"
+        "-file": ".*\\.(po|html|xml)",
         "notify": "security@prezi.com",
         "description": "Use SSL-enabled protocols if credentials are passed",
         "href": ""
