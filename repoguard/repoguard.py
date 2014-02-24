@@ -218,7 +218,7 @@ class RepoGuard:
 					if not self.args.notify:
 						for issue in check_results:
 							#print '### id: %s\nfile:\t%s\ncommit:\thttps://github.com/prezi/%s/commit/%s\nmatch:\t%s\n\n' % (issue[0],issue[1],issue[4],issue[2],issue[3])
-							print '%s\t%s\t%s\thttps://github.com/prezi/%s/commit/%s\t%s' % (repo_name, issue[0],issue[1],issue[4],issue[2],issue[3][0:200].replace("\t"," ").decode('utf-8'))
+							print '%s\t%s\t%s\thttps://github.com/prezi/%s/commit/%s\t%s' % (repo_name, issue[0],issue[1],issue[4],issue[2],issue[3][0:200].replace("\t"," ").decode('utf-8', 'replace'))
 
 			else:
 				print 'skip %s (not repo directory)' % repo_dir
@@ -237,7 +237,7 @@ class RepoGuard:
 			check_id = issue[0]
 			filename = issue[1]
 			commit_id = issue[2]
-			matching_line = issue[3][0:200].decode('utf-8')
+			matching_line = issue[3][0:200].decode('utf-8', 'replace')
 			repo_name = issue[4]
 			#repo_id = issue[5]
 			alert_data = self.alertConfig[check_id]
