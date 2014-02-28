@@ -541,7 +541,7 @@
         "description": "Clickjacking protection removed (project-wide)",
         "href": ""
     },
-    "django_xfo_excemp": {
+    "django_xfo_exempt": {
         "line" : "\\+.*@xframe_options_exempt.*",
         "repo" : "",
         "file" : ".*\\.py",
@@ -550,12 +550,27 @@
         "description": "Clickjacking protection exception, review manually!",
         "href": ""
     },
+    "django_middleware_classes": {
+        "line" : "\\+.*middleware\\_classes.*",
+        "repo" : "",
+        "file" : ".*\\.cfg",
+        "language" :"",
+        "notify": "security@prezi.com",
+        "description": "Middleware classes freshly configured in django, check if XFO middlware is there!",
+        "href": ""
+    },
     "unsecure_protocol": {
         "line" : "\\+.*(http|ftp)://.*",
         "-line": "\\+(\\s*#|\\s*#|.*http://localhost:).*",
         "-file": ".*\\.(po|html|xml|xaml|md|txt|doc|rdoc)",
         "notify": "security@prezi.com",
         "description": "Use SSL-enabled protocols if credentials are passed",
+        "href": ""
+    },
+    "root_what": {
+        "line" : "\\+.*(\"|')root(\"|')root.*",
+        "notify": "security@prezi.com",
+        "description": "root, what?!",
         "href": ""
     }
 }
