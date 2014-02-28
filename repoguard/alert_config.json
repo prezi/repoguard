@@ -190,6 +190,12 @@
 		"description": "Row possibly contains secret",
 		"href": ""
 	},
+	"s3_set_object_acl" : {
+		"line" : "\\+.*(setObjectAcl|set_acl|set_canned_acl).*",
+		"notify": "security@prezi.com",
+		"description": "Setting S3 acl, maybe we should check it",
+		"href": ""
+	},
 	"basic_auth_in_source": {
 		"line" : "\\+.*((Authorization|auth).*Basic|auth_header\\s*=\\s*\").*",
 		"repo" : "",
