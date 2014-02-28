@@ -89,7 +89,7 @@
 		"href": ""
 	},
 	"dangerous_redirect" : {
-		"line" : "\\+.*(HttpResponseRedirect|HttpResponsePermanentRedirect)(?!\\([\"'][^\"']+[\"']\\)).*",
+		"line" : "\\+.*(HttpResponseRedirect|HttpResponsePermanentRedirect|redirect(?!\\([\"'][^\"']+[\"']\\)).*",
 		"repo" : "",
 		"-file" : ".*/test_.+\\.py",
 		"language" :"",
@@ -494,6 +494,15 @@
 		"language" :"",
 		"notify": "security@prezi.com",
 		"description": "network bind / file access / cmd exec is interesting (big false positive ratio, but it is OK now)",
+		"href": ""
+	},
+	"scala_spray_http": {
+		"line" : "\\+.*(pathPrefix\\(|HttpResponse\\().*",
+		"repo" : "",
+		"file" : ".*\\.(scala)",
+		"language" :"",
+		"notify": "security@prezi.com",
+		"description": "spray http response / url endpoints",
 		"href": ""
 	},
 	"godauth_whitelist": {
