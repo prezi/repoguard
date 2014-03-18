@@ -525,6 +525,7 @@
 	},
 	"chef_new_services": {
 		"line" : "\\+.*(prezi\\_django\\_app\\_base\\_placement|prezi\\_placement\\_deploy|supervisor\\_service|bind =|apache\\_vhost|Virtualhost ).*",
+		"-line": "\\s*(#|//|/*)",
 		"repo" : "",
 		"file" : ".*\\.(rb|erb)",
 		"language" :"",
