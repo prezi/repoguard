@@ -289,7 +289,7 @@
 		"href": "" 
 	},
 	"csrf_exempt": {
-		"line" : "\\+.*@csrf\\_exempt.*",
+		"line" : "\\+.*csrf\\_exempt.*",
 		"repo" : "",
 		"file" : "",
 		"-file" : ".*/test_.+\\.py",
