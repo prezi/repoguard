@@ -168,6 +168,7 @@
 	},
 	"js_network_listen" : {
 		"line" : "\\+.*(WebSocket|\\.listen\\(|http\\.request|socket\\.io).*",
+		"-line": "\\s*(#|/\\*|//|\\*)",
 		"repo" : "",
 		"file" : ".*\\.(hx|js)",
 		"-file": ".*(bootstrap.min.js|query.atmosphere.js|(jquery[\\w\\.-]*.js)).*",
@@ -525,7 +526,7 @@
 	},
 	"chef_new_services": {
 		"line" : "\\+.*(prezi\\_django\\_app\\_base\\_placement|prezi\\_placement\\_deploy|supervisor\\_service|bind =|apache\\_vhost|Virtualhost ).*",
-		"-line": "\\s*(#|//|/*)",
+		"-line": "\\s*(#|//|/\\*)",
 		"repo" : "",
 		"file" : ".*\\.(rb|erb)",
 		"language" :"",
