@@ -562,7 +562,7 @@
     "unsecure_protocol": {
         "line" : "\\+.*(http|ftp)://.*",
         "-line": "\\+(\\s*(#|//|<!--|/\\*|\\*)|.*(http://localhost:|xmlns|doctype)).*",
-        "-file": ".*(\\.(po|html|xml|xaml|md|txt|doc|rdoc|css|gradle)|((tests|scripts/common|scripts/release)/.*)|(/cookbooks/.*\\.rb))",
+        "-file": ".*(\\.(po|html|xml|xaml|md|txt|doc|rdoc|css|gradle)|((tests|scripts/common|scripts/release|build)/.*)|(/cookbooks/.*\\.rb|/build|build.scala))",
         "notify": "security@prezi.com",
         "description": "Use SSL-enabled protocols if credentials are passed",
         "href": ""
