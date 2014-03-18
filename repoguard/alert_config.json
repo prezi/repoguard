@@ -92,7 +92,7 @@
 		"line" : "\\+.*(HttpResponseRedirect|HttpResponsePermanentRedirect|redirect)(?!\\([\"'][^\"']+[\"']\\)).*",
 		"-line": "<bindingRedirect",
 		"repo" : "",
-		"-file" : ".*(/test_.+\\.py|\\.config|\\.po)",
+		"-file" : ".*(/test_.+\\.py|\\.config|\\.po|\\.md)",
 		"language" :"",
 		"notify": "security@prezi.com",
 		"description": "Possibly dangerous redirect.",
