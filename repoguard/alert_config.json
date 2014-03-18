@@ -91,7 +91,7 @@
 	"dangerous_redirect" : {
 		"line" : "\\+.*(HttpResponseRedirect|HttpResponsePermanentRedirect|redirect)(?!\\([\"'][^\"']+[\"']\\)).*",
 		"repo" : "",
-		"-file" : ".*(/test_.+\\.py|\\.config)",
+		"-file" : ".*(/test_.+\\.py|\\.config|\\.po)",
 		"language" :"",
 		"notify": "security@prezi.com",
 		"description": "Possibly dangerous redirect.",
@@ -184,7 +184,7 @@
 	},
 	"secret_in_source" : {
 		"line" : "\\+.*(secret|password|S3Connection)+[\\w_]*[\\s]*=.*",
-		"-line" : ".+=.*(get_encrypted_data|export AWS_SECRET_ACCESS_KEY=`|prezi_app_secrets\\['django_secret_key'\\]|chef_secrets\\['encrypted_data_bag_secret|StringOption\\(\\))",
+		"-line" : ".+=.*(get_encrypted_data|export AWS_SECRET_ACCESS_KEY=`|prezi_app_secrets\\['django_secret_key'\\]|chef_secrets\\['encrypted_data_bag_secret|StringOption\\(\\)|AWS_SECRET=<%=|aws_secret => aws_secret)",
 		"-file" : ".*(/tests/.*|\\.js)",
 		"notify": "security@prezi.com",
 		"description": "Row possibly contains secret",
