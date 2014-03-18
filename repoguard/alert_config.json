@@ -90,6 +90,7 @@
 	},
 	"dangerous_redirect" : {
 		"line" : "\\+.*(HttpResponseRedirect|HttpResponsePermanentRedirect|redirect)(?!\\([\"'][^\"']+[\"']\\)).*",
+		"-line": "<bindingRedirect",
 		"repo" : "",
 		"-file" : ".*(/test_.+\\.py|\\.config|\\.po)",
 		"language" :"",
