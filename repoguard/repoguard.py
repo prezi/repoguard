@@ -302,6 +302,7 @@ class RepoGuard:
 		
 		# check by timestamp if --since specified, otherwise check for new commits
 		if self.args.since:
+			rev_list = []
 			try:
 				last_run = self.args.since
 				rev_list_output = subprocess.check_output(["git","rev-list", "--remotes", "--since=\"%s\"" % last_run, "HEAD"], cwd=cwd)
