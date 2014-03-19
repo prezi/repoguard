@@ -218,7 +218,11 @@ class RepoGuard:
 					if not self.args.notify:
 						for issue in check_results:
 							#print '### id: %s\nfile:\t%s\ncommit:\thttps://github.com/prezi/%s/commit/%s\nmatch:\t%s\n\n' % (issue[0],issue[1],issue[4],issue[2],issue[3])
-							print '%s\t%s\t%s\thttps://github.com/prezi/%s/commit/%s\t%s' % (repo_name, issue[0],issue[1],issue[4],issue[2],issue[3][0:200].replace("\t"," ").decode('utf-8', 'replace'))
+							try:
+								print '%s\t%s\t%s\thttps://github.com/prezi/%s/commit/%s\t%s' % (repo_name, issue[0],issue[1],issue[4],issue[2],issue[3][0:200].replace("\t"," ").decode('utf-8', 'replace'))
+							except UnicodeEncodeError:
+								print '%s\t%s\t%s\thttps://github.com/prezi/%s/commit/%s\t%s' % (repo_name, issue[0],issue[1],issue[4],issue[2],'failed to get the details due to some unicode error madness')
+							
 
 			else:
 				print 'skip %s (not repo directory)' % repo_dir
