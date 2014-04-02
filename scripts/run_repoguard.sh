@@ -10,4 +10,18 @@
 
 # EDITME
 
-#exec python -m SimpleHTTPServer 8000
+. $(dirname $0)/common
+
+cd "${root}"
+
+${root}/scripts/setup.sh
+
+ensure_virtualenv
+
+# run rEDDAlert
+if [ "$#" -eq 0 ]; then
+    # for local testing purposes
+    exec python repoguard/repoguard.py --nopull --limit 'zuisite,conversion' --alerts 'tastypie_usage' --since "2014-03-01 00:00:00"
+else
+    exec python repoguard/repoguard.py "$@"
+fi

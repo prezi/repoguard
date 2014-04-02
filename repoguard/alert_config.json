@@ -209,7 +209,7 @@
 		"language": "",
 		"notify": "security@prezi.com",
 		"description": "Row possibly contains basic auth containing secret",
-		"href": "" 
+		"href": ""
 	},
 	"cross-domain-policy-access": {
 		"line" : "\\+.*(allow-access-from domain=\"*\").*",
@@ -218,7 +218,7 @@
 		"language" :"",
 		"notify": "security@prezi.com",
 		"description": "allow-access-from possibly set too permissive",
-		"href": "" 
+		"href": ""
 	},
 	"http_variable_used": {
 		"line" : "\\+.*(request\\.(GET|POST|FILES|META)(\\[|\\.get)).*",
@@ -228,7 +228,7 @@
 		"language" :"",
 		"notify": "security@prezi.com",
 		"description": "HTTP variable (GET, POST, FILES, META) used",
-		"href": "" 
+		"href": ""
 	},
 	"http_variable_used_js": {
 		"line" : "\\+.*(Node\\.url\\.parse|\\.query\\.).*",
@@ -238,7 +238,7 @@
 		"language" :"",
 		"notify": "security@prezi.com",
 		"description": "request variable used",
-		"href": "" 
+		"href": ""
 	},
 	"new_token_related_method": {
 		"line" : "\\+.*(def .*\\_token|MacToken\\.generate)\\(.*",
@@ -248,7 +248,7 @@
 		"language" :"",
 		"notify": "security@prezi.com",
 		"description": "new token related method (please check if proper authorization is in place)",
-		"href": "" 
+		"href": ""
 	},
 	"new_url_endpoint": {
 		"line" : "\\+\\s+(url)*\\(r'\\^.*\\$',.*",
@@ -257,7 +257,7 @@
 		"language" :"",
 		"notify": "security@prezi.com",
 		"description": "possible new url endpoint",
-		"href": "" 
+		"href": ""
 	},
 	"backbonejs_model_get": {
 		"line" : "\\+.*this\\.model\\.get.*",
@@ -267,7 +267,7 @@
 		"language" :"",
 		"notify": "security@prezi.com",
 		"description": "possible unsafe data usage from model (user supplied + written back = baad)",
-		"href": "" 
+		"href": ""
 	},
 	"backbonejs_unsanitized_html": {
 		"line" : "\\+.*this\\..*\\.html\\(.*",
@@ -277,7 +277,7 @@
 		"language" :"",
 		"notify": "security@prezi.com",
 		"description": "possibly unsanitized html usage (user supplied, not escaped = baad)",
-		"href": "" 
+		"href": ""
 	},
 	"unsafe_underscore_js_template": {
 		"line" : "\\+.*<%=.*",
@@ -287,7 +287,7 @@
 		"language" :"",
 		"notify": "security@prezi.com",
 		"description": "possibly unsafe template usage (underscoreJS AND user supplied = baad)",
-		"href": "" 
+		"href": ""
 	},
 	"csrf_exempt": {
 		"line" : "\\+.*csrf\\_exempt.*",
@@ -297,7 +297,7 @@
 		"language" :"",
 		"notify": "security@prezi.com",
 		"description": "new csrf exempt, please check it",
-		"href": "" 
+		"href": ""
 	},
 	"redirect_field_usage": {
 		"line" : "\\+.*request.*\\.get\\(('next'|redirect_field).*",
@@ -307,14 +307,14 @@
 		"language" :"",
 		"notify": "security@prezi.com",
 		"description": "redirect field usage, please check if input is validated",
-		"href": "" 
+		"href": ""
 	},
 	"oauth_string": {
 		"line" : "\\+.*[^N]oauth.*",
 		"-file" : ".*/test_.+\\.py",
 		"notify": "security@prezi.com",
 		"description": "oauth string appeared, check it plz",
-		"href": "" 
+		"href": ""
 	},
 	"interesting_object_get": {
 		"line" : "\\+.*objects\\.get\\(.*request\\..*",
@@ -323,7 +323,7 @@
 		"language" :"",
 		"notify": "security@prezi.com",
 		"description": "getting object by request data, check it plz",
-		"href": "" 
+		"href": ""
 	},
 	"jsonp_middleware": {
 		"line" : "\\+.*middleware.*(JSONP|jsonp).*",
@@ -333,7 +333,17 @@
 		"language" :"",
 		"notify": "security@prezi.com",
 		"description": "new jsonp middleware, check if no sensitive info is given back",
-		"href": "" 
+		"href": ""
+	},
+	"tastypie_usage": {
+		"line" : "\\+.*tastypie.*",
+		"repo" : "",
+		"file" : "",
+		"-file" : ".*/test_.+\\.py",
+		"language" :"",
+		"notify": "security@prezi.com",
+		"description": "TastyPie usage, check if csrf_exempt is disabled and format=jsonp does not leak any sensitive data",
+		"href": ""
 	},
 	"jsonp_usage": {
 		"line" : "\\+.*\\$\\.jsonp\\(.*",
@@ -343,7 +353,7 @@
 		"language" :"",
 		"notify": "security@prezi.com",
 		"description": "jsonp usage, check if no sensitive info is given back",
-		"href": "" 
+		"href": ""
 	},
 	"csharp_sql_command": {
 		"line" : "\\+.*\\.CommandText.*",
@@ -352,7 +362,7 @@
 		"language" :"",
 		"notify": "security@prezi.com",
 		"description": "possible SQL query, please check it for user supplied input and hardcoded connection creds",
-		"href": "" 
+		"href": ""
 	},
 	"csharp_base64": {
 		"line" : "\\+.*\\.ToBase64String.*",
@@ -361,7 +371,7 @@
 		"language" :"",
 		"notify": "security@prezi.com",
 		"description": "using base64, please check if not used for enCRAPtion",
-		"href": "" 
+		"href": ""
 	},
 	"csharp_request": {
 		"line" : "\\+.*client\\.(Post|Get).*(Request).*",
