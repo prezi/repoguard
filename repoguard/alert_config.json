@@ -189,7 +189,7 @@
 	},
 	"secret_in_source" : {
 		"line" : "\\+.*(secret|password|S3Connection)+[\\w_]*[\\s]*=.*",
-		"-line" : ".+=.*(get_encrypted_data|export AWS_SECRET_ACCESS_KEY=`|prezi_app_secrets\\['django_secret_key'\\]|chef_secrets\\['encrypted_data_bag_secret|StringOption\\(\\)|AWS_SECRET=<%=|aws_secret => aws_secret)",
+		"-line" : ".+=.*(get_encrypted_data|export [\\w_]\\s*=\\s*['\"`]<%=.*(password|secret)|prezi_app_secrets\\['django_secret_key'\\]|chef_secrets\\['encrypted_data_bag_secret|StringOption\\(\\)|AWS_SECRET=<%=|aws_secret => aws_secret)",
 		"-file" : ".*(/tests/|test/|/scripts/build|/scripts/common|/scripts/release|/scripts/bootstrap)",
 		"notify": "security@prezi.com",
 		"description": "Row possibly contains secret",
@@ -461,6 +461,7 @@
 	},
 	"cpp_system_popen_calls": {
 		"line" : "\\+.*(system|popen|exec(ve)?|execvp?|execlp?)\\(.*",
+        "-line" : "\\+\\s+//.*",
 		"file" : ".*\\.(cpp|cxx|h|hpp|c)",
 		"notify": "security@prezi.com",
 		"description": "the affected function will run a command, please check if no unvalidated user input is used",
@@ -468,6 +469,7 @@
 	},
 	"cpp_bof_calls": {
 		"line" : "\\+.*(strcpy|strcat|f?gets|memcpy)\\(.*",
+        "-line" : "\\+\\s+//.*",
 		"file" : ".*\\.(cpp|cxx|h|hpp|c)",
 		"notify": "security@prezi.com",
 		"description": "the affected function doesn't check destination buffer boundaries, therefore they can lead to BOF vulns",
@@ -475,6 +477,7 @@
 	},
 	"cpp_format_string": {
 		"line" : "\\+.*(v?s?n?f?printf|syslog|f?s?scanf)\\(.*",
+        "-line" : "\\+\\s+//.*",
 		"file" : ".*\\.(cpp|cxx|h|hpp|c)",
 		"notify": "security@prezi.com",
 		"description": "please check the fn call if user data is read directly and it is possible to include format strings...",
@@ -535,7 +538,7 @@
 		"href": ""
 	},
 	"chef_new_services": {
-		"line" : "\\+.*(prezi\\_django\\_app\\_base\\_placement|prezi\\_placement\\_deploy|supervisor\\_service|bind =|apache\\_vhost|Virtualhost ).*",
+		"line" : "\\+.*(prezi\\_django\\_app\\_base\\_placement|prezi\\_placement\\_deploy|supervisor\\_service|apache\\_vhost|Virtualhost ).*",
 		"-line": "\\s*(#|//|/\\*)",
 		"repo" : "",
 		"file" : ".*\\.(rb|erb)",
@@ -544,6 +547,14 @@
 		"description": "something new in chef, just wanted to let you know",
 		"href": ""
 	},
+    "chef_new_open_port": {
+        "line" : "\\+\\s*bind\\s*=.*",
+        "-line": "\\s*(#|//|/\\*)",
+        "file" : ".*\\.(rb|erb)",
+        "notify": "security@prezi.com",
+        "description": "something new in chef, just wanted to let you know",
+        "href": ""
+    },
     "chef_new_user_access": {
         "line" : "\\+.*(assessment_weekers =|\"users\": |recipe\\[users\\:\\:).*",
         "repo" : "",
@@ -583,7 +594,7 @@
     "unsecure_protocol": {
         "line" : "\\+.*(http|ftp)://.*",
         "-line": "\\+(\\s*(#|//|<!--|/\\*|\\*)|.*(http://localhost:|xmlns|doctype|<prezi><documentStyle>|template|createElementNS)).*",
-        "-file": "(.*\\.(po|po\\.json|html|xml|xaml|md|txt|doc|rdoc|css|gradle|properties|log)$)|.*(templates/|test/|tests/|/bdd/|(scripts/(build|common|release|bootstrap))|(^/cookbooks/.*\\.rb))|(^/scripts|build$)",
+        "-file": "(.*\\.(po|po\\.json|html|xml|xaml|ism|markdown|md|txt|doc|rdoc|css|gradle|properties|log|wiki)$)|.*(templates/|test/|tests/|/bdd/|(scripts/(build|common|release|bootstrap))|(^/cookbooks/.*\\.rb))|(^/scripts|build$)",
         "notify": "security@prezi.com",
         "description": "Use SSL-enabled protocols if credentials are passed",
         "href": ""
