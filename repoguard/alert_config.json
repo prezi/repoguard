@@ -36,6 +36,14 @@
 		"description": "'javascript:' is used to run Javascript code which might lead to cross-site scripting vulnerabilities. Please ensure that input can only come from trusted sources (e.g. not from the user).",
 		"href": ""
 	},
+	"javascript_redirect" : {
+		"line" : "\\+.*(window|document)\\.location[^\\.].*",
+		"repo" : "",
+		"language" :"",
+		"notify": "security@prezi.com",
+		"description": "Javascript redirect detected, please ensure that it does not come from user-input (or sanitize it accordingly)",
+		"href": ""
+	},
 	"dom_event_parameter" : {
 		"line" : "\\+.*\\son\\w+=\\s*('|\").*",
 		"repo" : "",
@@ -313,7 +321,7 @@
 		"line" : "\\+.*[^N]oauth.*",
 		"-file" : ".*/test_.+\\.py",
 		"notify": "security@prezi.com",
-		"description": "oauth string appeared, check it plz",
+		"description": "oauth string appeared, check it for redirect_url settings, etc.",
 		"href": ""
 	},
 	"interesting_object_get": {

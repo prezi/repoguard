@@ -253,7 +253,8 @@ class RepoGuard:
 																	"path: %s \n"
 																	"commit: https://github.com/prezi/%s/commit/%s\n"
 																	"matching line: %s\n"
-																	"repo name: %s\n\n" %  (check_id, filename, repo_name, commit_id, matching_line, repo_name) ) 
+																	"description: %s\n"
+																	"repo name: %s\n\n" %  (check_id, filename, repo_name, commit_id, matching_line, alert_data['description'], repo_name) ) 
 		for mail_addr in alert_per_notify_person:
 			print "sending mail to: %s" % mail_addr
 			now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
