@@ -249,7 +249,8 @@ class RepoGuard:
 					"commit_id": issue[2],
 					"matching_line": issue[3][0:200].decode('utf-8', 'replace'),
 					"repo_name": issue[4],
-					"@timestamp": int(time.time() * 1000)
+					"@timestamp": int(time.time() * 1000),
+					"type": "repoguard"
 				}
 
 				es.create(body=body, id=hashlib.sha1(str(body)).hexdigest(), index='repoguard', doc_type='repoguard')
