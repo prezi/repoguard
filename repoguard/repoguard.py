@@ -5,10 +5,14 @@ import re
 import os
 import subprocess
 import datetime
+import hashlib
 import argparse
 import smtplib
+import time
+import logging
 import ConfigParser
 import git_repo_updater
+from elasticsearch import Elasticsearch
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -28,6 +32,11 @@ class RepoGuard:
 		self.parseArgs()
 		self.readAlertConfigFromFile()
 
+		root_logger = logging.getLogger()
+		root_logger.setLevel(logging.DEBUG)
+		ch = logging.StreamHandler()
+		logging.getLogger('elasticsearch').addHandler(ch)
+
 	def parseArgs(self):
 		parser = argparse.ArgumentParser(description='Watch git repos for changes...')
 		parser.add_argument('--since','-s', default=False, help='Search for alerts in older git commits (git rev-list since, e.g. 2013-05-05 01:00)')
@@ -37,6 +46,7 @@ class RepoGuard:
 		parser.add_argument('--nopull', action='store_true', default=False, help='No repo pull if set')
 		parser.add_argument('--forcerefresh', action='store_true', default=False, help='Force script to refresh local repo status file')
 		parser.add_argument('--notify', '-N', action='store_true', default=False, help='Notify pre-defined contacts via e-mail')
+		parser.add_argument('--store', '-S', default=False, help='ElasticSearch node (host:port)')
 
 		self.args = parser.parse_args()
 
@@ -227,6 +237,24 @@ class RepoGuard:
 			else:
 				print 'skip %s (not repo directory)' % repo_dir
 
+	def storeResults(self):
+		(host, port) = self.args.store.split(":")
+		es = Elasticsearch([{"host": host, "port": port}])
+
+		for issue in self.checkResults:
+			try:
+				body = {
+					"check_id": issue[0],
+					"filename": issue[1],
+					"commit_id": issue[2],
+					"matching_line": issue[3][0:200].decode('utf-8', 'replace'),
+					"repo_name": issue[4],
+					"@timestamp": int(time.time() * 1000)
+				}
+
+				es.create(body=body, id=hashlib.sha1(str(body)).hexdigest(), index='repoguard', doc_type='repoguard')
+			except Exception as e:
+				print e
 
 	# TODO: test
 	def sendResults(self):
@@ -472,6 +500,10 @@ class RepoGuard:
 		# send alert mail (only if prod)
 		if self.args.notify:
 			self.sendResults()
+
+		# store things in ES:
+		if self.args.store:
+			self.storeResults()
 
 		# save repo status changes
 		self.writeNewRepoStatusToFile()
