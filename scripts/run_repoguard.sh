@@ -21,7 +21,7 @@ ensure_virtualenv
 # run rEDDAlert
 if [ "$#" -eq 0 ]; then
     # for local testing purposes
-    exec python repoguard/repoguard.py --nopull --limit 'zuisite,conversion' --alerts 'tastypie_usage' --since "2014-03-01 00:00:00"
+    exec python repoguard/repoguard.py --nopull --limit 'zuisite,conversion' --alerts 'tastypie_usage' --since "2014-03-01 00:00:00" --store 127.0.0.1:9201
 else
     exec python repoguard/repoguard.py "$@"
 fi

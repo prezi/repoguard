@@ -245,11 +245,12 @@ class RepoGuard:
 			try:
 				body = {
 					"check_id": issue[0],
+					"description": self.alertConfig[issue[0]]['description'],
 					"filename": issue[1],
 					"commit_id": issue[2],
 					"matching_line": issue[3][0:200].decode('utf-8', 'replace'),
 					"repo_name": issue[4],
-					"@timestamp": int(time.time() * 1000),
+					"@timestamp": datetime.datetime.utcnow().isoformat(),
 					"type": "repoguard"
 				}
 
