@@ -53,7 +53,7 @@ class LocalRepoTestCase(unittest.TestCase):
 		rd["name"] = "to_skip"
 		rd["language"] = "python"
 		self.ra.resetRepoLimits()
-		self.ra.REPO_LANGUAGE_LIMITATION = ["notpython"]
+		self.ra.setRepoLanguageLimitation( ["notpython"] )
 		self.assertTrue(self.ra.shouldSkip(rd))
 
 	def test_should_skip_due_language_false(self):
@@ -61,7 +61,7 @@ class LocalRepoTestCase(unittest.TestCase):
 		rd["name"] = "to_skip"
 		rd["language"] = "python"
 		self.ra.resetRepoLimits()
-		self.ra.REPO_LANGUAGE_LIMITATION = ["python"]
+		self.ra.setRepoLanguageLimitation( ["python"] )
 		self.assertFalse(self.ra.shouldSkip(rd))
 
 	def test_should_skip_due_name(self):

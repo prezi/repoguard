@@ -170,7 +170,7 @@
 		"line" : "\\+.*(eval\\(|child_process|var command =).*",
 		"repo" : "",
 		"file" : ".*\\.(hx|js)",
-		"-file": ".*(test/|tests/|angular[\\w\\.-].js|bootstrap.min.js|require.js|(shumway[\\w\\.-].js)|query.atmosphere.js|(jquery[\\w\\.-]*.js)).*",
+		"-file": ".*(test/|tests/|angular[\\w\\.-]*.js|bootstrap.min.js|require.js|(shumway[\\w\\.-]*.js)|query.atmosphere.js|(jquery[\\w\\.-]*.js)).*",
 		"language" :"",
 		"notify": "security@prezi.com",
 		"description": "JS calls with possible eval / os command injection vulns",
@@ -472,7 +472,7 @@
 	"cpp_system_popen_calls": {
 		"line" : "\\+.*(system|popen|exec(ve)?|execvp?|execlp?)\\(.*",
         "-line" : "\\+\\s+//.*",
-		"file" : ".*\\.(cpp|cxx|h|hpp|c)^",
+		"file" : ".*\\.(cpp|cxx|h|hpp|c)$",
 		"notify": "security@prezi.com",
 		"description": "the affected function will run a command, please check if no unvalidated user input is used",
 		"href": ""
@@ -480,7 +480,7 @@
 	"cpp_bof_calls": {
 		"line" : "\\+.*(strcpy|strcat|f?gets|memcpy)\\(.*",
         "-line" : "\\+\\s+//.*",
-		"file" : ".*\\.(cpp|cxx|h|hpp|c)^",
+		"file" : ".*\\.(cpp|cxx|h|hpp|c)$",
 		"notify": "security@prezi.com",
 		"description": "the affected function doesn't check destination buffer boundaries, therefore they can lead to BOF vulns",
 		"href": ""
@@ -488,7 +488,7 @@
 	"cpp_format_string": {
 		"line" : "\\+.*(v?s?n?f?printf|syslog|f?s?scanf)\\(.*",
         "-line" : "\\+\\s+//.*",
-		"file" : ".*\\.(cpp|cxx|h|hpp|c)^",
+		"file" : ".*\\.(cpp|cxx|h|hpp|c)$",
 		"notify": "security@prezi.com",
 		"description": "please check the fn call if user data is read directly and it is possible to include format strings...",
 		"href": ""

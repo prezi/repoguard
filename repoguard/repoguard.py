@@ -8,7 +8,6 @@ import datetime
 import hashlib
 import argparse
 import smtplib
-import time
 import logging
 import ConfigParser
 import git_repo_updater
@@ -18,11 +17,13 @@ from email.mime.text import MIMEText
 
 class RepoGuard:
 	def __init__(self, evaluatorFactories):
+		self.CONFIG = {}
 		self.RUNNING_ON_PROD = False
 		self.evaluatorFactories = evaluatorFactories
 
 		self.detectPaths()
 		self.readCommonConfig()
+		self.transformConfigOptionsToLists( ('SKIP_REPO_LIST','REPO_LANGUAGE_LIMITATION','ENFORCE_CHECK_REPO_LIST') )
 
 		self.repoList = {}
 		self.repoStatus = {}
@@ -79,18 +80,24 @@ class RepoGuard:
 	def readCommonConfig(self):
 		parser = ConfigParser.ConfigParser()
 		parser.read(self.COMMON_CONFIG_PATH)
-		self.SKIP_REPO_LIST = parser.get('__main__','skip_repo_list').replace(' ','').split(',')
-		self.REPO_LANGUAGE_LIMITATION = parser.get('__main__','repo_language_limitation').replace(' ','').split(',')
-		self.OVERRIDE_SKIP_LIST = parser.get('__main__','override_language_limitation').replace(' ','').split(',')
+		for config_option, config_value in parser.items('__main__'):
+			self.CONFIG[config_option.upper()] = config_value
+		
+	def transformConfigOptionsToLists(self, list_of_options_to_transform):
+		for config_option in list_of_options_to_transform:
+			self.CONFIG[config_option] = self.CONFIG[config_option].replace(' ','').split(',')
 
+	def getConfigOptionValue(self, option_name):
+		return self.CONFIG[option_name]
+
+	def setConfigOptionValue(self, option_name, value):
+		self.CONFIG[option_name] = value
 
 	def setRepoLanguageLimitation(self, value):
-		self.REPO_LANGUAGE_LIMITATION = value
-
+		self.setConfigOptionValue('REPO_LANGUAGE_LIMITATION', value)
 
 	def setSkipRepoList(self, value):
-		self.SKIP_REPO_LIST = value
-
+		self.setConfigOptionValue('SKIP_REPO_LIST', value)
 
 	def resetRepoLimits(self):
 		self.setRepoLanguageLimitation( [''] )
@@ -121,24 +128,30 @@ class RepoGuard:
 		
 
 	def shouldSkip(self, repo_data):
-		skip_due_language = False
-		skip_due_repo_name = False
-
-		if self.REPO_LANGUAGE_LIMITATION != ['']:
-			skip_due_language = str(repo_data["language"]).lower() not in self.REPO_LANGUAGE_LIMITATION
-
-		if self.SKIP_REPO_LIST != ['']:
-			skip_due_repo_name = repo_data["name"] in self.SKIP_REPO_LIST
-
-		if repo_data["name"] in self.OVERRIDE_SKIP_LIST:
+		if self.isCheckEnforcedForRepo(repo_data["name"]):
 			return False
 
 		if self.args.limit:
 			if repo_data["name"] not in self.args.limit:
 				return False
 
+		skip_due_language = self.shouldSkipDueLanguageLimitation(repo_data['language'])
+		skip_due_repo_name = self.shouldSkipDueRepoNameIsOnSkipList(repo_data['name'])
+
 		return skip_due_language or skip_due_repo_name
 
+	def isCheckEnforcedForRepo(self, repo_name):
+		return True if repo_name in self.getConfigOptionValue('ENFORCE_CHECK_REPO_LIST') else False
+
+	def shouldSkipDueLanguageLimitation(self, repo_language):
+		if self.getConfigOptionValue('REPO_LANGUAGE_LIMITATION') != ['']:
+			return str(repo_language).lower() not in self.getConfigOptionValue('REPO_LANGUAGE_LIMITATION')
+		return False
+
+	def shouldSkipDueRepoNameIsOnSkipList(self, repo_name):
+		if self.getConfigOptionValue('SKIP_REPO_LIST') != ['']:
+			return repo_name in self.getConfigOptionValue('SKIP_REPO_LIST')
+		return False
 
 	# repoList required
 	def updateLocalRepos(self):
