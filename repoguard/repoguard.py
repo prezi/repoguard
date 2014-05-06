@@ -81,17 +81,17 @@ class RepoGuard:
 		parser = ConfigParser.ConfigParser()
 		parser.read(self.COMMON_CONFIG_PATH)
 		for config_option, config_value in parser.items('__main__'):
-			self.CONFIG[config_option.upper()] = config_value
+			self.setConfigOptionValue(config_option, config_value)
 		
 	def transformConfigOptionsToLists(self, list_of_options_to_transform):
 		for config_option in list_of_options_to_transform:
-			self.CONFIG[config_option] = self.CONFIG[config_option].replace(' ','').split(',')
+			self.setConfigOptionValue(config_option, self.getConfigOptionValue(config_option).replace(' ','').split(','))
 
 	def getConfigOptionValue(self, option_name):
-		return self.CONFIG[option_name]
+		return self.CONFIG[option_name.upper()]
 
 	def setConfigOptionValue(self, option_name, value):
-		self.CONFIG[option_name] = value
+		self.CONFIG[option_name.upper()] = value
 
 	def setRepoLanguageLimitation(self, value):
 		self.setConfigOptionValue('REPO_LANGUAGE_LIMITATION', value)
