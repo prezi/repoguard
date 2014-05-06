@@ -65,7 +65,7 @@
 		"line" : "\\+[\\s]*query[\\s]*=.*",
 		"repo" : "",
 		"file" : "",
-		"-file": "^/hadoop/.*\\.script^",
+		"-file": "^/hadoop/.*\\.script$",
 		"language" :"",
 		"notify": "security@prezi.com",
 		"description": "Possible new SQL query (query=)",
