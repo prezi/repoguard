@@ -37,7 +37,7 @@
 		"href": ""
 	},
 	"javascript_redirect" : {
-		"line" : "\\+.*(window|document)\\.location[^\\.].*",
+		"line" : "\\+.*(window|document)\\.location((\\s*=)|(\\.replace\\())+(?!\\s*'\\w*'\\s*$)",
 		"repo" : "",
 		"language" :"",
 		"notify": "security@prezi.com",
