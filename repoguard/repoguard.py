@@ -664,7 +664,7 @@ class RepoEvalFactory(EvaluatorFactoryBase):
 class InScriptEvalFactory(EvaluatorFactoryBase):
 	def __init__(self):
 		super(InScriptEvalFactory, self).__init__("inscripttag")
-		self.script_begin_re = re.compile(r'(?!.+type="text/tpl".+)<script[^>]*>')
+		self.script_begin_re = re.compile(r'(?!.+type="text/(tpl|template)".+)<script[^>]*>')
 		self.script_end_re = re.compile(r'</script\s*>')
 
 
