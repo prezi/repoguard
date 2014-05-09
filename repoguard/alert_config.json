@@ -465,6 +465,13 @@
 		"description": "please check the fn call if user data is read directly and it is possible to include format strings...",
 		"href": ""
 	},
+	"java_ssl_validation": {
+		"line" : "\\+.*(AllTrustSSLSocketFactory|NonValidatingSSLSocketFactory).*",
+		"file" : ".*\\.(scala|java|groovy)",
+		"language" :"",
+		"notify": "security@prezi.com",
+		"description": "We should always do proper SSL validation, please check why do we try to avoid it..."
+	},
 	"java_interesting_codeexec_calls": {
 		"line" : "\\+.*(ProcessUtils|\\.(exec|execute)\\(|(ProcessBuilder|getRuntime)).*",
 		"file" : ".*\\.(scala|java|groovy)",
@@ -474,11 +481,11 @@
 		"href": ""
 	},
 	"java_interesting_io_calls": {
-		"line" : "\\+.*java\\.io\\.(File|\\*).*",
+		"line" : "\\+.*(java\\.io\\.(File|\\*)|new File\\().*",
 		"file" : ".*\\.(scala|java)",
 		"language" :"",
 		"notify": "security@prezi.com",
-		"description": "file reading or java.io.* import",
+		"description": "Please check if there is proper authorization on file reads/writes and think about directory traversals as well ;)",
 		"href": ""
 	},
 	"java_interesting_sql_calls": {
@@ -591,5 +598,24 @@
         "notify": "security@prezi.com",
         "description": "root, what?!",
         "href": ""
+    },
+    "android_storage": {
+    	"line" : "\\+.*(getFilesDir|getExternalFilesDir|getExternalStorageDirectory|getSharedPreferences|addPreferencesFromResource).*",
+    	"file": ".*\\.java",
+        "notify": "security@prezi.com",
+        "description": "Please check what is stored in this location or shared preferences file. Sensitive stuff shouldnt be stored externally, encryption is preferred."
+    },
+    "android_app_permission": {
+    	"line" : "\\+.*(uses-permission android:name).*",
+    	"file": ".*\\.xml",
+        "notify": "security@prezi.com",
+        "description": "New permission requirement added, please check if it is really necessary."
+    },
+    "android_webview": {
+    	"line" : "\\+.*(addJavascriptInterface|setJavaScriptEnabled|webView\\.loadData).*",
+    	"file": ".*\\.java",
+        "notify": "security@prezi.com",
+        "description": "Please check how we use webview, disable JS interface if it is not absolutely necessary and check if any rendered webview can end in a XSS..."
+
     }
 }
