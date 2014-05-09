@@ -465,6 +465,14 @@
 		"description": "please check the fn call if user data is read directly and it is possible to include format strings...",
 		"href": ""
 	},
+	"java_interesting_codeexec_calls": {
+		"line" : "\\+.*(ProcessUtils|\\.(exec|execute)\\(|(ProcessBuilder|getRuntime)).*",
+		"file" : ".*\\.(scala|java|groovy)",
+		"language" :"",
+		"notify": "security@prezi.com",
+		"description": "Methods for code execution might be risky, please check if user supplied input is not used in them without proper validation",
+		"href": ""
+	},
 	"java_interesting_io_calls": {
 		"line" : "\\+.*java\\.io\\.(File|\\*).*",
 		"file" : ".*\\.(scala|java)",
