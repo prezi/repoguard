@@ -1,0 +1,472 @@
+--- #!django_middleware_classes
+diff: add
+line:
+    - match: middleware\_classes.*
+file:
+    - match: .*\.cfg
+
+--- #!redirect_field_usage
+diff: add
+line:
+    - match: request.*\.get\(('next'|redirect_field).*
+
+--- #!csrf_exempt
+diff: add
+line:
+    - match: csrf\_exempt.*
+
+--- #!sql_query_cursor_execute
+diff: add
+line:
+    - match: \+[\s]*cursor\.execute\(.*
+
+--- #!oauth_string
+diff: add
+line:
+    - match: "[^N]oauth.*"
+
+--- #!unsafe_as_htmlText
+diff: add
+line:
+    - match: \.htmlText.*=.*
+    - except: .*=.*htmlEscape.*
+file:
+    - match: .*\.(as)
+
+--- #!csharp_base64
+diff: add
+line:
+    - match: \.ToBase64String.*
+file:
+    - match: .*\.(cs)
+
+--- #!chef_directory_listing
+diff: add
+line:
+    - match: Options Indexes.*
+file:
+    - match: .*\.(erb|conf)
+
+--- #!template_variable_inside_script_tag
+diff: add
+line:
+    - match: "{{((?!urlencode).)+}}.*"
+inscripttag: true
+
+--- #!json_no_content_type
+diff: add
+line:
+    - match: (HttpResponse|render\_to\_response|render)\s*\((simplejson|json)(?!.*application/json).*
+
+--- #!secret_in_source
+diff: add
+line:
+    - match: (secret|password|S3Connection)+[\w_]*[\s]*=.*
+    - except: .+=.*(get_encrypted_data|export [\w_]\s*=\s*['"`]<%=.*(password|secret)|{{ S3_SECRET_KEY }}|prezi_app_secrets\['django_secret_key'\]|chef_secrets\['encrypted_data_bag_secret|StringOption\(\)|AWS_SECRET=<%=|aws_secret => aws_secret)
+file:
+    - except: .*(/scripts/build|/scripts/common|/scripts/release|/scripts/bootstrap)
+
+--- #!java_interesting_codeexec_calls
+diff: add
+line:
+    - match: (ProcessUtils|\.(exec|execute)\(|(ProcessBuilder|getRuntime)).*
+file:
+    - match: .*\.(scala|java|groovy)
+
+--- #!dangerous_redirect
+diff: add
+line:
+    - match: (HttpResponseRedirect|HttpResponsePermanentRedirect|redirect)(?!\(["'][^"']+["']\)).*
+    - except: <bindingRedirect
+file:
+    - except: .*(\.config|\.po|\.po\.json|\.md|\.rb)$
+
+--- #!basic_auth_in_source
+diff: add
+line:
+    - match: ((Authorization|auth).*Basic|auth_header\s*=\s*").*
+
+--- #!new_url_endpoint
+diff: add
+line:
+    - match: \+\s+(url)*\(r'\^.*\$',.*
+file:
+    - match: .*/urls\.py
+
+--- #!jsonp_middleware
+diff: add
+line:
+    - match: middleware.*(JSONP|jsonp).*
+
+--- #!django_xfo_exempt
+diff: del
+line:
+    - match: "@xframe_options_exempt.*"
+file:
+    - match: .*\.py
+
+--- #!java_interesting_sql_calls
+diff: add
+line:
+    - match: java\.sql\..*
+file:
+    - match: .*\.(scala|java)
+
+--- #!unsecure_protocol
+diff: add
+line:
+    - match: (http|ftp)://.*
+    - except: \+.*(http://localhost:|xmlns|doctype|<prezi><documentStyle>|template|createElementNS).*
+file:
+    - except: (.*\.(po|json|html|xml|xaml|ism|markdown|md|txt|csv|doc|rdoc|css|gradle|properties|log|wiki)$)|.*(templates/|(scripts/(build|common|release|bootstrap))|(^/cookbooks/.*\.rb))|(^/scripts|build$)
+
+--- #!autoescape_off
+diff: add
+line:
+    - match: "{% autoescape off %}.*"
+
+--- #!android_storage
+diff: add
+line:
+    - match: (getFilesDir|getExternalFilesDir|getExternalStorageDirectory|getSharedPreferences|addPreferencesFromResource).*
+file:
+    - match: .*\.java
+
+--- #!hashing_function
+diff: add
+line:
+    - match: (SHA|MD|sha|md)[0-9]+\(.*
+
+--- #!jsonp_usage
+diff: add
+line:
+    - match: \$\.jsonp\(.*
+
+--- #!direct_prezi_access_helpers
+diff: add
+line:
+    - match: zuibackend\.cache(\.get_prezi|\s+import\s+get_prezi).*
+file:
+    - match: .*\.(py)
+
+--- #!csharp_storage
+diff: add
+line:
+    - match: Windows\.Storage.*
+file:
+    - match: .*\.(cs)
+
+--- #!http_variable_used_js
+diff: add
+line:
+    - match: (Node\.url\.parse|\.query\.).*
+file:
+    - match: .*\.(hx|js)
+
+--- #!cross-domain-policy-access
+diff: add
+line:
+    - match: (allow-access-from domain="*").*
+
+--- #!android_webview
+diff: add
+line:
+    - match: (addJavascriptInterface|setJavaScriptEnabled|webView\.loadData).*
+file:
+    - match: .*\.java
+
+--- #!s3_set_object_acl
+diff: add
+line:
+    - match: (setObjectAcl|set_acl|set_canned_acl).*
+
+--- #!csharp_sql_command
+diff: add
+line:
+    - match: \.CommandText.*
+file:
+    - match: .*\.(cs)
+
+--- #!http_response_js
+diff: add
+line:
+    - match: (\.end\(.*req\.).*
+file:
+    - match: .*\.(hx|js)
+
+--- #!direct_prezi_access
+diff: add
+line:
+    - match: Presentation\.objects\.(all|get_by_id_or_oid).*
+file:
+    - match: .*\.(py)
+
+--- #!scala_spray_http
+diff: add
+line:
+    - match: (pathPrefix\(|HttpResponse\().*
+file:
+    - match: .*\.(scala)
+
+--- #!js_network_listen
+diff: add
+line:
+    - match: (WebSocket|\.listen\(|http\.request|socket\.io).*
+    - except: \s*(#|/\*|//|\*)
+file:
+    - match: .*\.(hx|js)
+
+--- #!cpp_format_string
+diff: add
+line:
+    - match: (v?s?n?f?printf|syslog|f?s?scanf)\(.*
+file:
+    - match: .*\.(cpp|cxx|h|hpp|c)$
+
+--- #!chef_new_vhost
+diff: add
+line:
+    - match: (apache|nginx)\_vhost.*
+file:
+    - match: .*\.(rb)
+
+--- #!java_ssl_validation
+diff: add
+line:
+    - match: (AllTrustSSLSocketFactory|NonValidatingSSLSocketFactory).*
+file:
+    - match: .*\.(scala|java|groovy)
+
+--- #!java_interesting_io_calls
+diff: add
+line:
+    - match: (java\.io\.(File|\*)|new File\().*
+file:
+    - match: .*\.(scala|java)
+
+--- #!urlopen
+diff: add
+line:
+    - match: (urlopen\(|pycurl\.Curl|_make_call\().*
+file:
+    - match: .*\.(py)
+
+--- #!chef_new_services
+diff: add
+line:
+    - match: (prezi\_django\_app\_base\_placement|prezi\_placement\_deploy|supervisor\_service|apache\_vhost|Virtualhost ).*
+file:
+    - match: .*\.(rb|erb)
+
+--- #!root_what
+diff: add
+line:
+    - match: ("|')root("|')root.*
+
+--- #!unsafe_as_calls
+diff: add
+line:
+    - match: (externalinterface|loadVariables|navigateToURL|loadMovie|getURL|FScrollPane\.loadScrollContent|LoadVars\.load|LoadVars\.send|XML\.load|Sound\.loadSound|NetStream\.play|asFunction|clickTAG).*
+file:
+    - match: .*\.(as)
+
+--- #!django_xfo_remove
+diff: add
+line:
+    - match: \-.*clickjacking.XFrameOptionsMiddleware.*
+file:
+    - match: .*\.(py|cfg)
+
+--- #!js_file_access
+diff: add
+line:
+    - match: (Node\.fs\.).*
+file:
+    - match: .*\.(hx|js)
+
+--- #!new_token_related_method
+diff: add
+line:
+    - match: (def .*\_token|MacToken\.generate)\(.*
+
+--- #!scala_interesting_calls
+diff: add
+line:
+    - match: (scala\.io\.|scala\.sys\.process|new File|\.(!|lines\(|run\()|Http\.Bind).*
+file:
+    - match: .*\.(scala)
+
+--- #!interesting_object_get
+diff: add
+line:
+    - match: objects\.get\(.*request\..*
+
+--- #!tastypie_usage
+diff: add
+line:
+    - match: tastypie.*
+
+--- #!javascript_target
+diff: add
+line:
+    - match: javascript:.*
+file:
+    - except: (^.*\.css$)
+
+--- #!csharp_invokescript
+diff: add
+line:
+    - match: WebBrowser\.InvokeScript.*
+file:
+    - match: .*\.(cs)
+
+--- #!http_variable_used
+diff: add
+line:
+    - match: (request\.(GET|POST|FILES|META)(\[|\.get)).*
+
+--- #!cpp_system_popen_calls
+diff: add
+line:
+    - match: (system|popen|exec(ve)?|execvp?|execlp?)\(.*
+file:
+    - match: .*\.(cpp|cxx|h|hpp|c)$
+
+--- #!js_code_exec_functions
+diff: add
+line:
+    - match: (eval\(|child_process|var command =).*
+file:
+    - match: .*\.(hx|js)
+
+--- #!android_app_permission
+diff: add
+line:
+    - match: (uses-permission android:name).*
+file:
+    - match: .*\.xml
+
+--- #!safe_in_template
+diff: add
+line:
+    - match: \|safe.*
+
+--- #!python_object_enumeration
+diff: add
+line:
+    - match: (\.get_by_secondary_key\().*
+file:
+    - match: .*\.(py)
+
+--- #!godauth_whitelist
+diff: add
+line:
+    - match: "\"who\"\\: \"all\".*"
+file:
+    - match: .*\.(json)
+
+--- #!csharp_request
+diff: add
+line:
+    - match: client\.(Post|Get).*(Request).*
+file:
+    - match: .*\.(cs)
+
+--- #!javascript_redirect
+diff: add
+line:
+    - match: (window|document)\.location((\s*=)|(\.replace\())+(?!\s*'\w*'\s*$)
+
+--- #!cpp_bof_calls
+diff: add
+line:
+    - match: (strcpy|strcat|f?gets|memcpy)\(.*
+file:
+    - match: .*\.(cpp|cxx|h|hpp|c)$
+
+--- #!dom_event_parameter
+diff: add
+line:
+    - match: \son\w+=\s*('|").*
+
+--- #!python_password_form
+diff: add
+line:
+    - match: (forms\.PasswordInput).*
+file:
+    - match: .*\.(py)
+
+--- #!chef_new_user_access
+diff: add
+line:
+    - match: "(assessment_weekers =|\"users\": |recipe\\[users\\:\\:).*"
+file:
+    - match: .*\.(rb|json)
+
+--- #!backbonejs_model_get
+diff: add
+line:
+    - match: this\.model\.get.*
+file:
+    - match: .*\.(js|html)
+
+--- #!python_remote_objects
+diff: add
+line:
+    - match: (RemoteUserFactory).*
+file:
+    - match: .*\.(py)
+
+--- #!chef_new_open_port
+diff: add
+line:
+    - match: \+\s*bind\s*=.*
+file:
+    - match: .*\.(rb|erb)
+
+--- #!unsafe_underscore_js_template
+diff: add
+line:
+    - match: <%=.*
+file:
+    - match: .*\.(js|html|tpl)$
+
+--- #!python_os_code_exec_functions
+diff: add
+line:
+    - match: (system\(|Popen\(|subprocess.call\(|subprocess\.|import subprocess|from subprocess).*
+file:
+    - match: .*\.(py)
+
+--- #!backbonejs_unsanitized_html
+diff: add
+line:
+    - match: this\..*\.html\(.*
+file:
+    - match: .*\.(js|html)
+
+--- #!java_interesting_net_calls
+diff: add
+line:
+    - match: java\.net\.URL.*
+file:
+    - match: .*\.(scala|java)
+
+--- #!sql_query
+diff: add
+line:
+    - match: \+[\s]*query[\s]*=.*
+file:
+    - except: ^/hadoop/.*\.script$
+
+--- #!raw_query
+diff: add
+line:
+    - match: \.raw\(.*
+
+--- #!http_response
+diff: add
+line:
+    - match: HttpResponse\(.*
+    - except: .*content_type=['"]application/json['"]
+

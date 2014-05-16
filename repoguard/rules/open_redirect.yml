@@ -1,0 +1,24 @@
+--- #!base
+description: Please ensure that the user provided data validated for the redirection.
+--- #!js
+#(window|document)\\.location((\\s*=)|(\\.replace\\())+(?!\\s*'\\w*'\\s*$)
+extends: base
+diff: add
+line:
+    - match: (window|document)\.location\s*=(?!\s*'\w*'\s*$)
+    - match: (window|document)\.location\.replace\((?!\s*'\w*'\s*$)
+
+--- #!django_inscripttags
+extends: base
+diff: add
+line:
+    - match: {{((?!urlencode).)+}}
+inscripttag: true
+
+--- #!generic_javascript_target
+extends: base
+diff: add
+line:
+    - match: javascript:
+file:
+    - except: ^.*\.css$

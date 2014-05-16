@@ -1,21 +1,19 @@
----#!base
+--- #!base
 description: Executing OS commands is not fun.
 
----#!python
+--- #!python
 extends: base
 diff: add
 line:
-    - match: system(
-    - match: Popen(
+    - match: system\(
+    - match: Popen\(
     - match: subprocess\.
     - match: import subprocess
     - match: from subprocess
-    - except: whateverexception
 file:
     - match: ^.*\.py$
-    - except: test\.py
 
----#!java
+--- #!java
 extends: base
 diff: add
 line:
@@ -23,7 +21,15 @@ line:
     - match: \.(exec|execute)
     - match: ProcessBuilder
     - match: getRuntime
-    - except: whateverexception
 file:
     - match: ^.*\.(java|scala|groovy)$
-    - except: test\.java
+
+--- #!js
+extends: base
+diff: add
+line:
+    - match: eval(
+    - match: child_process
+    - match: var command\s*=
+file:
+    - match: ^.*\.(hx|js)$
