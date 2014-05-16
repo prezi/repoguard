@@ -405,8 +405,6 @@ class RepoGuard:
 		with open(filename) as alert_config:
 			self.alertConfig_o = json.load(alert_config)
 
-		self.extendNegatedRulesWithGlobalWhitelist(self.alertConfig_o)
-
 		# filter for items in --alerts parameter
 		applied_alerts = [(aid, adata) for aid, adata 
 			in self.alertConfig_o.iteritems() 
@@ -422,16 +420,6 @@ class RepoGuard:
 			except Exception:
 				print '!! Failure during configuring rule "%s"' % alert_id
 				raise
-
-	def extendNegatedRulesWithGlobalWhitelist(self, alert_config_json_object):
-		for whitelist_type in ('line', 'file'):
-			whitelisted_alert_key_name = '-%s' % whitelist_type
-			whitelisted_global_config_name = 'GLOBAL_%s_WHITELIST' % whitelist_type
-			for alert_id, alert_data in alert_config_json_object.iteritems():
-				if whitelisted_alert_key_name in alert_data:
-					alert_data[whitelisted_alert_key_name] = '(%s)|(%s)' % (alert_data[whitelisted_alert_key_name], self.getConfigOptionValue(whitelisted_global_config_name))
-				else:
-					alert_data[whitelisted_alert_key_name] = self.getConfigOptionValue(whitelisted_global_config_name)	
 
 	def checkLine(self, line_info):
 		# a bit dirty here, but don't check line if it's empty
