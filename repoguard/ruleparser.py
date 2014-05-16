@@ -34,3 +34,16 @@ class ConfigParser:
 		else:
 			self.autoincr_base += 1
 			return "%s::gen%d" % (self.namespace, self.autoincr_base) 
+
+## Helper method to load configs in a dir:
+def load_rules(mypath):
+	from os import listdir
+	from os.path import isfile, join
+	rule_files = [join(mypath, f) for f in listdir(mypath) if isfile(join(mypath,f)) and f.endswith(".yml")]
+	rules = {}
+	for rf in rule_files:
+		try:
+			rules.update(ConfigParser(rf).load())
+		except Exception as e:
+			raise Exception("Error parsing file %s" % rf, e)
+	return rules
