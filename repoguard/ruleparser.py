@@ -7,7 +7,7 @@ class ConfigParser:
 
 	def __init__(self, file_name):
 		self.file_name = file_name
-		namespace = self._find_default_namespace()
+		self.namespace = self._find_default_namespace()
 
 	def load(self):
 		with open(self.file_name) as f:
@@ -18,6 +18,8 @@ class ConfigParser:
 		dpos = self.file_name.rfind("/")
 		if dpos < 0:
 			dpos = 0
+		else:
+			dpos += 1
 		ppos = self.file_name.rfind(".")
 		if ppos < 0:
 			ppos = len(self.file_name)
@@ -27,7 +29,7 @@ class ConfigParser:
 	def _get_key(self, document):
 		d = document.lstrip()
 		if d.startswith("#!"):
-			end = d.find("/n")
+			end = d.find("\n")
 			return "%s::%s" % (self.namespace, d[2:end].strip())
 		else:
 			self.autoincr_base += 1
