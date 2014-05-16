@@ -162,7 +162,6 @@ class LocalRepoTestCase(unittest.TestCase):
 class CheckNewCodeTest(unittest.TestCase):
 	def setUp(self):
 		self.ra = repoguard.repoguard.createInitializedRepoguardInstance()
-		self.ra.ALERT_CONFIG_PATH=APPDIR+'test_data/test_alert_config.json'
 		self.ra.readAlertConfigFromFile()
 		self.ra.REPO_LIST_PATH=APPDIR+'test_data/test_repo_list.json'
 		self.ra.loadRepoListFromFile()
@@ -191,26 +190,6 @@ class CheckNewCodeTest(unittest.TestCase):
 		self.ra.checkNewCode()
 		self.assertIn('123456', self.ra.repoStatus)
 		self.assertEqual(self.ra.repoStatus['123456']['last_checked_hashes'], [])
-
-	@patch('subprocess.check_output')
-	def test_check_by_rev_hash(self, *mocks):
-		mocks[0].return_value = open(APPDIR+'test_data/test_git_show.txt','r').read()
-		res = self.ra.checkByRevHash('de74d131fbcca4bacac02523ef8d45c1dc8e2bde', 'testdir', '123123')
-		expected_res = [
-			(	u'file_modified', 
-				'/zuisite/my/views.py',
-				'de74d131fbcca4bacac02523ef8d45c1dc8e2bde', 'diff --git a/zuisite/my/views.py b/zuisite/my/views.py', 'testdir', '123123'), 
-			(	u'function_modified', 
-				'/zuisite/my/views.py', 
-				'de74d131fbcca4bacac02523ef8d45c1dc8e2bde', 
-				' def settings_and_license(request, tab=None, group_id=None, grouplicense=False):', 'testdir', '123123'), 
-			(	u'string_matches', 
-				'/zuisite/my/views.py', 
-				'de74d131fbcca4bacac02523ef8d45c1dc8e2bde', 
-				'+                    "expired": True if group_license_expiry < datetime.date.today() else False,', 'testdir', '123123')
-		]
-		print res
-		self.assertEqual(res, expected_res)
 
 	@patch('subprocess.check_output', return_value='1163bec4351413be354f7c88317647815b000000\n')
 	@patch('repoguard.repoguard.RepoGuard.getNewHashes', return_value=['1163bec4351413be354f7c88317647815b000000'])

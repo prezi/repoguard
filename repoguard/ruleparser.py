@@ -1,6 +1,6 @@
 import yaml
 
-class ConfigParser:
+class RuleParser:
 	file_name = None
 	namespace = None
 	autoincr_base = 0
@@ -12,7 +12,7 @@ class ConfigParser:
 	def load(self):
 		with open(self.file_name) as f:
 			content = f.read()
-			return {self._get_key(c): c for c in content.split('---') if len(c) > 0}
+			return {self._get_key(c): yaml.load(c) for c in content.split('---') if len(c) > 0}
 
 	def _find_default_namespace(self):
 		dpos = self.file_name.rfind("/")
@@ -43,7 +43,7 @@ def load_rules(mypath):
 	rules = {}
 	for rf in rule_files:
 		try:
-			rules.update(ConfigParser(rf).load())
+			rules.update(RuleParser(rf).load())
 		except Exception as e:
 			raise Exception("Error parsing file %s" % rf, e)
 	return rules

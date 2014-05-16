@@ -14,6 +14,7 @@ import git_repo_updater
 from elasticsearch import Elasticsearch
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from ruleparser import load_rules
 
 class RepoGuard:
 	def __init__(self, evaluatorFactories):
@@ -74,7 +75,7 @@ class RepoGuard:
 
 		self.REPO_LIST_PATH = self.APP_DIR+'repo_list.json'
 		self.REPO_STATUS_PATH = self.APP_DIR+'repo_status.json'
-		self.ALERT_CONFIG_PATH = '%s/alert_config.json' % os.path.dirname(os.path.realpath(__file__))
+		self.ALERT_CONFIG_DIR = '%s/rules' % os.path.dirname(os.path.realpath(__file__))
 
 
 	def readCommonConfig(self):
@@ -401,9 +402,7 @@ class RepoGuard:
 
 
 	def readAlertConfigFromFile(self):
-		filename = self.ALERT_CONFIG_PATH
-		with open(filename) as alert_config:
-			self.alertConfig_o = json.load(alert_config)
+		self.alertConfig_o = load_rules(self.ALERT_CONFIG_DIR)
 
 		# filter for items in --alerts parameter
 		applied_alerts = [(aid, adata) for aid, adata 
@@ -413,7 +412,7 @@ class RepoGuard:
 		self.alertConfig = {}
 		for alert_id, alert_data in applied_alerts:
 			try:
-				alert_data['evaluators'] = [fact.create(alert_data[fact.key]) for fact 
+				alert_data['evaluators'] = [fact.create(alert_data) for fact 
 					in self.evaluatorFactories
 					if fact.key in alert_data]
 				self.alertConfig[alert_id] = alert_data
@@ -423,7 +422,7 @@ class RepoGuard:
 
 	def checkLine(self, line_info):
 		# a bit dirty here, but don't check line if it's empty
-		if line_info["line"] is None or len(line_info["line"].strip()) == 0:
+		if "line" in line_info and (line_info["line"] is None or len(line_info["line"].strip()) == 0):
 			return []
 
 		# run checks
@@ -680,10 +679,45 @@ class InScriptEvalFactory(EvaluatorFactoryBase):
 			return None if value is None else value > 0
 
 
+class AllEvalFactory(EvaluatorFactoryBase):
+	def __init__(self):
+		super(AllEvalFactory, self).__init__("line")
+
+
+	def create(self, rule):
+		return self.AllEvaluator(rule["line"])
+
+
+	class AllEvaluator(EvaluatorBase):
+		def __init__(self, rules):
+			super(AllEvalFactory.AllEvaluator, self).__init__()
+			self.positive_patterns = []
+			self.negative_patterns = []
+			for rule in rules:
+				if "match" in rule:
+					self.positive_patterns.append(re.compile(rule["match"], flags=re.IGNORECASE))
+				elif "except" in rule:
+					self.negative_patterns.append(re.compile(rule["except"], flags=re.IGNORECASE))
+				else:
+					raise Exception("Unknown key in %s" % str(rule))
+
+		def evaluate(self, line_info):
+			print line_info
+
+			if "line" not in line_info:
+				return None
+			else:
+				value = line_info["line"]
+			
+			ctx = reduce(lambda ctx, p: ctx and p.match(value), self.positive_patterns, True)
+			return reduce(lambda ctx, p: ctx and not p.match(value), self.negative_patterns, ctx)
+
+
+
 def createInitializedRepoguardInstance():
-	baseEvaluators = [InScriptEvalFactory(), LineEvalFactory(), FileEvalFactory(), RepoEvalFactory()]
-	evaluators = reduce(list.__add__, map(lambda e: [e, NegateFactory(e)], baseEvaluators))
-	return RepoGuard(evaluators)
+	baseEvaluators = [AllEvalFactory()]
+	#evaluators = reduce(list.__add__, map(lambda e: [e, NegateFactory(e)], baseEvaluators))
+	return RepoGuard(baseEvaluators)
 
 
 if __name__ == '__main__':
