@@ -677,8 +677,9 @@ class LineEvalFactory(EvaluatorFactoryBase):
 
 
 	class LineEvaluator(EvaluatorBase):
-		def __init__(self, rules):
+		def __init__(self, rules, must_begin_with=None):
 			super(LineEvalFactory.LineEvaluator, self).__init__()
+			self.must_begin_with = must_begin_with
 			self.positive_patterns = []
 			self.negative_patterns = []
 			for rule in rules:
@@ -695,7 +696,11 @@ class LineEvalFactory(EvaluatorFactoryBase):
 			else:
 				value = line_info["line"]
 			
-			ctx = reduce(lambda ctx, p: ctx and p.match(value), self.positive_patterns, True)
+			ctx = True
+			if self.must_begin_with is not None:
+				ctx = value.startswith(self.must_begin_with)
+
+			ctx = reduce(lambda ctx, p: ctx and p.match(value), self.positive_patterns, ctx)
 			return reduce(lambda ctx, p: ctx and not p.match(value), self.negative_patterns, ctx)
 
 
