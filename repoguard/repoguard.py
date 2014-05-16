@@ -557,73 +557,6 @@ class EvaluatorFactoryBase(object):
 		raise NotImplementedError()
 
 
-class NegateFactory(EvaluatorFactoryBase):
-	def __init__(self, ef):
-		super(NegateFactory, self).__init__("-%s" % ef.key)
-		self.ef = ef
-
-
-	def create(self, configuration):
-		return self.NegateEvaluator(self.ef.create(configuration))
-
-
-	class NegateEvaluator(EvaluatorBase):
-		def __init__(self, evaluator):
-			super(NegateFactory.NegateEvaluator, self).__init__()
-			self.evaluator = evaluator
-
-		def evaluate(self, line_info):
-			orig = self.evaluator.evaluate(line_info)
-			return not orig if orig is not None else None
-
-
-class FileEvalFactory(EvaluatorFactoryBase):
-	def __init__(self):
-		super(FileEvalFactory, self).__init__("file")
-
-
-	def processLineInfo(self, line, line_info):
-		if line[0:13]=='diff --git a/':
-			line_info["filename"] = line[12:line.find(' b/')]
-		
-		return line_info
-
-
-	def create(self, configuration):
-		return self.FileEvaluator(re.compile(configuration, flags=re.IGNORECASE))
-
-
-	class FileEvaluator(EvaluatorBase):
-		def __init__(self, pattern):
-			super(FileEvalFactory.FileEvaluator, self).__init__()
-			self.pattern = pattern
-
-
-		def evaluate(self, line_info):
-			value = line_info["filename"]
-			return None if value is None else self.pattern.match(value) is not None
-
-
-class RepoEvalFactory(EvaluatorFactoryBase):
-	def __init__(self):
-		super(RepoEvalFactory, self).__init__("repo")
-
-
-	def create(self, configuration):
-		return self.RepoEvaluator(re.compile(configuration, flags=re.IGNORECASE))
-
-
-	class RepoEvaluator(EvaluatorBase):
-		def __init__(self, pattern):
-			super(RepoEvalFactory.RepoEvaluator, self).__init__()
-			self.pattern = pattern
-
-
-		def evaluate(self, line_info):
-			value = line_info["repo"]
-			return None if value is None else self.pattern.match(value) is not None
-
-
 class InScriptEvalFactory(EvaluatorFactoryBase):
 	def __init__(self):
 		super(InScriptEvalFactory, self).__init__("inscripttag")
@@ -705,8 +638,45 @@ class LineEvalFactory(EvaluatorFactoryBase):
 
 
 
+class FileEvalFactory(EvaluatorFactoryBase):
+	def __init__(self):
+		super(FileEvalFactory, self).__init__("file")
+
+	def processLineInfo(self, line, line_info):
+		if line[0:13]=='diff --git a/':
+			line_info["filename"] = line[12:line.find(' b/')]
+		return line_info
+
+	def create(self, rule):
+		return self.FileEvaluator(rule["file"])
+
+
+	class FileEvaluator(EvaluatorBase):
+		def __init__(self, rules):
+			super(FileEvalFactory.FileEvaluator, self).__init__()
+			self.positive_patterns = []
+			self.negative_patterns = []
+			for rule in rules:
+				if "match" in rule:
+					self.positive_patterns.append(re.compile(rule["match"], flags=re.IGNORECASE))
+				elif "except" in rule:
+					self.negative_patterns.append(re.compile(rule["except"], flags=re.IGNORECASE))
+				else:
+					raise Exception("Unknown key in %s" % str(rule))
+
+		def evaluate(self, line_info):
+			if "filename" not in line_info:
+				return None
+			else:
+				value = line_info["filename"]
+
+			ctx = reduce(lambda ctx, p: ctx and p.match(value), self.positive_patterns, True)
+			return reduce(lambda ctx, p: ctx and not p.match(value), self.negative_patterns, ctx)
+
+
+
 def createInitializedRepoguardInstance():
-	baseEvaluators = [LineEvalFactory(), InScriptEvalFactory()]
+	baseEvaluators = [LineEvalFactory(), InScriptEvalFactory(), FileEvalFactory()]
 	#evaluators = reduce(list.__add__, map(lambda e: [e, NegateFactory(e)], baseEvaluators))
 	return RepoGuard(baseEvaluators)
 
