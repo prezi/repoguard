@@ -18,7 +18,7 @@ line:
 --- #!sql_query_cursor_execute
 diff: add
 line:
-    - match: "[\s]*cursor\.execute\(.*"
+    - match: "[\\s]*cursor\\.execute\\(.*"
 
 --- #!oauth_string
 diff: add

@@ -2,5 +2,5 @@
 diff: add
 line:
     - except: test/|tests/|/bdd/
-    - except: angular|bootstrap|require|jquery|sinon)[\w\.-]*\.js$
+    - except: (angular|bootstrap|require|jquery|sinon)[\w\.-]*\.js$
     - except: /test_.+\.py

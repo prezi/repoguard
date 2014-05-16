@@ -28,7 +28,7 @@ file:
 extends: base
 diff: add
 line:
-    - match: eval(
+    - match: eval\(
     - match: child_process
     - match: var command\s*=
 file:
