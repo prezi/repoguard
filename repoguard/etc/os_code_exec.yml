@@ -1,7 +1,7 @@
---- ! base
+---#!base
 description: Executing OS commands is not fun.
 
---- ! python
+---#!python
 extends: base
 diff: add
 line:
@@ -15,7 +15,7 @@ file:
     - match: ^.*\.py$
     - except: test\.py
 
---- ! java
+---#!java
 extends: base
 diff: add
 line:
