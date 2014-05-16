@@ -1,7 +1,7 @@
 --- #!base
 description: Please ensure that the user provided data validated for the redirection.
+
 --- #!js
-#(window|document)\\.location((\\s*=)|(\\.replace\\())+(?!\\s*'\\w*'\\s*$)
 extends: base
 diff: add
 line:
@@ -12,13 +12,13 @@ line:
 extends: base
 diff: add
 line:
-    - match: {{((?!urlencode).)+}}
+    - match: "{{((?!urlencode).)+}}"
 inscripttag: true
 
 --- #!generic_javascript_target
 extends: base
 diff: add
 line:
-    - match: javascript:
+    - match: "javascript:"
 file:
     - except: ^.*\.css$
