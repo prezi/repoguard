@@ -577,30 +577,6 @@ class NegateFactory(EvaluatorFactoryBase):
 			return not orig if orig is not None else None
 
 
-class LineEvalFactory(EvaluatorFactoryBase):
-	def __init__(self):
-		super(LineEvalFactory, self).__init__("line")
-
-
-	def processLineInfo(self, line, line_info):
-		line_info["line"] = line
-		return line_info
-
-
-	def create(self, configuration):
-		return self.LineEvaluator(re.compile(configuration, flags=re.IGNORECASE))
-
-
-	class LineEvaluator(EvaluatorBase):
-		def __init__(self, pattern):
-			super(LineEvalFactory.LineEvaluator, self).__init__()
-			self.pattern = pattern
-
-
-		def evaluate(self, line_info):
-			return self.pattern.match(line_info["line"]) is not None
-
-
 class FileEvalFactory(EvaluatorFactoryBase):
 	def __init__(self):
 		super(FileEvalFactory, self).__init__("file")
@@ -664,14 +640,13 @@ class InScriptEvalFactory(EvaluatorFactoryBase):
 		return line_info
 
 
-	def create(self, configuration):
-		return self.InScriptEvaluator(re.compile(configuration, flags=re.IGNORECASE))
+	def create(self, rule):
+		return self.InScriptEvaluator()
 
 
 	class InScriptEvaluator(EvaluatorBase):
-		def __init__(self, pattern):
+		def __init__(self):
 			super(InScriptEvalFactory.InScriptEvaluator, self).__init__()
-			self.pattern = pattern
 
 
 		def evaluate(self, line_info):
@@ -679,18 +654,31 @@ class InScriptEvalFactory(EvaluatorFactoryBase):
 			return None if value is None else value > 0
 
 
-class AllEvalFactory(EvaluatorFactoryBase):
+class LineEvalFactory(EvaluatorFactoryBase):
 	def __init__(self):
-		super(AllEvalFactory, self).__init__("line")
+		super(LineEvalFactory, self).__init__("line")
 
+	def processLineInfo(self, line, line_info):
+		line_info["line"] = line
+		return line_info
 
 	def create(self, rule):
-		return self.AllEvaluator(rule["line"])
+		if "diff" in rule:
+			if rule["diff"] == "add":
+				return self.LineEvaluator(rule["line"], "+")
+			elif rule["diff"] == "del":
+				return self.LineEvaluator(rule["line"], "-")
+			elif rule["diff"] == "all":
+				return self.LineEvaluator(rule["line"])
+			else:
+				raise Exception("Unknown diff strategy: %s", rule["diff"])
+		else:
+			return self.LineEvaluator(rule["line"])
 
 
-	class AllEvaluator(EvaluatorBase):
+	class LineEvaluator(EvaluatorBase):
 		def __init__(self, rules):
-			super(AllEvalFactory.AllEvaluator, self).__init__()
+			super(LineEvalFactory.LineEvaluator, self).__init__()
 			self.positive_patterns = []
 			self.negative_patterns = []
 			for rule in rules:
@@ -702,8 +690,6 @@ class AllEvalFactory(EvaluatorFactoryBase):
 					raise Exception("Unknown key in %s" % str(rule))
 
 		def evaluate(self, line_info):
-			print line_info
-
 			if "line" not in line_info:
 				return None
 			else:
@@ -715,7 +701,7 @@ class AllEvalFactory(EvaluatorFactoryBase):
 
 
 def createInitializedRepoguardInstance():
-	baseEvaluators = [AllEvalFactory()]
+	baseEvaluators = [LineEvalFactory(), InScriptEvalFactory()]
 	#evaluators = reduce(list.__add__, map(lambda e: [e, NegateFactory(e)], baseEvaluators))
 	return RepoGuard(baseEvaluators)
 
