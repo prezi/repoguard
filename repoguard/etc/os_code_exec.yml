@@ -1,0 +1,29 @@
+--- ! base
+description: Executing OS commands is not fun.
+
+--- ! python
+extends: base
+diff: add
+line:
+    - match: system(
+    - match: Popen(
+    - match: subprocess\.
+    - match: import subprocess
+    - match: from subprocess
+    - except: whateverexception
+file:
+    - match: ^.*\.py$
+    - except: test\.py
+
+--- ! java
+extends: base
+diff: add
+line:
+    - match: ProcessUtils
+    - match: \.(exec|execute)
+    - match: ProcessBuilder
+    - match: getRuntime
+    - except: whateverexception
+file:
+    - match: ^.*\.(java|scala|groovy)$
+    - except: test\.java
