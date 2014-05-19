@@ -2,7 +2,9 @@ import unittest
 from mock import patch
 
 from repoguard.ruleparser import RuleLoader
-from repoguard.ruleparser import merge_rules, merge_many_rules
+from repoguard.ruleparser import merge_rules
+from repoguard.ruleparser import merge_many_rules
+from repoguard.ruleparser import resolve_rule
 
 class RuleLoaderTestCase(unittest.TestCase):
 	
@@ -37,7 +39,7 @@ class RuleLoaderTestCase(unittest.TestCase):
 		self.assertEquals("test::gen1", cp._get_key(yaml))
 
 
-class RuleInheritanceTestCase(unittest.TestCase):
+class RuleMergingTestCase(unittest.TestCase):
 	
 	def setUp(self):
 		self.base = {"foo1": "bar", "foo2": {1:1, 2:2}, "foo3": [3, 4, 5], "foo4": [{1:2}, {2:3}]}
@@ -98,3 +100,37 @@ class RuleInheritanceTestCase(unittest.TestCase):
 		res = merge_many_rules(self.base, [tt0, tt1])
 
 		self.assertEquals(3, res["foo2"][3])
+
+
+class RuleInheritanceTestCase(unittest.TestCase):
+
+	def setUp(self):
+		self.rule_0 = {"extends": "base", "diff": "add"}
+		self.rule_1 = {"extends": "ns1::base", "line": [{"match": "system("}]}
+		self.rule_2 = {"line": [{"match": "Popen("}]}
+		self.rule_3 = {"extends": "ns1::foo", "file": [{"match": "*.py"}]}
+
+	def test_no_inheritance(self):
+		rule = resolve_rule("ns1::sys", {"ns1::sys": self.rule_2, "ns1::base": self.rule_2})
+
+		self.assertIn("line", rule)
+		self.assertEquals(1, len(rule))
+		self.assertEquals(1, len(rule["line"]))
+
+	def test_inheritance_with_ns(self):
+		rule = resolve_rule("ns1::sys", {"ns1::sys": self.rule_1, "ns1::base": self.rule_2})
+
+		self.assertIn("line", rule)
+		self.assertEquals(2, len(rule)) #extends, line
+		self.assertEquals(2, len(rule["line"]))
+
+	def test_inheritance_with_implicit_ns(self):
+		rule = resolve_rule("ns1::sys", {"ns1::sys": self.rule_0, "ns1::base": self.rule_2})
+
+		self.assertIn("line", rule)
+		self.assertEquals(3, len(rule)) #extends, line, diff
+		self.assertEquals(1, len(rule["line"]))
+
+	def test_circular_deps(self):
+		with self.assertRaises(Exception):
+			resolve_rule("ns1::foo", {"ns1::foo": self.rule_1, "ns1::base": self.rule_3})

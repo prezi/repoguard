@@ -51,20 +51,26 @@ def load_rules(rule_dir):
 			raise Exception("Error parsing file %s" % rf), None, sys.exc_info()[2]
 	return rules
 
-def resolve_rules(rules, resolved=set()):
-	return {name, rule}
+## Resolves rule hierarchy, and omits abstract rules
+def build_resolved_ruleset(rules):
+	return {name: resolve_rule(name, rules) for name in rules if not _is_abstract(name)}
 
+def _is_abstract(rule_name):
+	ns, name = rule_name.split("::")
+	return name.startswith("~")
+
+## Resolves a rule
 def resolve_rule(rule_name, ruleset, in_progress=()):
 	if rule_name not in ruleset:
 		raise Exception("Unknown rule: %s", rule_name)
 	if rule_name in in_progress:
-		raise Exception("Circular depencencies found: %s", " -> ".join(in_progress))
+		raise Exception("Circular depencencies found: %s -> %s" % (" -> ".join(in_progress), rule_name))
 	rule_specs = ruleset[rule_name]
 	namespace, localname = rule_name.split("::")
 	if "extends" in rule_specs:
 		base_rule_names = [b.strip() for b in rule_specs["extends"].split(",")]
 		base_rule_fqdns = ["%s::%s" % (namespace, rn) if "::" not in rn else rn for rn in base_rule_names]
-		base_rules = [resolve_rules(rname, ruleset, in_progress + (rname,)) for rname in base_rule_fqdns]
+		base_rules = [resolve_rule(rname, ruleset, in_progress + (rule_name,)) for rname in base_rule_fqdns]
 		return merge_many_rules(rule_specs, base_rules)
 	else:
 		return rule_specs
