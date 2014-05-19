@@ -1,3 +1,4 @@
+from evaluators import *
 
 class CodeChecker:
 
@@ -23,19 +24,30 @@ class CodeChecker:
 	def _check_all(self, rules):
 		def check_line(check_ctx, line):
 			alerts, line_ctx = check_ctx
-			line_ctx = reduce(lambda ctx, cp: cp.preprocess(ctx), self.context_processors, line_ctx)
+			line_ctx = reduce(lambda ctx, cp: cp.preprocess(ctx, line), self.context_processors, line_ctx)
 			for r in rules:
 				if all(e.matches(line_ctx, line) for e in r.evaluators):
 					alerts.append((r.name, line))
 			return (alerts, line_ctx)
 		return check_line
 
-class CodeCheckerFactory:
-	MODE_DIFF = 1
-	MODE_SINGLE = 2
 
+class Rule:
+	def __init__(self, name, evaluators):
+		self.name = name
+		self.evaluators = evaluators
+
+
+class CodeCheckerFactory:
 	def __init__(self, ruleset):
 		self.ruleset = ruleset
 
-	def create(mode=MODE_DIFF):
-		pass
+	def create(self, mode=LineEvalFactory.MODE_DIFF):
+		factories = [LineEvalFactory(mode), InScriptEvalFactory(), FileEvalFactory()]
+		context_processors = [InScriptEvalFactory.ContextProcessor()]
+		rules = [self.create_single(rn, factories) for rn in self.ruleset]
+
+	def create_single(self, rule_name, factories):
+		rule = self.ruleset[rule_name]
+		evaluators = filter(lambda e: e is not None, [f.create(rule) for f in factories])
+		return Rule(rule_name, evaluators)

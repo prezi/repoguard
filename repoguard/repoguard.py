@@ -11,16 +11,18 @@ import smtplib
 import logging
 import ConfigParser
 import git_repo_updater
+from codechecker import CodeCheckerFactory
 from elasticsearch import Elasticsearch
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from ruleparser import build_resolved_ruleset
 from ruleparser import load_rules
 
+
 class RepoGuard:
-	def __init__(self, evaluatorFactories):
+	def __init__(self):
 		self.CONFIG = {}
 		self.RUNNING_ON_PROD = False
-		self.evaluatorFactories = evaluatorFactories
 
 		self.detectPaths()
 		self.readCommonConfig()
@@ -377,15 +379,17 @@ class RepoGuard:
 		cmd = "git show --function-context %s" % rev_hash
 		try:
 			diff_output = subprocess.check_output(cmd.split(), cwd=cwd)
-			# initial setup:
-			lineCtx = {"filename": None, "inside_script_tag": 0, "repo": repo_name, "languange": None}
-
+			lines = []
 			# we ignore the first 3 lines which are commit info for sure
 			for diff_line in diff_output.split("\n")[3:]:
-				lineCtx = reduce(lambda ctx, ef: ef.processLineInfo(diff_line, ctx), self.evaluatorFactories, lineCtx)
-				alerts = self.checkLine(lineCtx)
-				matches_in_rev.extend(
-					[(alert, lineCtx["filename"], rev_hash, diff_line, repo_name, repo_id) for alert in alerts])
+				if diff_line.startswith('diff --git a/') and len(lines) > 0:
+					filename = diff_line[12:line.find(' b/')]
+					alerts = self.code_checker.check(lines, filename)
+					extended_alerts = [(alert[0], alert[1], rev_hash, diff_line, repo_name, repo_id) for alert in alerts]
+					matches_in_rev.extend(extended_alerts)
+					lines = []
+				else:
+					lines.append(diff_line)			
 		except subprocess.CalledProcessError as e:
 			print 'Failed running %s (exception: %s)' % (cmd, e)
 
@@ -402,33 +406,15 @@ class RepoGuard:
 
 
 	def readAlertConfigFromFile(self):
-		self.alertConfig_o = load_rules(self.ALERT_CONFIG_DIR)
+		bare_rules = load_rules(self.ALERT_CONFIG_DIR)
+		resolved_rules = build_resolved_ruleset(bare_rules)
 
 		# filter for items in --alerts parameter
 		applied_alerts = [(aid, adata) for aid, adata 
-			in self.alertConfig_o.iteritems() 
-			if not self.args.alerts or aid in self.args.alerts ]
+			in resolved_rules.iteritems() 
+			if not self.args.alerts or aid in self.args.alerts]
 		
-		self.alertConfig = {}
-		for alert_id, alert_data in applied_alerts:
-			try:
-				alert_data['evaluators'] = [fact.create(alert_data) for fact 
-					in self.evaluatorFactories
-					if fact.key in alert_data]
-				self.alertConfig[alert_id] = alert_data
-			except Exception:
-				print '!! Failure during configuring rule "%s"' % alert_id
-				raise
-
-	def checkLine(self, line_info):
-		# a bit dirty here, but don't check line if it's empty
-		if "line" in line_info and (line_info["line"] is None or len(line_info["line"].strip()) == 0):
-			return []
-
-		# run checks
-		from itertools import imap
-		return [alert_id for alert_id, alert_data in self.alertConfig.iteritems()
-			if all(imap(lambda e: e.evaluate(line_info), alert_data['evaluators']))]
+		self.code_checker = CodeCheckerFactory(applied_alerts).create
 
 
 	def putLock(self):
@@ -528,157 +514,8 @@ class RepoGuard:
 		print "* run finished at %s" % now
 
 
-class EvaluatorBase(object):
-	def __init__(self):
-		super(EvaluatorBase, self).__init__()
-
-
-	def evaluate(self, line_info):
-		from exceptions import NotImplementedError
-		raise NotImplementedError()
-		
-
-class EvaluatorFactoryBase(object):
-	def __init__(self, key):
-		super(EvaluatorFactoryBase, self).__init__()
-		self.key = key
-
-
-	def key(self):
-		return self.key
-
-
-	def processLineInfo(self, line, line_info):
-		return line_info
-
-
-	def create(self, configuration):
-		from exceptions import NotImplementedError
-		raise NotImplementedError()
-
-
-class InScriptEvalFactory(EvaluatorFactoryBase):
-	def __init__(self):
-		super(InScriptEvalFactory, self).__init__("inscripttag")
-		self.script_begin_re = re.compile(r'(?!.+type="text/(tpl|template)".+)<script[^>]*>')
-		self.script_end_re = re.compile(r'</script\s*>')
-
-
-	def processLineInfo(self, line, line_info):
-		if line[0:13]=='diff --git a/':
-			line_info["inside_script_tag"] = 0
-		else:
-			line_info["inside_script_tag"] += len(self.script_begin_re.findall(line)) - len(self.script_end_re.findall(line))
-
-		return line_info
-
-
-	def create(self, rule):
-		return self.InScriptEvaluator()
-
-
-	class InScriptEvaluator(EvaluatorBase):
-		def __init__(self):
-			super(InScriptEvalFactory.InScriptEvaluator, self).__init__()
-
-
-		def evaluate(self, line_info):
-			value = line_info["inside_script_tag"]
-			return None if value is None else value > 0
-
-
-class LineEvalFactory(EvaluatorFactoryBase):
-	def __init__(self):
-		super(LineEvalFactory, self).__init__("line")
-
-	def processLineInfo(self, line, line_info):
-		line_info["line"] = line
-		return line_info
-
-	def create(self, rule):
-		if "diff" in rule:
-			if rule["diff"] == "add":
-				return self.LineEvaluator(rule["line"], "+")
-			elif rule["diff"] == "del":
-				return self.LineEvaluator(rule["line"], "-")
-			elif rule["diff"] == "all":
-				return self.LineEvaluator(rule["line"])
-			else:
-				raise Exception("Unknown diff strategy: %s", rule["diff"])
-		else:
-			return self.LineEvaluator(rule["line"])
-
-
-	class LineEvaluator(EvaluatorBase):
-		def __init__(self, rules, must_begin_with=None):
-			super(LineEvalFactory.LineEvaluator, self).__init__()
-			self.must_begin_with = must_begin_with
-			self.positive_patterns = []
-			self.negative_patterns = []
-			for rule in rules:
-				if "match" in rule:
-					self.positive_patterns.append(re.compile(rule["match"], flags=re.IGNORECASE))
-				elif "except" in rule:
-					self.negative_patterns.append(re.compile(rule["except"], flags=re.IGNORECASE))
-				else:
-					raise Exception("Unknown key in %s" % str(rule))
-
-		def evaluate(self, line_info):
-			if "line" not in line_info:
-				return None
-			else:
-				value = line_info["line"]
-			
-			ctx = True
-			if self.must_begin_with is not None:
-				ctx = value.startswith(self.must_begin_with)
-
-			ctx = reduce(lambda ctx, p: ctx and p.match(value), self.positive_patterns, ctx)
-			return reduce(lambda ctx, p: ctx and not p.match(value), self.negative_patterns, ctx)
-
-
-
-class FileEvalFactory(EvaluatorFactoryBase):
-	def __init__(self):
-		super(FileEvalFactory, self).__init__("file")
-
-	def processLineInfo(self, line, line_info):
-		if line[0:13]=='diff --git a/':
-			line_info["filename"] = line[12:line.find(' b/')]
-		return line_info
-
-	def create(self, rule):
-		return self.FileEvaluator(rule["file"])
-
-
-	class FileEvaluator(EvaluatorBase):
-		def __init__(self, rules):
-			super(FileEvalFactory.FileEvaluator, self).__init__()
-			self.positive_patterns = []
-			self.negative_patterns = []
-			for rule in rules:
-				if "match" in rule:
-					self.positive_patterns.append(re.compile(rule["match"], flags=re.IGNORECASE))
-				elif "except" in rule:
-					self.negative_patterns.append(re.compile(rule["except"], flags=re.IGNORECASE))
-				else:
-					raise Exception("Unknown key in %s" % str(rule))
-
-		def evaluate(self, line_info):
-			if "filename" not in line_info:
-				return None
-			else:
-				value = line_info["filename"]
-
-			ctx = reduce(lambda ctx, p: ctx and p.match(value), self.positive_patterns, True)
-			return reduce(lambda ctx, p: ctx and not p.match(value), self.negative_patterns, ctx)
-
-
-
 def createInitializedRepoguardInstance():
-	baseEvaluators = [LineEvalFactory(), InScriptEvalFactory(), FileEvalFactory()]
-	#evaluators = reduce(list.__add__, map(lambda e: [e, NegateFactory(e)], baseEvaluators))
-	return RepoGuard(baseEvaluators)
+	return RepoGuard()
 
 
 if __name__ == '__main__':
