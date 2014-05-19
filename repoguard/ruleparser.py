@@ -1,6 +1,6 @@
 import yaml
 
-class RuleParser:
+class RuleLoader:
 	file_name = None
 	namespace = None
 	autoincr_base = 0
@@ -35,15 +35,16 @@ class RuleParser:
 			self.autoincr_base += 1
 			return "%s::gen%d" % (self.namespace, self.autoincr_base) 
 
+
 ## Helper method to load configs in a dir:
-def load_rules(mypath):
+def load_rules(rule_dir):
 	from os import listdir
 	from os.path import isfile, join
-	rule_files = [join(mypath, f) for f in listdir(mypath) if isfile(join(mypath,f)) and f.endswith(".yml")]
+	rule_files = [join(rule_dir, f) for f in listdir(rule_dir) if isfile(join(rule_dir,f)) and f.endswith(".yml")]
 	rules = {}
 	for rf in rule_files:
 		try:
-			rules.update(RuleParser(rf).load())
+			rules.update(RuleLoader(rf).load())
 		except Exception as e:
 			raise Exception("Error parsing file %s" % rf, e)
 	return rules
