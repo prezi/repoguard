@@ -1,3 +1,5 @@
+import copy
+import sys
 import yaml
 
 class RuleLoader:
@@ -46,5 +48,44 @@ def load_rules(rule_dir):
 		try:
 			rules.update(RuleLoader(rf).load())
 		except Exception as e:
-			raise Exception("Error parsing file %s" % rf, e)
+			raise Exception("Error parsing file %s" % rf), None, sys.exc_info()[2]
 	return rules
+
+def resolve_rules(rules, resolved=set()):
+	return {name, rule}
+
+def resolve_rule(rule_name, ruleset, in_progress=()):
+	if rule_name not in ruleset:
+		raise Exception("Unknown rule: %s", rule_name)
+	if rule_name in in_progress:
+		raise Exception("Circular depencencies found: %s", " -> ".join(in_progress))
+	rule_specs = ruleset[rule_name]
+	namespace, localname = rule_name.split("::")
+	if "extends" in rule_specs:
+		base_rule_names = [b.strip() for b in rule_specs["extends"].split(",")]
+		base_rule_fqdns = ["%s::%s" % (namespace, rn) if "::" not in rn else rn for rn in base_rule_names]
+		base_rules = [resolve_rules(rname, ruleset, in_progress + (rname,)) for rname in base_rule_fqdns]
+		return merge_many_rules(rule_specs, base_rules)
+	else:
+		return rule_specs
+
+def merge_many_rules(target, sources):
+	rule = copy.deepcopy(target)
+	for base_rule in sources:
+		merge_rules(rule, base_rule)
+	return rule
+
+def merge_rules(target, source):
+	if isinstance(source, dict):
+		for k, v in source.iteritems():
+			if isinstance(target, dict) and k not in target:
+				target[k] = v
+			elif isinstance(target, list) and {k: v} not in target:
+				target.append({k: v})
+			else:
+				merge_rules(target[k], v)
+	elif isinstance(source, list):
+		for e in source:
+			if e not in target:
+				target.append(e)
+
