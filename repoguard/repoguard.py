@@ -385,9 +385,7 @@ class RepoGuard:
 			for diff_line in diff_output.split("\n")[3:]:
 				if diff_line.startswith('diff --git a/') and len(lines) > 0:
 					filename = diff_line[12:diff_line.find(' b/')]
-					print filename
 					alerts = self.code_checker.check(lines, filename)
-					print alerts
 					extended_alerts = [(alert[0], alert[1], rev_hash, diff_line, repo_name, repo_id) for alert in alerts]
 					matches_in_rev.extend(extended_alerts)
 					lines = []

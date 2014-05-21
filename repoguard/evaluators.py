@@ -40,46 +40,34 @@ class LineEvalFactory:
 	def create(self, rule):
 		if "line" not in rule:
 			return None
-
-		if self.mode == self.MODE_DIFF:
-			if "diff" in rule:
-				if rule["diff"] == "add":
-					return self.LineEvaluator(rule["line"], "+")
-				elif rule["diff"] == "del":
-					return self.LineEvaluator(rule["line"], "-")
-				elif rule["diff"] == "all":
-					return self.LineEvaluator(rule["line"])
-				else:
-					raise Exception("Unknown diff strategy: %s" % rule["diff"])
-			else:
-				return self.LineEvaluator(rule["line"])
 		else:
-			if "diff" in rule and rule["diff"] != "del":
-				return self.LineEvaluator(rule["line"])
+			positive_patterns = [re.compile(r["match"]) for r in rule["line"] if "match" in r]
+			negative_patterns = [re.compile(r["except"]) for r in rule["line"] if "except" in r]
+			diff_mode = rule["diff"] if "diff" in rule else "all"
+			if self.mode == self.MODE_DIFF:
+				diff_mode_prefixes = {"add": "+ ", "del": "- "} 
+				must_begin_with = diff_mode_prefixes.get(diff_mode, None)
+				return self.LineEvaluator(positive_patterns, negative_patterns, must_begin_with)
 			else:
-				return None
+				if diff_mode != "del":
+					return self.LineEvaluator(positive_patterns, negative_patterns)
+				else:
+					return None
 
 	class LineEvaluator:
 		key = "line"
 
-		def __init__(self, rules, must_begin_with=None):
+		def __init__(self, positive_patterns, negative_patterns, must_begin_with=None):
 			self.must_begin_with = must_begin_with
-			self.positive_patterns = []
-			self.negative_patterns = []
-			for rule in rules:
-				if "match" in rule:
-					self.positive_patterns.append(re.compile(rule["match"], flags=re.IGNORECASE))
-				elif "except" in rule:
-					self.negative_patterns.append(re.compile(rule["except"], flags=re.IGNORECASE))
-				else:
-					raise Exception("Unknown key in %s" % str(rule))
+			self.positive_patterns = positive_patterns
+			self.negative_patterns = negative_patterns
 
 		def matches(self, line_context, line):
 			if line is None or len(line) == 0:
 				return False
 			ctx = True if self.must_begin_with is None else line.startswith(self.must_begin_with)
-			ctx = ctx and reduce(lambda ctx, p: ctx and p.match(line), self.positive_patterns, ctx)
-			return ctx and reduce(lambda ctx, p: ctx and not p.match(line), self.negative_patterns, ctx)
+			ctx = ctx and reduce(lambda ctx, p: ctx and p.search(line) is not None, self.positive_patterns, ctx)
+			return ctx and reduce(lambda ctx, p: ctx and p.search(line) is None, self.negative_patterns, ctx)
 
 
 class FileEvalFactory:
