@@ -47,14 +47,27 @@ class LineEvalFactory:
 			if self.mode == self.MODE_DIFF:
 				diff_mode_prefixes = {"add": "+ ", "del": "- "} 
 				must_begin_with = diff_mode_prefixes.get(diff_mode, None)
-				return self.LineEvaluator(positive_patterns, negative_patterns, must_begin_with)
+				return self.DiffLineEvaluator(positive_patterns, negative_patterns, must_begin_with)
 			else:
 				if diff_mode != "del":
-					return self.LineEvaluator(positive_patterns, negative_patterns)
+					return self.SimpleLineEvaluator(positive_patterns, negative_patterns)
 				else:
 					return None
 
-	class LineEvaluator:
+	class SimpleLineEvaluator:
+		key = "line"
+
+		def __init__(self, positive_patterns, negative_patterns):
+			self.positive_patterns = positive_patterns
+			self.negative_patterns = negative_patterns
+
+		def matches(self, line_context, line):
+			if line is None or len(line) == 0:
+				return False
+			ctx = reduce(lambda ctx, p: ctx and p.search(line) is not None, self.positive_patterns, True)
+			return ctx and reduce(lambda ctx, p: ctx and p.search(line) is None, self.negative_patterns, ctx)
+
+	class DiffLineEvaluator:
 		key = "line"
 
 		def __init__(self, positive_patterns, negative_patterns, must_begin_with=None):
@@ -63,12 +76,16 @@ class LineEvalFactory:
 			self.negative_patterns = negative_patterns
 
 		def matches(self, line_context, line):
-			if line is None or len(line) == 0:
+			if line is None or len(line) <= 2:
 				return False
-			ctx = True if self.must_begin_with is None else line.startswith(self.must_begin_with)
+
+			ctx = True
+			if self.must_begin_with is not None:
+				ctx = line.startswith(self.must_begin_with)
+				line = line [2:]
+
 			ctx = ctx and reduce(lambda ctx, p: ctx and p.search(line) is not None, self.positive_patterns, ctx)
 			return ctx and reduce(lambda ctx, p: ctx and p.search(line) is None, self.negative_patterns, ctx)
-
 
 class FileEvalFactory:
 
