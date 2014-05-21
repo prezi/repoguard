@@ -29,7 +29,6 @@ class InScriptEvalFactory:
 			return line_context
 
 
-
 class LineEvalFactory:
 	MODE_DIFF = 1
 	MODE_SINGLE = 2
@@ -86,6 +85,7 @@ class LineEvalFactory:
 
 			ctx = ctx and reduce(lambda ctx, p: ctx and p.search(line) is not None, self.positive_patterns, ctx)
 			return ctx and reduce(lambda ctx, p: ctx and p.search(line) is None, self.negative_patterns, ctx)
+
 
 class FileEvalFactory:
 
