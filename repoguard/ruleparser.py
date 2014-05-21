@@ -61,12 +61,16 @@ def _is_abstract(rule_name):
 
 ## Resolves a rule
 def resolve_rule(rule_name, ruleset, in_progress=()):
+	namespace, localname = rule_name.split("::")
 	if rule_name not in ruleset:
-		raise Exception("Unknown rule: %s", rule_name)
+		abstract_name = "%s::~%s" % (namespace, localname)
+		if abstract_name not in ruleset:
+			raise Exception("Unknown rule: %s" % rule_name)
+		else:
+			rule_name = abstract_name
 	if rule_name in in_progress:
 		raise Exception("Circular depencencies found: %s -> %s" % (" -> ".join(in_progress), rule_name))
 	rule_specs = ruleset[rule_name]
-	namespace, localname = rule_name.split("::")
 	if "extends" in rule_specs:
 		base_rule_names = [b.strip() for b in rule_specs["extends"].split(",")]
 		base_rule_fqdns = ["%s::%s" % (namespace, rn) if "::" not in rn else rn for rn in base_rule_names]

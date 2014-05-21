@@ -377,14 +377,17 @@ class RepoGuard:
 		matches_in_rev = []
 		cwd = "%s/%s_%s/" % (self.WORKING_DIR, repo_name, repo_id)
 		cmd = "git show --function-context %s" % rev_hash
+
 		try:
 			diff_output = subprocess.check_output(cmd.split(), cwd=cwd)
 			lines = []
 			# we ignore the first 3 lines which are commit info for sure
 			for diff_line in diff_output.split("\n")[3:]:
 				if diff_line.startswith('diff --git a/') and len(lines) > 0:
-					filename = diff_line[12:line.find(' b/')]
+					filename = diff_line[12:diff_line.find(' b/')]
+					print filename
 					alerts = self.code_checker.check(lines, filename)
+					print alerts
 					extended_alerts = [(alert[0], alert[1], rev_hash, diff_line, repo_name, repo_id) for alert in alerts]
 					matches_in_rev.extend(extended_alerts)
 					lines = []
@@ -410,11 +413,11 @@ class RepoGuard:
 		resolved_rules = build_resolved_ruleset(bare_rules)
 
 		# filter for items in --alerts parameter
-		applied_alerts = [(aid, adata) for aid, adata 
+		applied_alerts = {aid: adata for aid, adata 
 			in resolved_rules.iteritems() 
-			if not self.args.alerts or aid in self.args.alerts]
+			if not self.args.alerts or aid in self.args.alerts}
 		
-		self.code_checker = CodeCheckerFactory(applied_alerts).create
+		self.code_checker = CodeCheckerFactory(applied_alerts).create()
 
 
 	def putLock(self):

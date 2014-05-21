@@ -134,3 +134,10 @@ class RuleInheritanceTestCase(unittest.TestCase):
 	def test_circular_deps(self):
 		with self.assertRaises(Exception):
 			resolve_rule("ns1::foo", {"ns1::foo": self.rule_1, "ns1::base": self.rule_3})
+
+	def test_inheritance_from_abstract_base(self):
+		rule = resolve_rule("ns1::sys", {"ns1::sys": self.rule_0, "ns1::~base": self.rule_2})
+
+		self.assertIn("line", rule)
+		self.assertEquals(3, len(rule)) #extends, line, diff
+		self.assertEquals(1, len(rule["line"]))

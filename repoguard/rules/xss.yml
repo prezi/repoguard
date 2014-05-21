@@ -1,4 +1,4 @@
---- #!base
+--- #!~base
 description: Unescaped user input might lead to Cross-site scripting issues, please ensure that input can only come from trusted sources
 
 --- #!django

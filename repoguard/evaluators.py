@@ -1,3 +1,4 @@
+import re
 
 class InScriptEvalFactory:
 	def __init__(self):
@@ -37,7 +38,10 @@ class LineEvalFactory:
 		self.mode = mode
 
 	def create(self, rule):
-		if mode == MODE_DIFF:
+		if "line" not in rule:
+			return None
+
+		if self.mode == self.MODE_DIFF:
 			if "diff" in rule:
 				if rule["diff"] == "add":
 					return self.LineEvaluator(rule["line"], "+")
@@ -74,8 +78,8 @@ class LineEvalFactory:
 			if line is None or len(line) == 0:
 				return False
 			ctx = True if self.must_begin_with is None else line.startswith(self.must_begin_with)
-			ctx = ctx and reduce(lambda ctx, p: ctx and p.match(value), self.positive_patterns, ctx)
-			return ctx and reduce(lambda ctx, p: ctx and not p.match(value), self.negative_patterns, ctx)
+			ctx = ctx and reduce(lambda ctx, p: ctx and p.match(line), self.positive_patterns, ctx)
+			return ctx and reduce(lambda ctx, p: ctx and not p.match(line), self.negative_patterns, ctx)
 
 
 class FileEvalFactory:
@@ -87,7 +91,6 @@ class FileEvalFactory:
 		key = "file"
 
 		def __init__(self, rules):
-			super(FileEvalFactory.FileEvaluator, self).__init__()
 			self.positive_patterns = []
 			self.negative_patterns = []
 			for rule in rules:
@@ -105,6 +108,8 @@ class FileEvalFactory:
 				# it's not None, we don't need to run the costly checks, since once it was
 				# matching already
 				return True
+				
+			filename = line_context["filename"]
 
-			ctx = reduce(lambda ctx, p: ctx and p.match(value), self.positive_patterns, True)
-			return ctx and reduce(lambda ctx, p: ctx and not p.match(value), self.negative_patterns, ctx)
+			ctx = reduce(lambda ctx, p: ctx and p.match(filename), self.positive_patterns, True)
+			return ctx and reduce(lambda ctx, p: ctx and not p.match(filename), self.negative_patterns, ctx)

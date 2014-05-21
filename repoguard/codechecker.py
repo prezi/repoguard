@@ -46,6 +46,7 @@ class CodeCheckerFactory:
 		factories = [LineEvalFactory(mode), InScriptEvalFactory(), FileEvalFactory()]
 		context_processors = [InScriptEvalFactory.ContextProcessor()]
 		rules = [self.create_single(rn, factories) for rn in self.ruleset]
+		return CodeChecker(context_processors, rules)
 
 	def create_single(self, rule_name, factories):
 		rule = self.ruleset[rule_name]
