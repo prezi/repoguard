@@ -44,7 +44,7 @@ class LineEvalFactory:
 			negative_patterns = [re.compile(r["except"]) for r in rule["line"] if "except" in r]
 			diff_mode = rule["diff"] if "diff" in rule else "all"
 			if self.mode == self.MODE_DIFF:
-				diff_mode_prefixes = {"add": "+ ", "del": "- "} 
+				diff_mode_prefixes = {"add": "+", "del": "-"}
 				must_begin_with = diff_mode_prefixes.get(diff_mode, None)
 				return self.DiffLineEvaluator(positive_patterns, negative_patterns, must_begin_with)
 			else:
@@ -81,8 +81,7 @@ class LineEvalFactory:
 			ctx = True
 			if self.must_begin_with is not None:
 				ctx = line.startswith(self.must_begin_with)
-				line = line [2:]
-
+				line = line [1:]
 			ctx = ctx and reduce(lambda ctx, p: ctx and p.search(line) is not None, self.positive_patterns, ctx)
 			return ctx and reduce(lambda ctx, p: ctx and p.search(line) is None, self.negative_patterns, ctx)
 

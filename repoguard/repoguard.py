@@ -381,16 +381,25 @@ class RepoGuard:
 		try:
 			diff_output = subprocess.check_output(cmd.split(), cwd=cwd)
 			lines = []
+			filename = None
 			# we ignore the first 3 lines which are commit info for sure
 			for diff_line in diff_output.split("\n")[3:]:
-				if diff_line.startswith('diff --git a/') and len(lines) > 0:
-					filename = diff_line[12:diff_line.find(' b/')]
+				newfile = diff_line.startswith('diff --git a/')
+				if newfile and filename is not None:
 					alerts = self.code_checker.check(lines, filename)
-					extended_alerts = [(alert[0], alert[1], rev_hash, diff_line, repo_name, repo_id) for alert in alerts]
+					extended_alerts = [(alert[0], filename, rev_hash, alert[1], repo_name, repo_id) for alert in alerts]
 					matches_in_rev.extend(extended_alerts)
 					lines = []
+					filename = diff_line[12:diff_line.find(' b/')]
+				elif newfile and filename is None:
+					filename = diff_line[12:diff_line.find(' b/')]
+					lines = []
 				else:
-					lines.append(diff_line)			
+					lines.append(diff_line)
+			if filename is not None:
+				alerts = self.code_checker.check(lines, filename)
+				extended_alerts = [(alert[0], filename, rev_hash, alert[1], repo_name, repo_id) for alert in alerts]
+				matches_in_rev.extend(extended_alerts)
 		except subprocess.CalledProcessError as e:
 			print 'Failed running %s (exception: %s)' % (cmd, e)
 
