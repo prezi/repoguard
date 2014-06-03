@@ -51,7 +51,7 @@ class LineEvalFactory:
 				if diff_mode != "del":
 					return self.SimpleLineEvaluator(positive_patterns, negative_patterns)
 				else:
-					return None
+					return self.AlwaysFalseLineEvaluator()
 
 	class SimpleLineEvaluator:
 		key = "line"
@@ -84,6 +84,12 @@ class LineEvalFactory:
 				line = line [1:]
 			ctx = ctx and reduce(lambda ctx, p: ctx and p.search(line) is not None, self.positive_patterns, ctx)
 			return ctx and reduce(lambda ctx, p: ctx and p.search(line) is None, self.negative_patterns, ctx)
+
+	class AlwaysFalseLineEvaluator:
+		key = "line"
+
+		def matches(self, line_context, line):
+			return False
 
 
 class FileEvalFactory:

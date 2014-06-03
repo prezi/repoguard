@@ -68,3 +68,16 @@ class LineEvaluatorTestCase(unittest.TestCase):
 		self.assertTrue(evaluator.matches({}, lines[1]))
 		self.assertTrue(evaluator.matches({}, lines[2]))
 		self.assertFalse(evaluator.matches({}, lines[3]))
+
+	def test_normal_del(self):
+		lines = [
+			"hello greeter",
+			"hello world"
+		]
+		self.rule["diff"] = "del"
+
+		lef = LineEvalFactory(mode=LineEvalFactory.MODE_SINGLE)
+		evaluator = lef.create(self.rule)
+
+		self.assertFalse(evaluator.matches({}, lines[0]))
+		self.assertFalse(evaluator.matches({}, lines[1]))
