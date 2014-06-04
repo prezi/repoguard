@@ -1,0 +1,8 @@
+--- #!unsecure_protocol
+diff: add
+line:
+    - match: (http|ftp)://.*
+    - except: "http://localhost:"
+    - except: xmlns|doctype|DOCTYPE|<prezi><documentStyle>|template|createElementNS
+file:
+    - except: (.*\.(po|json|html|xml|xaml|ism|markdown|md|txt|csv|doc|rdoc|css|gradle|properties|log|wiki)$)|.*(templates/|(scripts/(build|common|release|bootstrap))|(^/cookbooks/.*\.rb))|(^/scripts|build$)

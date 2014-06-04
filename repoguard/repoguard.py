@@ -17,6 +17,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from ruleparser import build_resolved_ruleset
 from ruleparser import load_rules
+from notifier import EmailNotifier
 
 
 class RepoGuard:
@@ -289,9 +290,10 @@ class RepoGuard:
 			commit_id = issue[2]
 			matching_line = issue[3][0:200].decode('utf-8', 'replace')
 			repo_name = issue[4]
-			#repo_id = issue[5]
-			alert_data = self.alertConfig[check_id]
 
+			alert_data = self.alertConfig[check_id]
+			# TODO: get the list of subscribed users for this repository & check_id combo, until then hardcoded value
+			alert_data['notify'] = 'security@prezi.com'
 			if alert_data['notify'] not in alert_per_notify_person:
 				alert_per_notify_person[alert_data['notify']] = "The following change(s) might introduce new security risks:\n\n"
 			
@@ -302,25 +304,15 @@ class RepoGuard:
 																	"description: %s\n"
 																	"repo name: %s\n\n" %  (check_id, filename, repo_name, commit_id, matching_line, alert_data['description'], repo_name) ) 
 		for mail_addr in alert_per_notify_person:
-			print "sending mail to: %s" % mail_addr
 			now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-			#print "mail content: %s\n\n" % alert_per_notify_person[mail_addr]
-			self.send_email("mihaly.zagon+repoguard@prezi.com", [mail_addr], "[repoguard] possibly vulnerable changes - %s" % now, alert_per_notify_person[mail_addr])
 
+			email_notification = EmailNotifier(
+				self.getConfigOptionValue("default_notification_src_address"), 
+				self.getConfigOptionValue("default_notification_to_address"),
+				"[repoguard] possibly vulnerable changes - %s" % now,
+				alert_per_notify_person[mail_addr])
 
-	def send_email(self, email_from, email_to, subject, txt):
-		recipients = ", ".join(email_to)
-		
-		msg = MIMEMultipart()
-		msg["Subject"] = subject
-		msg['From'] = email_from
-		msg['To'] = recipients
-
-		msg.attach(MIMEText(txt.encode("utf-8"), "plain"))
-		
-		smtp = smtplib.SMTP('localhost')
-		smtp.sendmail(email_from, email_to, msg.as_string())
-		smtp.quit()
+			email_notification.send_if_fine()
 
 
 	def setInitialRepoStatusById(self, repo_id, repo_name):
@@ -447,12 +439,14 @@ class RepoGuard:
 				return True
 			else:
 				print 'Lock there but script not running, removing lock entering aborted state...'
-				self.send_email(	'mihaly.zagon+repoguard@prezi.com', 
-									['security@prezi.com'], 
-									'[repoguard] invalid lock, entering aborted state', 
-									'Found lock with PID %s, but process not found... entering aborted state (someone should check the logs and restart manually!)' % pid
-								)
+				email_notification = EmailNotifier(
+					self.getConfigOptionValue("default_notification_src_address"), 
+					self.getConfigOptionValue("default_notification_to_address"),
+					"[repoguard] invalid lock, entering aborted state",
+					"Found lock with PID %s, but process not found... entering aborted state (someone should check the logs and restart manually!)")
 
+				email_notification.send_if_fine()
+				
 				self.releaseLock()
 				self.setAborted()
 				return False

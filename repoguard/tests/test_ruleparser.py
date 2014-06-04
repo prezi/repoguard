@@ -1,5 +1,4 @@
 import unittest
-from mock import patch
 
 from repoguard.ruleparser import RuleLoader
 from repoguard.ruleparser import merge_rules

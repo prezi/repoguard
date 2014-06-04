@@ -62,7 +62,7 @@ line:
 diff: add
 line:
     - match: (secret|password|S3Connection)+[\w_]*[\s]*=.*
-    - except: .+=.*(get_encrypted_data|export [\w_]\s*=\s*['"`]<%=.*(password|secret)|{{ S3_SECRET_KEY }}|prezi_app_secrets\['django_secret_key'\]|chef_secrets\['encrypted_data_bag_secret|StringOption\(\)|AWS_SECRET=<%=|aws_secret => aws_secret)
+    - except: .+=.*(get_encrypted_data|export [\w_]\s*=\s*['"`]<%=.*(password|secret)|{{ S3_SECRET_KEY }}|prezi_app_secrets\['django_secret_key'\]|chef_secrets\['encrypted_data_bag_secret|StringOption\(\)|AWS_SECRET=<%=|aws_secret => aws_secret|<%=/s*@/w+/s*%>)
 file:
     - except: .*(/scripts/build|/scripts/common|/scripts/release|/scripts/bootstrap)
 
@@ -111,14 +111,6 @@ line:
     - match: java\.sql\..*
 file:
     - match: .*\.(scala|java)
-
---- #!unsecure_protocol
-diff: add
-line:
-    - match: (http|ftp)://.*
-    - except: \+.*(http://localhost:|xmlns|doctype|<prezi><documentStyle>|template|createElementNS).*
-file:
-    - except: (.*\.(po|json|html|xml|xaml|ism|markdown|md|txt|csv|doc|rdoc|css|gradle|properties|log|wiki)$)|.*(templates/|(scripts/(build|common|release|bootstrap))|(^/cookbooks/.*\.rb))|(^/scripts|build$)
 
 --- #!autoescape_off
 diff: add
@@ -388,6 +380,8 @@ file:
 diff: add
 line:
     - match: \son\w+=\s*('|").*
+file:
+    - except: .*\.(xml)
 
 --- #!python_password_form
 diff: add
