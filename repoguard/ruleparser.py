@@ -14,7 +14,13 @@ class RuleLoader:
 	def load(self):
 		with open(self.file_name) as f:
 			content = f.read()
-			return {self._get_key(c): yaml.load(c) for c in content.split('---') if len(c) > 0}
+			return {self._get_key(c): self._load_yaml(c) for c in content.split('---') if len(c) > 0}
+
+	def _load_yaml(self, text):
+		try:
+			return yaml.load(text)
+		except Exception:
+			raise Exception("Error loading yaml:\n" + text)
 
 	def _find_default_namespace(self):
 		dpos = self.file_name.rfind("/")
@@ -48,7 +54,7 @@ def load_rules(rule_dir):
 		try:
 			rules.update(RuleLoader(rf).load())
 		except Exception as e:
-			raise Exception("Error parsing file %s" % rf), None, sys.exc_info()[2]
+			raise Exception("Error parsing file %s: %s" % (rf, e.message)), None, sys.exc_info()[2]
 	return rules
 
 ## Resolves rule hierarchy, and omits abstract rules
