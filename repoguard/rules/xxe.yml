@@ -1,0 +1,35 @@
+--- #!~base
+description: either the xml source is not client or DTD parsing is disabled
+
+--- #!python
+description: "sax; etree; pulldom; minidom; xmlrpc: all vulnerable"
+file:
+    - match: ^.*\.py$
+line:
+    - match: "from xml.* import"
+    - match: ^\s*import xml.*
+    - match: sax\.parseString
+
+--- #!java
+extends: base
+file:
+    - match: ^.*\.(java|clj)$
+line:
+    - match: JAXBContext.newInstance
+    - match: XMLStreamReader
+    - match: XMLInputFactory.newInstance()
+    - match: SAXParser(Factory)+
+
+--- #!scala
+extends: java
+file:
+    - match: ^.*\.scala$
+line:
+    - match: XML\.load(File|String|XML)*
+
+--- #!dotnet
+extends: base
+line:
+    - match: Xml(Document|Reader|TextReader|Resolver)
+file:
+    - match: ^.+\.cs$
