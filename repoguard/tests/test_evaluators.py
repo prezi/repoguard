@@ -2,6 +2,7 @@ import unittest
 from mock import Mock
 
 from repoguard.evaluators import LineEvalFactory
+from repoguard.evaluators import FileEvalFactory
 
 class LineEvaluatorTestCase(unittest.TestCase):
 	
@@ -81,3 +82,42 @@ class LineEvaluatorTestCase(unittest.TestCase):
 
 		self.assertFalse(evaluator.matches({}, lines[0]))
 		self.assertFalse(evaluator.matches({}, lines[1]))
+
+	def test_multisearch_criteria(self):
+		lines = [
+			"hello",
+			"bello",
+			"hello world"
+		]
+		self.rule["line"].append({"match": "bello"})
+
+		lef = LineEvalFactory(mode=LineEvalFactory.MODE_SINGLE)
+		evaluator = lef.create(self.rule)
+
+		self.assertTrue(evaluator.matches({}, lines[0]))
+		self.assertTrue(evaluator.matches({}, lines[1]))
+		self.assertFalse(evaluator.matches({}, lines[2]))
+
+
+class FileEvaluatorTestCase(unittest.TestCase):
+
+	def test_multisearch_criteria(self):
+		files = [
+			"vuln.scala",
+			"vuln.java",
+			"test_vuln.scala"
+		]
+		rule = {
+			"file": [
+				{"match": ".+\\.scala"},
+				{"match": ".+\\.java"},
+				{"except": "test_.+"}
+			]
+		}
+
+		fef = FileEvalFactory()
+		evaluator = fef.create(rule)
+
+		self.assertTrue(evaluator.matches({"filename": files[0]}, "test"))
+		self.assertTrue(evaluator.matches({"filename": files[1]}, "test"))
+		self.assertFalse(evaluator.matches({"filename": files[2]}, "test"))

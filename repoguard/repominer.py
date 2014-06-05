@@ -1,7 +1,8 @@
 import argparse
-import re
 import os
 import os.path
+import re
+import sys
 
 from codechecker import CodeCheckerFactory
 from evaluators import LineEvalFactory
@@ -22,7 +23,11 @@ enabled_alerts = [a.strip() for a in args.alerts.split(',')] if args.alerts else
 applied_alerts = {aid: adata for aid, adata 
 	in resolved_rules.iteritems() 
 	if not enabled_alerts or any(aid.startswith(ea) for ea in enabled_alerts)}
-		
+
+if not applied_alerts:
+	print "No matching alers"
+	sys.exit()
+
 code_checker = CodeCheckerFactory(applied_alerts).create(LineEvalFactory.MODE_SINGLE)
 
 alerts = []
@@ -37,7 +42,9 @@ for path in args.files:
 	else:
 		with open(path) as f:
 			content = f.readlines()
-			alerts.extend(code_checker.check(content, path))
+			fname = os.path.basename(path)
+			actual_alert = [(fname, alert, line) for alert, line in code_checker.check(content, fname)]
+			alerts.extend(actual_alert)
 
 for fname, alert, line in alerts:
 	print "%s\n%s\n%s\n\n" % (fname, alert, line.strip())

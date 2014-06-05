@@ -63,7 +63,7 @@ class LineEvalFactory:
 		def matches(self, line_context, line):
 			if line is None or len(line) == 0:
 				return False
-			ctx = reduce(lambda ctx, p: ctx and p.search(line) is not None, self.positive_patterns, True)
+			ctx = reduce(lambda ctx, p: ctx or p.search(line) is not None, self.positive_patterns, False)
 			return ctx and reduce(lambda ctx, p: ctx and p.search(line) is None, self.negative_patterns, ctx)
 
 	class DiffLineEvaluator:
@@ -82,7 +82,7 @@ class LineEvalFactory:
 			if self.must_begin_with is not None:
 				ctx = line.startswith(self.must_begin_with)
 				line = line [1:]
-			ctx = ctx and reduce(lambda ctx, p: ctx and p.search(line) is not None, self.positive_patterns, ctx)
+			ctx = ctx and reduce(lambda ctx, p: ctx or p.search(line) is not None, self.positive_patterns, False)
 			return ctx and reduce(lambda ctx, p: ctx and p.search(line) is None, self.negative_patterns, ctx)
 
 	class AlwaysFalseLineEvaluator:
@@ -112,7 +112,7 @@ class FileEvalFactory:
 					raise Exception("Unknown key in %s" % str(rule))
 
 		def matches(self, line_context, line):
-			if line is not None:
+			if line is None:
 				# bit ugly, but this is a speed improvement: we check first if a file-keyed
 				# evaluator matches to a filename, and at that point the line is None. When
 				# it's not None, we don't need to run the costly checks, since once it was
@@ -121,5 +121,5 @@ class FileEvalFactory:
 				
 			filename = line_context["filename"]
 
-			ctx = reduce(lambda ctx, p: ctx and p.match(filename), self.positive_patterns, True)
+			ctx = reduce(lambda ctx, p: ctx or p.match(filename), self.positive_patterns, False)
 			return ctx and reduce(lambda ctx, p: ctx and not p.match(filename), self.negative_patterns, ctx)
