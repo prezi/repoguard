@@ -112,7 +112,7 @@ class FileEvalFactory:
 					raise Exception("Unknown key in %s" % str(rule))
 
 		def matches(self, line_context, line):
-			if line is None:
+			if line is not None:
 				# bit ugly, but this is a speed improvement: we check first if a file-keyed
 				# evaluator matches to a filename, and at that point the line is None. When
 				# it's not None, we don't need to run the costly checks, since once it was

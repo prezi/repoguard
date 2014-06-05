@@ -118,6 +118,6 @@ class FileEvaluatorTestCase(unittest.TestCase):
 		fef = FileEvalFactory()
 		evaluator = fef.create(rule)
 
-		self.assertTrue(evaluator.matches({"filename": files[0]}, "test"))
-		self.assertTrue(evaluator.matches({"filename": files[1]}, "test"))
-		self.assertFalse(evaluator.matches({"filename": files[2]}, "test"))
+		self.assertTrue(evaluator.matches({"filename": files[0]}, None))
+		self.assertTrue(evaluator.matches({"filename": files[1]}, None))
+		self.assertFalse(evaluator.matches({"filename": files[2]}, None))
