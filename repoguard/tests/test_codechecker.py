@@ -67,3 +67,23 @@ class CodeCheckerTestCase(unittest.TestCase):
 
 		self.assertEquals(len(self.code), len(alerts))
 		self.assertIn(("test", self.code[0]), alerts)
+
+	'''
+		Long lines are not readable, but very resource intensive to
+		match regexes to. Don't parse lines longer than 512 characters,
+		since they are usually auto-compressed and not readable anyways.
+	'''
+	def test_long_lines(self):
+		line_evaluator = Mock()
+		line_evaluator.key = "line"
+		line_evaluator.matches = Mock(return_value = True)
+		rule = Mock()
+		rule.name = "test"
+		rule.evaluators = [line_evaluator]
+		code_checker = CodeChecker([], [rule])
+		code = ["l0", "X"*513, "l2"]
+
+		alerts = code_checker.check(code, "macbeth.txt")
+
+		self.assertEquals(len(code) - 1, len(alerts))
+

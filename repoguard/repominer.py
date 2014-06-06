@@ -30,23 +30,31 @@ if not applied_alerts:
 
 code_checker = CodeCheckerFactory(applied_alerts).create(LineEvalFactory.MODE_SINGLE)
 
-alerts = []
+textchars = ''.join(map(chr, [7,8,9,10,12,13,27] + range(0x20, 0x100)))
+is_binary_string = lambda bytes: bool(bytes.translate(None, textchars))
 for path in args.files:
+	print "Checking " + path
+	alerts = []
 	if os.path.isdir(path):
 		for root, subFolders, files in os.walk(path):
+			print root
 			for fname in files:
-				with open(root + "/" + fname) as f:
-					content = f.readlines()
-					actual_alert = [(fname, alert, line) for alert, line in code_checker.check(content, fname)]
-					alerts.extend(actual_alert)
+				fpath = root + "/" + fname
+				if not os.path.islink(fpath):
+					with open(fpath) as f:
+						if is_binary_string(f.read(128)):
+							continue
+						else:
+							f.seek(0)
+						content = f.readlines()
+						actual_alert = [(fpath, alert, line) for alert, line in code_checker.check(content, fname)]
+						alerts.extend(actual_alert)
 	else:
 		with open(path) as f:
 			content = f.readlines()
-			fname = os.path.basename(path)
-			actual_alert = [(fname, alert, line) for alert, line in code_checker.check(content, fname)]
+			actual_alert = [(path, alert, line) for alert, line in code_checker.check(content, fname)]
 			alerts.extend(actual_alert)
-
-for fname, alert, line in alerts:
-	print "%s\n%s\n%s\n\n" % (fname, alert, line.strip())
+	for fname, alert, line in alerts:
+		print "%s\n%s\n%s\n\n" % (fname, alert, line.strip())
 
 

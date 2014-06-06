@@ -23,6 +23,9 @@ class CodeChecker:
 
 	def _check_all(self, rules):
 		def check_line(check_ctx, line):
+			if len(line) > 512:
+				# probably not readable source, but it's hard to match regexes at least
+				return check_ctx
 			alerts, line_ctx = check_ctx
 			line_ctx = reduce(lambda ctx, cp: cp.preprocess(ctx, line), self.context_processors, line_ctx)
 			for r in rules:
