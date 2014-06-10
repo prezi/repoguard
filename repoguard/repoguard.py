@@ -83,8 +83,16 @@ class RepoGuard:
 	def readCommonConfig(self):
 		parser = ConfigParser.ConfigParser()
 		parser.read(self.COMMON_CONFIG_PATH)
+		self.subscribers = {}
 		for config_option, config_value in parser.items('__main__'):
 			self.setConfigOptionValue(config_option, config_value)
+		for subscriber, rules in parser.items('subscribers'):
+			rule_list = [r.strip() for r in rules.split(',')]
+			for rule in rule_list:
+				if rule in self.subscribers:
+					self.subscribers.append(subscriber)
+				else:
+					self.subscribers = [subscriber]
 		
 	def transformConfigOptionsToLists(self, list_of_options_to_transform):
 		for config_option in list_of_options_to_transform:
@@ -288,28 +296,31 @@ class RepoGuard:
 			commit_id = issue[2]
 			matching_line = issue[3][0:200].decode('utf-8', 'replace')
 			repo_name = issue[4]
-
-			notify = 'security@prezi.com'
-			if notify not in alert_per_notify_person:
-				alert_per_notify_person[notify] = "The following change(s) might introduce new security risks:\n\n"
 			
-			alert_per_notify_person[notify] += (u"check_id: %s \n"
-												"path: %s \n"
-												"commit: https://github.com/prezi/%s/commit/%s\n"
-												"matching line: %s\n"
-												"description: %s\n"
-												"repo name: %s\n\n" %  (check_id, filename, repo_name, commit_id, matching_line, "TODO", repo_name) ) 
+			alert = (u"check_id: %s \n"
+					  "path: %s \n"
+					  "commit: https://github.com/prezi/%s/commit/%s\n"
+					  "matching line: %s\n"
+					  "description: %s\n"
+					  "repo name: %s\n\n" %  (check_id, filename, repo_name, commit_id, matching_line, "TODO", repo_name) ) 
 
-		for mail_addr in alert_per_notify_person:
-			now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+			notify_users = self.find_subscribed_users(check_id)
+			for u in notify_users:
+				if u not in alert_per_notify_person:
+					alert_per_notify_person[u] = "The following change(s) might introduce new security risks:\n\n"
+				alert_per_notify_person[u] += alert
 
-			email_notification = EmailNotifier(
-				self.getConfigOptionValue("default_notification_src_address"), 
-				self.getConfigOptionValue("default_notification_to_address"),
-				"[repoguard] possibly vulnerable changes - %s" % now,
-				alert_per_notify_person[mail_addr])
-
+		from_addr = self.getConfigOptionValue("default_notification_src_address")
+		for to_addr, text in alert_per_notify_person.iteritems():
+			email_notification = EmailNotifier.create_notification(from_addr, to_addr, text)
 			email_notification.send_if_fine()
+
+
+	def find_subscribed_users(self, alert):
+		import fnmatch
+		import itertools
+		matching_subscriptions = [users for pattern, users in self.subscribers.iteritems() if fnmatch.fnmatch(alert, pattern)]
+		return set(itertools.chain(*matching_subscriptions))
 
 
 	def setInitialRepoStatusById(self, repo_id, repo_name):

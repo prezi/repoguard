@@ -1,5 +1,4 @@
 import unittest
-from mock import Mock
 
 from repoguard.evaluators import LineEvalFactory
 from repoguard.evaluators import FileEvalFactory

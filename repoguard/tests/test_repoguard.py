@@ -2,7 +2,7 @@
 import os
 import unittest
 import sys
-from mock import patch
+from mock import patch, Mock
 from StringIO import StringIO
 
 import repoguard.repoguard
@@ -239,6 +239,40 @@ class CheckNewCodeTest(unittest.TestCase):
 	def test_check_by_repo_id_without_new_hashes(self, *mocks):
 		tres = self.ra.checkByRepoId('8742897','zuisite')
 		self.assertEqual(tres, [])
+
+
+class AlertSubscriptionTestCase(unittest.TestCase):
+	def setUp(self):
+		self.repoguard = repoguard.repoguard.createInitializedRepoguardInstance()
+		self.repoguard.subscribers = {"xxe::simple": ["A", "B", "C"], "xxe::*": ["A", "D"]}
+
+	def test_simple_match(self):
+		users = self.repoguard.find_subscribed_users("xxe::simple")
+		self.assertIn("A", users)
+		self.assertIn("B", users)
+		self.assertIn("C", users)
+		self.assertIn("D", users)
+
+	def test_limit_match(self):
+		users = self.repoguard.find_subscribed_users("xxe::simplealert")
+		self.assertIn("A", users)
+		self.assertNotIn("B", users)
+		self.assertNotIn("C", users)
+		self.assertIn("D", users)
+
+	@patch('repoguard.notifier.EmailNotifier.create_notification')
+	def test_send_alerts(self, *mocks):
+		self.repoguard.checkResults = [
+			("xxe::test", "file", "1231commit", "line1", "repo"),
+			("xxe::simple", "file", "1231commit", "line1", "repo"),
+			("test::test", "file", "1231commit", "line1", "repo")
+		]
+		mock_notification = Mock()
+		mocks[0].return_value = mock_notification
+
+		self.repoguard.sendResults()
+
+		self.assertEqual(4, mocks[0].call_count)
 
 def main():
     unittest.main()

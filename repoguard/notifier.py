@@ -1,5 +1,7 @@
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+
+import datetime
 import smtplib
 
 class EmailNotifier:
@@ -9,6 +11,11 @@ class EmailNotifier:
         self.mime_message = MIMEMultipart()
         self.prepare_message_headers(subject)
         self.create_mime_message(text)
+
+    @staticmethod
+    def create_notification(from_addr, to_addr, text):
+        subject = "[repoguard] possibly vulnerable changes - %s" % datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        return EmailNotifier(from_addr, to_addr, subject, text)
 
     def prepare_message_headers(self, subject):
         self.subject = subject
