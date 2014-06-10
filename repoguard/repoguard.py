@@ -32,7 +32,6 @@ class RepoGuard:
 		self.repoList = {}
 		self.repoStatus = {}
 		self.repoStatusNew = {}
-		self.alertConfig = {}
 		self.checkResults = []
 		self.parseArgs()
 		self.readAlertConfigFromFile()
@@ -262,7 +261,7 @@ class RepoGuard:
 			try:
 				body = {
 					"check_id": issue[0],
-					"description": self.alertConfig[issue[0]]['description'],
+					"description": "", #TODO
 					"filename": issue[1],
 					"commit_id": issue[2],
 					"matching_line": issue[3][0:200].decode('utf-8', 'replace'),
@@ -278,7 +277,6 @@ class RepoGuard:
 	# TODO: test
 	def sendResults(self):
 		alert_per_notify_person = {}
-
 		if not self.checkResults:
 			return False
 
@@ -291,18 +289,17 @@ class RepoGuard:
 			matching_line = issue[3][0:200].decode('utf-8', 'replace')
 			repo_name = issue[4]
 
-			alert_data = self.alertConfig[check_id]
-			# TODO: get the list of subscribed users for this repository & check_id combo, until then hardcoded value
-			alert_data['notify'] = 'security@prezi.com'
-			if alert_data['notify'] not in alert_per_notify_person:
-				alert_per_notify_person[alert_data['notify']] = "The following change(s) might introduce new security risks:\n\n"
+			notify = 'security@prezi.com'
+			if notify not in alert_per_notify_person:
+				alert_per_notify_person[notify] = "The following change(s) might introduce new security risks:\n\n"
 			
-			alert_per_notify_person[alert_data['notify']] += (u"check_id: %s \n"
-																	"path: %s \n"
-																	"commit: https://github.com/prezi/%s/commit/%s\n"
-																	"matching line: %s\n"
-																	"description: %s\n"
-																	"repo name: %s\n\n" %  (check_id, filename, repo_name, commit_id, matching_line, alert_data['description'], repo_name) ) 
+			alert_per_notify_person[notify] += (u"check_id: %s \n"
+												"path: %s \n"
+												"commit: https://github.com/prezi/%s/commit/%s\n"
+												"matching line: %s\n"
+												"description: %s\n"
+												"repo name: %s\n\n" %  (check_id, filename, repo_name, commit_id, matching_line, "TODO", repo_name) ) 
+
 		for mail_addr in alert_per_notify_person:
 			now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 
