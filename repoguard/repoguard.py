@@ -90,9 +90,9 @@ class RepoGuard:
 			rule_list = [r.strip() for r in rules.split(',')]
 			for rule in rule_list:
 				if rule in self.subscribers:
-					self.subscribers.append(subscriber)
+					self.subscribers[rule].append(subscriber)
 				else:
-					self.subscribers = [subscriber]
+					self.subscribers[rule] = [subscriber]
 		
 	def transformConfigOptionsToLists(self, list_of_options_to_transform):
 		for config_option in list_of_options_to_transform:
