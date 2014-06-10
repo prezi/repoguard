@@ -37,7 +37,6 @@ for path in args.files:
 	alerts = []
 	if os.path.isdir(path):
 		for root, subFolders, files in os.walk(path):
-			print root
 			for fname in files:
 				fpath = root + "/" + fname
 				if not os.path.islink(fpath):

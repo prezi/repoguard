@@ -20,7 +20,7 @@ class EmailNotifier:
         self.text = text
         self.mime_message.attach(MIMEText(text.encode("utf-8"), "plain"))
 
-    def send_if_fine(self, connection_string):
+    def send_if_fine(self, connection_string=None):
         if self.email_from and self.email_to and self.mime_message:
             self.smtp_send(connection_string)
         else:
