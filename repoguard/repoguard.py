@@ -220,7 +220,7 @@ class RepoGuard:
 
 	def checkNewCode(self):
 		working_dir = os.listdir(self.WORKING_DIR)
-		repodir_re = re.compile('^([\w\_-\.]+)\_([0-9]+)$')
+		repodir_re = re.compile('^([\w\-\._]+)\_([0-9]+)$')
 		# go through local repo directories
 		for repo_dir in working_dir:
 			repodir_match = repodir_re.match(repo_dir)
