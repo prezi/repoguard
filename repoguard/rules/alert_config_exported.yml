@@ -47,12 +47,6 @@ line:
 file:
     - match: .*\.(erb|conf)
 
---- #!template_variable_inside_script_tag
-diff: add
-line:
-    - match: "{{((?!urlencode).)+}}.*"
-inscripttag: true
-
 --- #!json_no_content_type
 diff: add
 line:
@@ -65,13 +59,6 @@ line:
     - except: .+=.*(get_encrypted_data|export [\w_]\s*=\s*['"`]<%=.*(password|secret)|{{ S3_SECRET_KEY }}|prezi_app_secrets\['django_secret_key'\]|chef_secrets\['encrypted_data_bag_secret|StringOption\(\)|AWS_SECRET=<%=|aws_secret => aws_secret|<%=/s*@/w+/s*%>)
 file:
     - except: .*(/scripts/build|/scripts/common|/scripts/release|/scripts/bootstrap)
-
---- #!java_interesting_codeexec_calls
-diff: add
-line:
-    - match: (ProcessUtils|\.(exec|execute)\(|(ProcessBuilder|getRuntime)).*
-file:
-    - match: .*\.(scala|java|groovy)
 
 --- #!dangerous_redirect
 diff: add
@@ -111,11 +98,6 @@ line:
     - match: java\.sql\..*
 file:
     - match: .*\.(scala|java)
-
---- #!autoescape_off
-diff: add
-line:
-    - match: "{% autoescape off %}.*"
 
 --- #!android_storage
 diff: add
@@ -298,13 +280,6 @@ diff: add
 line:
     - match: tastypie.*
 
---- #!javascript_target
-diff: add
-line:
-    - match: javascript:.*
-file:
-    - except: (^.*\.css$)
-
 --- #!csharp_invokescript
 diff: add
 line:
@@ -324,24 +299,12 @@ line:
 file:
     - match: .*\.(cpp|cxx|h|hpp|c)$
 
---- #!js_code_exec_functions
-diff: add
-line:
-    - match: (eval\(|child_process|var command =).*
-file:
-    - match: .*\.(hx|js)
-
 --- #!android_app_permission
 diff: add
 line:
     - match: (uses-permission android:name).*
 file:
     - match: .*\.xml
-
---- #!safe_in_template
-diff: add
-line:
-    - match: \|safe.*
 
 --- #!python_object_enumeration
 diff: add
@@ -363,11 +326,6 @@ line:
     - match: client\.(Post|Get).*(Request).*
 file:
     - match: .*\.(cs)
-
---- #!javascript_redirect
-diff: add
-line:
-    - match: (window|document)\.location((\s*=)|(\.replace\())+(?!\s*'\w*'\s*$)
 
 --- #!cpp_bof_calls
 diff: add
@@ -424,13 +382,6 @@ line:
     - match: <%=.*
 file:
     - match: .*\.(js|html|tpl)$
-
---- #!python_os_code_exec_functions
-diff: add
-line:
-    - match: (system\(|Popen\(|subprocess.call\(|subprocess\.|import subprocess|from subprocess).*
-file:
-    - match: .*\.(py)
 
 --- #!backbonejs_unsanitized_html
 diff: add

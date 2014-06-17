@@ -7,18 +7,3 @@ diff: add
 line:
     - match: \|safe
     - match: "{% autoescape off %}"
-
---- #!django_inscripttags
-extends: base
-diff: add
-line:
-    - match: "{{((?!urlencode).)+}}"
-inscripttag: true
-
---- #!generic_javascript_target
-extends: base
-diff: add
-line:
-    - match: "javascript:"
-file:
-    - except: ^.*\.css$
