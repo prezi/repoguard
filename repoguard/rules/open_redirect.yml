@@ -8,13 +8,6 @@ line:
     - match: (window|document)\.location\s*=(?!\s*'\w*'\s*$)
     - match: (window|document)\.location\.replace\((?!\s*'\w*'\s*$)
 
---- #!django_inscripttags
-extends: base
-diff: add
-line:
-    - match: "{{((?!urlencode).)+}}"
-inscripttag: true
-
 --- #!generic_javascript_target
 extends: base
 diff: add
