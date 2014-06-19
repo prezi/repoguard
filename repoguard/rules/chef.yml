@@ -1,0 +1,7 @@
+--- #!avoid_auto_restart
+diff: add
+line:
+    - match: (notifies|subscribes).*:restart
+file:
+    - match: ^.*/cookbooks/.*\.rb$
+description: Restarting services automatically with the notifies / subscribes chef notification is risky, we try to avoid it, please check if this commit doesn't pose significant threat to our availability.
