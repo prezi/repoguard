@@ -1,5 +1,4 @@
 --- #!python_raw_decode_arbitrary_process_memory_read
-extends: base
 diff: add
 line:
     - match: raw_decode\(
