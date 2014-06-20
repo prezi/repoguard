@@ -1,0 +1,8 @@
+--- #!python_raw_decode_arbitrary_process_memory_read
+extends: base
+diff: add
+line:
+    - match: raw_decode\(
+file:
+    - match: ^.*\.py$
+description: JSONDecoder.raw_decode is vulnerable and can lead to arbitrary process memory read (https://hackerone.com/reports/12297)
