@@ -1,0 +1,55 @@
+--- #!KPILog_add
+diff: add
+line:
+    - match: KPILog\.event\(.*
+file:
+    - match: .*\.py
+
+--- #!KPILog_remove
+diff: remove
+line:
+    - match: KPILog\.event\(.*
+file:
+    - match: .*\.py
+
+--- #!log_object_method_call_add
+diff: add
+line:
+    - match: _log\.
+file:
+    - match: .*\.py
+
+--- #!log_object_method_call_remove
+diff: remove
+line:
+    - match: _log\.
+file:
+    - match: .*\.py
+
+--- #!log_function_call_add
+diff: add
+line:
+    - match: log\(
+file:
+    - match: .*\.py
+
+--- #!log_function_call_remove
+diff: remove
+line:
+    - match: log\(
+file:
+    - match: .*\.py
+
+--- #!SecurityLog_add
+diff: add
+line:
+    - match: SecurityLog\.event\(.*
+file:
+    - match: .*\.py
+
+--- #!SecurityLog_remove
+diff: remove
+line:
+    - match: SecurityLog\.event\(.*
+file:
+    - match: .*\.py
