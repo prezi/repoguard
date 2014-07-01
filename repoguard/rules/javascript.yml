@@ -1,0 +1,4 @@
+--- #!~base
+description: JS-related rule
+line:
+    - except: ^\s*//.*
