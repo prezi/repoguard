@@ -15,14 +15,14 @@ file:
 --- #!log_object_method_call_add
 diff: add
 line:
-    - match: _log\.
+    - match: (braintree|client|editor|ipad|ipadremote|register)_log\.
 file:
     - match: .*\.py
 
 --- #!log_object_method_call_remove
 diff: remove
 line:
-    - match: _log\.
+    - match: (braintree|client|editor|ipad|ipadremote|register)_log\.
 file:
     - match: .*\.py
 
@@ -53,3 +53,59 @@ line:
     - match: SecurityLog\.event\(.*
 file:
     - match: .*\.py
+
+--- #!payment_logger_add
+diff: add
+line:
+    - match: payment_logger.*
+file:
+    - match: .*\.py
+
+--- #!payment_logger_remove
+diff: remove
+line:
+    - match: payment_logger.*
+file:
+    - match: .*\.py
+
+--- #!delete_kpi_logger_add
+diff: add
+line:
+    - match: delete_kpi_logger.*
+file:
+    - match: .*\.py
+
+--- #!delete_kpi_logger_remove
+diff: remove
+line:
+    - match: delete_kpi_logger.*
+file:
+    - match: .*\.py
+
+--- #!get_presentation_delete_kpi_logger_add
+diff: add
+line:
+    - match: get_presentation_delete_kpi_logger.*
+file:
+    - match: .*\.py
+
+--- #!get_presentation_delete_kpi_logger_remove
+diff: remove
+line:
+    - match: get_presentation_delete_kpi_logger.*
+file:
+    - match: .*\.py
+
+--- #!ipad_dev_repo_log_add
+diff: add
+line:
+    - match: (^|\W)(RL(_(INFO|WARN|ERROR))?)(INFO|WARN|ERROR2?)\().*
+file:
+    - match: .*\.(mm|m|h)
+
+--- #!ipad_dev_repo_log_remove
+diff: remove
+line:
+    - match: (^|\W)(RL(_(INFO|WARN|ERROR))?)(INFO|WARN|ERROR2?)\().*
+file:
+    - match: .*\.(mm|m|h)
