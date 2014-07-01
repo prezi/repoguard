@@ -99,13 +99,13 @@ file:
 --- #!ipad_dev_repo_log_add
 diff: add
 line:
-    - match: (^|\W)(RL(_(INFO|WARN|ERROR))?)(INFO|WARN|ERROR2?)\().*
+    - match: (^|\W)(RL(_(INFO|WARN|ERROR))?|INFO|WARN|ERROR2?)\(.*
 file:
     - match: .*\.(mm|m|h)
 
 --- #!ipad_dev_repo_log_remove
 diff: remove
 line:
-    - match: (^|\W)(RL(_(INFO|WARN|ERROR))?)(INFO|WARN|ERROR2?)\().*
+    - match: (^|\W)(RL(_(INFO|WARN|ERROR))?|INFO|WARN|ERROR2?)\(.*
 file:
     - match: .*\.(mm|m|h)
