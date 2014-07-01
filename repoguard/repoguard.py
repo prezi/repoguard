@@ -144,7 +144,7 @@ class RepoGuard:
 
 		if self.args.limit:
 			if repo_data["name"] not in self.args.limit:
-				return False
+				return True
 
 		skip_due_language = self.shouldSkipDueLanguageLimitation(repo_data['language'])
 		skip_due_repo_name = self.shouldSkipDueRepoNameIsOnSkipList(repo_data['name'])
