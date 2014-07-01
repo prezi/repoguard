@@ -6,7 +6,7 @@ file:
     - match: .*\.py
 
 --- #!KPILog_remove
-diff: remove
+diff: del
 line:
     - match: KPILog\.event\(.*
 file:
@@ -20,7 +20,7 @@ file:
     - match: .*\.py
 
 --- #!log_object_method_call_remove
-diff: remove
+diff: del
 line:
     - match: (braintree|client|editor|ipad|ipadremote|register)_log\.
 file:
@@ -34,7 +34,7 @@ file:
     - match: .*\.py
 
 --- #!log_function_call_remove
-diff: remove
+diff: del
 line:
     - match: log\(
 file:
@@ -48,7 +48,7 @@ file:
     - match: .*\.py
 
 --- #!SecurityLog_remove
-diff: remove
+diff: del
 line:
     - match: SecurityLog\.event\(.*
 file:
@@ -62,7 +62,7 @@ file:
     - match: .*\.py
 
 --- #!payment_logger_remove
-diff: remove
+diff: del
 line:
     - match: payment_logger.*
 file:
@@ -76,7 +76,7 @@ file:
     - match: .*\.py
 
 --- #!delete_kpi_logger_remove
-diff: remove
+diff: del
 line:
     - match: delete_kpi_logger.*
 file:
@@ -90,7 +90,7 @@ file:
     - match: .*\.py
 
 --- #!get_presentation_delete_kpi_logger_remove
-diff: remove
+diff: del
 line:
     - match: get_presentation_delete_kpi_logger.*
 file:
@@ -104,7 +104,7 @@ file:
     - match: .*\.(mm|m|h)
 
 --- #!ipad_dev_repo_log_remove
-diff: remove
+diff: del
 line:
     - match: (^|\W)(RL(_(INFO|WARN|ERROR))?|INFO|WARN|ERROR2?)\(.*
 file:

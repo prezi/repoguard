@@ -43,8 +43,9 @@ class LineEvalFactory:
 			positive_patterns = [re.compile(r["match"]) for r in rule["line"] if "match" in r]
 			negative_patterns = [re.compile(r["except"]) for r in rule["line"] if "except" in r]
 			diff_mode = rule["diff"] if "diff" in rule else "all"
+			diff_mode = diff_mode if diff_mode in ("add", "del", "all") else "all"
 			if self.mode == self.MODE_DIFF:
-				diff_mode_prefixes = {"add": "+", "del": "-"}
+				diff_mode_prefixes = {"add": ("+", ), "del": ("-",), "all": ("+", "-")}
 				must_begin_with = diff_mode_prefixes.get(diff_mode, None)
 				return self.DiffLineEvaluator(positive_patterns, negative_patterns, must_begin_with)
 			else:
