@@ -20,8 +20,8 @@ resolved_rules = build_resolved_ruleset(bare_rules)
 
 # filter for items in --alerts parameter
 enabled_alerts = [a.strip() for a in args.alerts.split(',')] if args.alerts else False
-applied_alerts = {aid: adata for aid, adata 
-	in resolved_rules.iteritems() 
+applied_alerts = {aid: adata for aid, adata
+	in resolved_rules.iteritems()
 	if not enabled_alerts or any(aid.startswith(ea) for ea in enabled_alerts)}
 
 if not applied_alerts:
@@ -38,7 +38,7 @@ for path in args.files:
 	if os.path.isdir(path):
 		for root, subFolders, files in os.walk(path):
 			for fname in files:
-				fpath = root + "/" + fname
+				fpath = os.path.join(root, fname)
 				if not os.path.islink(fpath):
 					with open(fpath) as f:
 						if is_binary_string(f.read(128)):
@@ -51,9 +51,7 @@ for path in args.files:
 	else:
 		with open(path) as f:
 			content = f.readlines()
-			actual_alert = [(path, alert, line) for alert, line in code_checker.check(content, fname)]
+			actual_alert = [(path, alert, line) for alert, line in code_checker.check(content, path)]
 			alerts.extend(actual_alert)
 	for fname, alert, line in alerts:
 		print "%s\n%s\n%s\n\n" % (fname, alert, line.strip())
-
-
