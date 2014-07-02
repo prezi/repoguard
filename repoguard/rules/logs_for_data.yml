@@ -113,28 +113,28 @@ file:
 --- #!ipad_dev_repo_log_macro_add
 diff: add
 line:
-    - match: #define (RL|LOG|.*DDLog).*
+    - match: \#define (RL|LOG|.*DDLog).*
 file:
     - match: .*CommonSettings\.h
 
 --- #!ipad_dev_repo_log_macro_remove
 diff: del
 line:
-    - match: #define (RL|LOG|.*DDLog).*
+    - match: \#define (RL|LOG|.*DDLog).*
 file:
     - match: .*CommonSettings\.h
 
 --- #!client_editor_repo_log_add
 diff: add
 line:
-    - match: FeatureLogger.increment\(
+    - match: FeatureLogger\.increment\(
 file:
     - match: .*\.(as|hx)
 
 --- #!client_editor_repo_log_remove
 diff: del
 line:
-    - match: FeatureLogger.increment\(
+    - match: FeatureLogger\.increment\(
 file:
     - match: .*\.(as|hx)
 
