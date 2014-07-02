@@ -144,3 +144,17 @@ line:
     - match: .*
 file:
     - match: .*cleanup_test_data\.py
+
+--- #!zuisite_log_register_kpi_event_method_add
+diff: add
+line:
+    - match: log_register_kpi_event.*
+file:
+    - match: .*\.py
+
+--- #!zuisite_log_register_kpi_event_method_remove
+diff: del
+line:
+    - match: log_register_kpi_event.*
+file:
+    - match: .*\.py
