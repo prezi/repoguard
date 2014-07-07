@@ -1,5 +1,5 @@
 --- #!~base
-description: Unescaped user input might lead to Cross-site scripting issues, please ensure that input can only come from trusted sources
+description: "Unescaped user input might lead to Cross-site scripting issues, please ensure that input can only come from trusted sources"
 
 --- #!django
 extends: base
@@ -14,3 +14,13 @@ diff: add
 line:
     - match: "{{((?!urlencode).)+}}"
 inscripttag: true
+
+--- #!haskell
+description: "error messages and responses should be sanitized"
+extends: base
+diff: add
+line:
+    - match: "haltWithMessage"
+    - match: "-> Snap"
+file:
+    - match: ^.+\.hs$
