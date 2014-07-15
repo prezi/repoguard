@@ -16,7 +16,7 @@ class InScriptEvalFactory:
 
 	class ContextProcessor:
 		def __init__(self):
-			self.script_begin_re = re.compile(r'(?!.+type="text/(tpl|template)".+)<script[^>]*>')
+			self.script_begin_re = re.compile(r'(?!.+type="text/(tpl|template|html)".+)<script[^>]*>')
 			self.script_end_re = re.compile(r'</script\s*>')
 
 		def preprocess(self, line_context, line):
