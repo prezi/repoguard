@@ -2,6 +2,7 @@
 description: either the xml source is not client or DTD parsing is disabled
 
 --- #!python
+diff: add
 description: "sax; etree; pulldom; minidom; xmlrpc: all vulnerable"
 file:
     - match: ^.*\.py$
@@ -12,6 +13,7 @@ line:
 
 --- #!java
 extends: base
+diff: add
 file:
     - match: ^.*\.(java|clj)$
 line:
