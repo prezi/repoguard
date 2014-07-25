@@ -363,6 +363,7 @@ file:
     - match: .*\.(js|html)
 
 --- #!python_remote_objects
+extends: whitelisted_files::whitelisted_files
 diff: add
 line:
     - match: (RemoteUserFactory).*

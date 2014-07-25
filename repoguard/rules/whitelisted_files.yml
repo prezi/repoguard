@@ -1,5 +1,4 @@
 --- #!~whitelisted_files
-diff: add
 file:
     - except: test/|tests/|/bdd/
     - except: (angular|bootstrap|require|jquery|sinon)[\w\.\-]*\.js$
