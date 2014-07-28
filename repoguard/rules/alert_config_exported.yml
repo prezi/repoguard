@@ -135,7 +135,7 @@ diff: add
 line:
     - match: (Node\.url\.parse|\.query\.).*
 file:
-    - match: .*\.(hx|js)
+    - match: .*\.(hx|js)$
 
 --- #!cross-domain-policy-access
 diff: add
