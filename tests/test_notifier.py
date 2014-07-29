@@ -11,7 +11,6 @@ class EmailNotifierTestCase(unittest.TestCase):
             "to@to.prezi.com",
             "subject",
             "message text")
-        pass
 
     def test_init(self):
         self.assertEqual(self.notifier.mime_message["Subject"], "subject")
