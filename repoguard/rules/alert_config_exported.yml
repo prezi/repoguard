@@ -186,7 +186,7 @@ file:
 diff: add
 line:
     - match: (WebSocket|\.listen\(|http\.request|socket\.io).*
-    - except: \s*(#|/\*|//|\*)
+    - except: EventListener\.
 file:
     - match: .*\.(hx|js)
 
