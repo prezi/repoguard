@@ -1,3 +1,7 @@
+--- #!~base
+description: Repoguard rules to test for generic best practices
+extends: whitelisted_files::whitelisted_files,comments::comments
+
 --- #!unsecure_protocol
 diff: add
 line:

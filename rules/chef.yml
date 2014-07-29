@@ -1,3 +1,7 @@
+--- #!~base
+description: Chef related repoguard rules
+extends: whitelisted_files::whitelisted_files,comments::comments
+
 --- #!avoid_auto_restart
 diff: add
 line:
