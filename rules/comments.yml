@@ -1,5 +1,4 @@
 --- #!~comments
-diff: add
+diff: mod
 line:
-    - match: ^\+\s*(//|#|/\*|<!--|\*|--)+.*$
-
+    - except: ^\s*(//|#|/\*|<!--|\*|--)+.*$

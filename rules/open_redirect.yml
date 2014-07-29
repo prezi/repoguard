@@ -1,12 +1,16 @@
 --- #!~base
 description: Please ensure that the user provided data validated for the redirection.
+extends: whitelisted_files::whitelisted_files,comments::comments
 
 --- #!js
 extends: base
 diff: add
 line:
-    - match: (window|document)\.location\s*=(?!\s*'\w*'\s*$)
-    - match: (window|document)\.location\.replace\((?!\s*'\w*'\s*$)
+    - match: (window|document)\.location\s*=
+    - match: (window|document)\.location\.replace\(
+    - except: (window|document)\.location\s*=\s*['"]+[^'"]*['"]+;\s*
+    - except: (window|document)\.location.replace\(\s*['"]+[^'"]*['"]+\s*\);
+
 
 --- #!generic_javascript_target
 extends: base
