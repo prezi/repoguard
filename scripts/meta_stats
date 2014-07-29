@@ -1,8 +1,0 @@
-#!/bin/sh
-
-# Placement daemon script that verifies service status, used for healthcheck and deploy. #placement#deploy#idoc
-
-fail() { echo "BAD $@"; exit 0; }
-ok() { echo "OK $@"; exit 0; }
-
-ok "we should be fine, no real healthcheck for repoguard"
