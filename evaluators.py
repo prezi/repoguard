@@ -123,5 +123,6 @@ class FileEvalFactory:
 
             filename = line_context["filename"]
 
-            ctx = reduce(lambda ctx, p: ctx or p.match(filename), self.positive_patterns, False)
-            return ctx and reduce(lambda ctx, p: ctx and not p.match(filename), self.negative_patterns, ctx)
+            pos = not self.positive_patterns or reduce(lambda ctx, p: ctx or p.match(filename), self.positive_patterns, False)
+            neg = reduce(lambda ctx, p: ctx and not p.match(filename), self.negative_patterns, True)
+            return pos and neg
