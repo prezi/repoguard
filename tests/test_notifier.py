@@ -1,14 +1,15 @@
 import unittest
 
-from repoguard.notifier import EmailNotifier
+from notifier import EmailNotifier
+
 
 class EmailNotifierTestCase(unittest.TestCase):
-    
+
     def setUp(self):
         self.notifier = EmailNotifier(
-            "from@from.prezi.com", 
-            "to@to.prezi.com", 
-            "subject", 
+            "from@from.prezi.com",
+            "to@to.prezi.com",
+            "subject",
             "message text")
         pass
 
@@ -20,5 +21,5 @@ class EmailNotifierTestCase(unittest.TestCase):
     def testCreateMimeMessage(self):
         self.notifier.create_mime_message("modified message text")
         self.assertEqual(
-            self.notifier.mime_message.get_payload()[0].as_string(), 
+            self.notifier.mime_message.get_payload()[0].as_string(),
             'Content-Type: text/plain; charset="us-ascii"\nMIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\n\nmessage text')

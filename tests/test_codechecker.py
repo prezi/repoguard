@@ -1,12 +1,13 @@
 import unittest
 from mock import Mock
 
-from repoguard.codechecker import CodeChecker
+from codechecker import CodeChecker
+
 
 class CodeCheckerTestCase(unittest.TestCase):
-	
+
 	def setUp(self):
-		self.code=[
+		self.code = [
 			"I have given suck, and know",
 			"How tender 'tis to love the babe that milks me:",
 			"I would, while it was smiling in my face,"
@@ -27,7 +28,7 @@ class CodeCheckerTestCase(unittest.TestCase):
 	def test_evaluators_called(self):
 		evaluator = Mock()
 		evaluator.key = "line"
-		evaluator.matches = Mock(return_value = False)
+		evaluator.matches = Mock(return_value=False)
 		rule = Mock()
 		rule.name = "test"
 		rule.evaluators = [evaluator]
@@ -40,10 +41,10 @@ class CodeCheckerTestCase(unittest.TestCase):
 	def test_filter_nonmatching_file_rules(self):
 		file_evaluator = Mock()
 		file_evaluator.key = "file"
-		file_evaluator.matches = Mock(return_value = False)
+		file_evaluator.matches = Mock(return_value=False)
 		line_evaluator = Mock()
 		line_evaluator.key = "line"
-		line_evaluator.matches = Mock(return_value = False)
+		line_evaluator.matches = Mock(return_value=False)
 		rule = Mock()
 		rule.name = "test"
 		rule.evaluators = [file_evaluator, line_evaluator]
@@ -57,7 +58,7 @@ class CodeCheckerTestCase(unittest.TestCase):
 	def test_alert_format(self):
 		line_evaluator = Mock()
 		line_evaluator.key = "line"
-		line_evaluator.matches = Mock(return_value = True)
+		line_evaluator.matches = Mock(return_value=True)
 		rule = Mock()
 		rule.name = "test"
 		rule.evaluators = [line_evaluator]
@@ -76,7 +77,7 @@ class CodeCheckerTestCase(unittest.TestCase):
 	def test_long_lines(self):
 		line_evaluator = Mock()
 		line_evaluator.key = "line"
-		line_evaluator.matches = Mock(return_value = True)
+		line_evaluator.matches = Mock(return_value=True)
 		rule = Mock()
 		rule.name = "test"
 		rule.evaluators = [line_evaluator]
@@ -86,4 +87,3 @@ class CodeCheckerTestCase(unittest.TestCase):
 		alerts = code_checker.check(code, "macbeth.txt")
 
 		self.assertEquals(len(code) - 1, len(alerts))
-

@@ -1,10 +1,10 @@
 import unittest
 
-from repoguard.evaluators import LineEvalFactory
-from repoguard.evaluators import FileEvalFactory
+from evaluators import LineEvalFactory, FileEvalFactory
+
 
 class LineEvaluatorTestCase(unittest.TestCase):
-	
+
 	def setUp(self):
 		self.rule = {
 			"line": [

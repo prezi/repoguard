@@ -1,12 +1,10 @@
 import unittest
 
-from repoguard.ruleparser import RuleLoader
-from repoguard.ruleparser import merge_rules
-from repoguard.ruleparser import merge_many_rules
-from repoguard.ruleparser import resolve_rule
+from ruleparser import RuleLoader, merge_rules, merge_many_rules, resolve_rule
+
 
 class RuleLoaderTestCase(unittest.TestCase):
-	
+
 	def setUp(self):
 		pass
 
@@ -39,9 +37,9 @@ class RuleLoaderTestCase(unittest.TestCase):
 
 
 class RuleMergingTestCase(unittest.TestCase):
-	
+
 	def setUp(self):
-		self.base = {"foo1": "bar", "foo2": {1:1, 2:2}, "foo3": [3, 4, 5], "foo4": [{1:2}, {2:3}]}
+		self.base = {"foo1": "bar", "foo2": {1: 1, 2: 2}, "foo3": [3, 4, 5], "foo4": [{1: 2}, {2: 3}]}
 
 	def test_merge_rules_simple(self):
 		simple = {"foo5": "bar"}
@@ -59,29 +57,29 @@ class RuleMergingTestCase(unittest.TestCase):
 		self.assertEquals("bar", self.base["foo1"])
 
 	def test_merge_rules_list(self):
-		tt = {"foo3": {1:1}, "foo4": [6]}
+		tt = {"foo3": {1: 1}, "foo4": [6]}
 
 		merge_rules(self.base, tt)
 
 		self.assertEquals(4, len(self.base))
-		self.assertIn({1:1}, self.base["foo3"])
+		self.assertIn({1: 1}, self.base["foo3"])
 		self.assertEquals(4, len(self.base["foo3"]))
 		self.assertIn(6, self.base["foo4"])
 		self.assertEquals(3, len(self.base["foo4"]))
 
 	def test_merge_rules_dict(self):
-		tt = {"foo2": {1:2, 3:3}}
+		tt = {"foo2": {1: 2, 3: 3}}
 
 		merge_rules(self.base, tt)
 
 		self.assertEquals(3, len(self.base["foo2"]))
 		self.assertIn(3, self.base["foo2"])
-		self.assertEquals(1, self.base["foo2"][1]) # doesn't override
+		self.assertEquals(1, self.base["foo2"][1])  # doesn't override
 
 	def test_merge_many_rules(self):
 		tt0 = {"foo1": "whee"}
-		tt1 = {"foo2": {2:3, 3:4}}
-		tt2 = {"foo3": [4,5,6]}
+		tt1 = {"foo2": {2: 3, 3: 4}}
+		tt2 = {"foo3": [4, 5, 6]}
 
 		res = merge_many_rules(self.base, [tt0, tt1, tt2])
 
@@ -93,8 +91,8 @@ class RuleMergingTestCase(unittest.TestCase):
 		self.assertEquals(4, len(res["foo3"]))
 
 	def test_merge_many_rules_first_wins(self):
-		tt0 = {"foo2": {3:3}}
-		tt1 = {"foo2": {3:4}}
+		tt0 = {"foo2": {3: 3}}
+		tt1 = {"foo2": {3: 4}}
 
 		res = merge_many_rules(self.base, [tt0, tt1])
 
@@ -120,14 +118,14 @@ class RuleInheritanceTestCase(unittest.TestCase):
 		rule = resolve_rule("ns1::sys", {"ns1::sys": self.rule_1, "ns1::base": self.rule_2})
 
 		self.assertIn("line", rule)
-		self.assertEquals(2, len(rule)) #extends, line
+		self.assertEquals(2, len(rule))  # extends, line
 		self.assertEquals(2, len(rule["line"]))
 
 	def test_inheritance_with_implicit_ns(self):
 		rule = resolve_rule("ns1::sys", {"ns1::sys": self.rule_0, "ns1::base": self.rule_2})
 
 		self.assertIn("line", rule)
-		self.assertEquals(3, len(rule)) #extends, line, diff
+		self.assertEquals(3, len(rule))  # extends, line, diff
 		self.assertEquals(1, len(rule["line"]))
 
 	def test_circular_deps(self):
@@ -138,5 +136,5 @@ class RuleInheritanceTestCase(unittest.TestCase):
 		rule = resolve_rule("ns1::sys", {"ns1::sys": self.rule_0, "ns1::~base": self.rule_2})
 
 		self.assertIn("line", rule)
-		self.assertEquals(3, len(rule)) #extends, line, diff
+		self.assertEquals(3, len(rule))  # extends, line, diff
 		self.assertEquals(1, len(rule["line"]))
