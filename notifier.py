@@ -4,6 +4,7 @@ from email.mime.text import MIMEText
 import datetime
 import smtplib
 
+
 class EmailNotifier:
     def __init__(self, email_from, email_to, subject, text):
         self.email_from = email_from
@@ -37,5 +38,3 @@ class EmailNotifier:
         smtp = smtplib.SMTP('localhost')
         smtp.sendmail(self.email_from, self.email_to, self.mime_message.as_string())
         smtp.quit()
-
-        
