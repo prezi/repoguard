@@ -1,5 +1,6 @@
 --- #!~base
 description: Please ensure that the user provided data validated for the redirection.
+extends: whitelisted_files::whitelisted_files,comments::comments
 
 --- #!js
 extends: base

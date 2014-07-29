@@ -1,3 +1,7 @@
+--- #!~base
+description: Alert configs exported from the previous format
+extends: whitelisted_files::whitelisted_files,comments::comments
+
 --- #!django_middleware_classes
 diff: add
 line:
@@ -363,7 +367,6 @@ file:
     - match: .*\.(js|html)
 
 --- #!python_remote_objects
-extends: whitelisted_files::whitelisted_files
 diff: add
 line:
     - match: (RemoteUserFactory).*
