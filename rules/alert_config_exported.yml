@@ -416,5 +416,7 @@ line:
 --- #!http_response
 diff: add
 line:
-    - match: HttpResponse\(.*
+    - match:  HttpResponse\(.*
     - except: .*content_type=['"]application/json['"]
+file:
+    - match: .*\.py
