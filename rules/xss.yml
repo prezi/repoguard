@@ -25,3 +25,10 @@ line:
     - match: "-> Snap"
 file:
     - match: ^.+\.hs$
+
+--- #!javascript
+description: "prezi meta data can come from the user"
+extends: base
+diff: add
+line:
+    - match: "preziMeta"
