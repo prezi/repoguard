@@ -3,6 +3,7 @@ description: Alert configs exported from the previous format
 extends: whitelisted_files::whitelisted_files,comments::comments
 
 --- #!django_middleware_classes
+extends: base
 diff: add
 line:
     - match: middleware\_classes.*
@@ -10,26 +11,31 @@ file:
     - match: .*\.cfg
 
 --- #!redirect_field_usage
+extends: base
 diff: add
 line:
     - match: request.*\.get\(('next'|redirect_field).*
 
 --- #!csrf_exempt
+extends: base
 diff: add
 line:
     - match: csrf\_exempt.*
 
 --- #!sql_query_cursor_execute
+extends: base
 diff: add
 line:
     - match: "[\\s]*cursor\\.execute\\(.*"
 
 --- #!oauth_string
+extends: base
 diff: add
 line:
     - match: "[^N]oauth.*"
 
 --- #!unsafe_as_htmlText
+extends: base
 diff: add
 line:
     - match: \.htmlText.*=.*
@@ -38,6 +44,7 @@ file:
     - match: .*\.(as)
 
 --- #!csharp_base64
+extends: base
 diff: add
 line:
     - match: \.ToBase64String.*
@@ -45,6 +52,7 @@ file:
     - match: .*\.(cs)
 
 --- #!chef_directory_listing
+extends: base
 diff: add
 line:
     - match: Options Indexes.*
@@ -52,11 +60,13 @@ file:
     - match: .*\.(erb|conf)
 
 --- #!json_no_content_type
+extends: base
 diff: add
 line:
     - match: (HttpResponse|render\_to\_response|render)\s*\((simplejson|json)(?!.*application/json).*
 
 --- #!secret_in_source
+extends: base
 diff: add
 line:
     - match: (secret|password|S3Connection)+[\w_]*[\s]*=.*
@@ -65,6 +75,7 @@ file:
     - except: .*(/scripts/build|/scripts/common|/scripts/release|/scripts/bootstrap)
 
 --- #!dangerous_redirect
+extends: base
 diff: add
 line:
     - match: (HttpResponseRedirect|HttpResponsePermanentRedirect|redirect)(?!\(["'][^"']+["']\)).*
@@ -73,11 +84,13 @@ file:
     - except: .*(\.config|\.po|\.po\.json|\.md|\.rb)$
 
 --- #!basic_auth_in_source
+extends: base
 diff: add
 line:
     - match: ((Authorization|auth).*Basic|auth_header\s*=\s*").*
 
 --- #!new_url_endpoint
+extends: base
 diff: add
 line:
     - match: \+\s+(url)*\(r'\^.*\$',.*
@@ -85,11 +98,13 @@ file:
     - match: .*/urls\.py
 
 --- #!jsonp_middleware
+extends: base
 diff: add
 line:
     - match: middleware.*(JSONP|jsonp).*
 
 --- #!django_xfo_exempt
+extends: base
 diff: add
 line:
     - match: "@xframe_options_exempt.*"
@@ -97,6 +112,7 @@ file:
     - match: .*\.py
 
 --- #!java_interesting_sql_calls
+extends: base
 diff: add
 line:
     - match: java\.sql\..*
@@ -104,6 +120,7 @@ file:
     - match: .*\.(scala|java)
 
 --- #!android_storage
+extends: base
 diff: add
 line:
     - match: (getFilesDir|getExternalFilesDir|getExternalStorageDirectory|getSharedPreferences|addPreferencesFromResource).*
@@ -111,16 +128,19 @@ file:
     - match: .*\.java
 
 --- #!hashing_function
+extends: base
 diff: add
 line:
     - match: (SHA|MD|sha|md)[0-9]+\(.*
 
 --- #!jsonp_usage
+extends: base
 diff: add
 line:
     - match: \$\.jsonp\(.*
 
 --- #!direct_prezi_access_helpers
+extends: base
 diff: add
 line:
     - match: zuibackend\.cache(\.get_prezi|\s+import\s+get_prezi).*
@@ -128,6 +148,7 @@ file:
     - match: .*\.(py)
 
 --- #!csharp_storage
+extends: base
 diff: add
 line:
     - match: Windows\.Storage.*
@@ -135,6 +156,7 @@ file:
     - match: .*\.(cs)
 
 --- #!http_variable_used_js
+extends: base
 diff: add
 line:
     - match: (Node\.url\.parse|\.query\.).*
@@ -142,11 +164,13 @@ file:
     - match: .*\.(hx|js)$
 
 --- #!cross-domain-policy-access
+extends: base
 diff: add
 line:
     - match: (allow-access-from domain="*").*
 
 --- #!android_webview
+extends: base
 diff: add
 line:
     - match: (addJavascriptInterface|setJavaScriptEnabled|webView\.loadData).*
@@ -154,11 +178,13 @@ file:
     - match: .*\.java
 
 --- #!s3_set_object_acl
+extends: base
 diff: add
 line:
     - match: (setObjectAcl|set_acl|set_canned_acl).*
 
 --- #!csharp_sql_command
+extends: base
 diff: add
 line:
     - match: \.CommandText.*
@@ -166,6 +192,7 @@ file:
     - match: .*\.(cs)
 
 --- #!http_response_js
+extends: base
 diff: add
 line:
     - match: (\.end\(.*req\.).*
@@ -173,6 +200,7 @@ file:
     - match: .*\.(hx|js)
 
 --- #!direct_prezi_access
+extends: base
 diff: add
 line:
     - match: Presentation\.objects\.(all|get_by_id_or_oid).*
@@ -180,6 +208,7 @@ file:
     - match: .*\.(py)
 
 --- #!scala_spray_http
+extends: base
 diff: add
 line:
     - match: (pathPrefix\(|HttpResponse\().*
@@ -187,6 +216,7 @@ file:
     - match: .*\.(scala)
 
 --- #!js_network_listen
+extends: base
 diff: add
 line:
     - match: (WebSocket|\.listen\(|http\.request|socket\.io).*
@@ -195,6 +225,7 @@ file:
     - match: .*\.(hx|js)
 
 --- #!cpp_format_string
+extends: base
 diff: add
 line:
     - match: (v?s?n?f?printf|syslog|f?s?scanf)\(.*
@@ -202,6 +233,7 @@ file:
     - match: .*\.(cpp|cxx|h|hpp|c)$
 
 --- #!chef_new_vhost
+extends: base
 diff: add
 line:
     - match: (apache|nginx)\_vhost.*
@@ -209,6 +241,7 @@ file:
     - match: .*\.(rb)
 
 --- #!java_ssl_validation
+extends: base
 diff: add
 line:
     - match: (AllTrustSSLSocketFactory|NonValidatingSSLSocketFactory).*
@@ -216,6 +249,7 @@ file:
     - match: .*\.(scala|java|groovy)
 
 --- #!java_interesting_io_calls
+extends: base
 diff: add
 line:
     - match: (java\.io\.(File|\*)|new File\().*
@@ -223,6 +257,7 @@ file:
     - match: .*\.(scala|java)
 
 --- #!urlopen
+extends: base
 diff: add
 line:
     - match: (urlopen\(|pycurl\.Curl|_make_call\().*
@@ -230,6 +265,7 @@ file:
     - match: .*\.(py)
 
 --- #!chef_new_services
+extends: base
 diff: add
 line:
     - match: (prezi\_django\_app\_base\_placement|prezi\_placement\_deploy|supervisor\_service|apache\_vhost|Virtualhost ).*
@@ -237,11 +273,13 @@ file:
     - match: .*\.(rb|erb)
 
 --- #!root_what
+extends: base
 diff: add
 line:
     - match: ("|')root("|')root.*
 
 --- #!unsafe_as_calls
+extends: base
 diff: add
 line:
     - match: (externalinterface|loadVariables|navigateToURL|loadMovie|getURL|FScrollPane\.loadScrollContent|LoadVars\.load|LoadVars\.send|XML\.load|Sound\.loadSound|NetStream\.play|asFunction|clickTAG).*
@@ -249,6 +287,7 @@ file:
     - match: .*\.(as)
 
 --- #!django_xfo_remove
+extends: base
 diff: add
 line:
     - match: \-.*clickjacking.XFrameOptionsMiddleware.*
@@ -256,6 +295,7 @@ file:
     - match: .*\.(py|cfg)
 
 --- #!js_file_access
+extends: base
 diff: add
 line:
     - match: (Node\.fs\.).*
@@ -263,11 +303,13 @@ file:
     - match: .*\.(hx|js)
 
 --- #!new_token_related_method
+extends: base
 diff: add
 line:
     - match: (def .*\_token|MacToken\.generate)\(.*
 
 --- #!scala_interesting_calls
+extends: base
 diff: add
 line:
     - match: (scala\.io\.|scala\.sys\.process|new File|\.(!|lines\(|run\()|Http\.Bind).*
@@ -275,16 +317,19 @@ file:
     - match: .*\.(scala)
 
 --- #!interesting_object_get
+extends: base
 diff: add
 line:
     - match: objects\.get\(.*request\..*
 
 --- #!tastypie_usage
+extends: base
 diff: add
 line:
     - match: tastypie.*
 
 --- #!csharp_invokescript
+extends: base
 diff: add
 line:
     - match: WebBrowser\.InvokeScript.*
@@ -292,11 +337,13 @@ file:
     - match: .*\.(cs)
 
 --- #!http_variable_used
+extends: base
 diff: add
 line:
     - match: (request\.(GET|POST|FILES|META)(\[|\.get)).*
 
 --- #!cpp_system_popen_calls
+extends: base
 diff: add
 line:
     - match: (system|popen|exec(ve)?|execvp?|execlp?)\(.*
@@ -304,6 +351,7 @@ file:
     - match: .*\.(cpp|cxx|h|hpp|c)$
 
 --- #!android_app_permission
+extends: base
 diff: add
 line:
     - match: (uses-permission android:name).*
@@ -311,6 +359,7 @@ file:
     - match: .*\.xml
 
 --- #!python_object_enumeration
+extends: base
 diff: add
 line:
     - match: (\.get_by_secondary_key\().*
@@ -318,6 +367,7 @@ file:
     - match: .*\.(py)
 
 --- #!godauth_whitelist
+extends: base
 diff: add
 line:
     - match: "\"who\"\\: \"all\".*"
@@ -325,6 +375,7 @@ file:
     - match: .*\.(json)
 
 --- #!csharp_request
+extends: base
 diff: add
 line:
     - match: client\.(Post|Get).*(Request).*
@@ -332,6 +383,7 @@ file:
     - match: .*\.(cs)
 
 --- #!cpp_bof_calls
+extends: base
 diff: add
 line:
     - match: (strcpy|strcat|f?gets|memcpy)\(.*
@@ -339,6 +391,7 @@ file:
     - match: .*\.(cpp|cxx|h|hpp|c)$
 
 --- #!dom_event_parameter
+extends: base
 diff: add
 line:
     - match: \son\w+=\s*('|").*
@@ -346,6 +399,7 @@ file:
     - except: .*\.(xml)
 
 --- #!python_password_form
+extends: base
 diff: add
 line:
     - match: (forms\.PasswordInput).*
@@ -353,6 +407,7 @@ file:
     - match: .*\.(py)
 
 --- #!chef_new_user_access
+extends: base
 diff: add
 line:
     - match: "(assessment_weekers =|\"users\": |recipe\\[users\\:\\:).*"
@@ -360,6 +415,7 @@ file:
     - match: .*\.(rb|json)
 
 --- #!backbonejs_model_get
+extends: base
 diff: add
 line:
     - match: this\.model\.get.*
@@ -367,6 +423,7 @@ file:
     - match: .*\.(js|html)
 
 --- #!python_remote_objects
+extends: base
 diff: add
 line:
     - match: (RemoteUserFactory).*
@@ -374,6 +431,7 @@ file:
     - match: .*\.(py)
 
 --- #!chef_new_open_port
+extends: base
 diff: add
 line:
     - match: \+\s*bind\s*=.*
@@ -381,6 +439,7 @@ file:
     - match: .*\.(rb|erb)
 
 --- #!unsafe_underscore_js_template
+extends: base
 diff: add
 line:
     - match: <%=.*
@@ -388,6 +447,7 @@ file:
     - match: .*\.(js|html|tpl)$
 
 --- #!backbonejs_unsanitized_html
+extends: base
 diff: add
 line:
     - match: this\..*\.html\(.*
@@ -395,6 +455,7 @@ file:
     - match: .*\.(js|html)
 
 --- #!java_interesting_net_calls
+extends: base
 diff: add
 line:
     - match: java\.net\.URL.*
@@ -402,6 +463,7 @@ file:
     - match: .*\.(scala|java)
 
 --- #!sql_query
+extends: base
 diff: add
 line:
     - match: \+[\s]*query[\s]*=.*
@@ -409,11 +471,13 @@ file:
     - except: ^/hadoop/.*\.script$
 
 --- #!raw_query
+extends: base
 diff: add
 line:
     - match: \.raw\(.*
 
 --- #!http_response
+extends: base
 diff: add
 line:
     - match:  HttpResponse\(.*

@@ -3,6 +3,7 @@ description: Repoguard rule to match for known vulnerabilities / vulnerable fn c
 extends: whitelisted_files::whitelisted_files,comments::comments
 
 --- #!python_raw_decode_arbitrary_process_memory_read
+extends: base
 diff: add
 line:
     - match: raw_decode\(

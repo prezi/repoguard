@@ -3,6 +3,7 @@ description: Repoguard rules to test for generic best practices
 extends: whitelisted_files::whitelisted_files,comments::comments
 
 --- #!unsecure_protocol
+extends: base
 diff: add
 line:
     - match: (http|ftp)://.*

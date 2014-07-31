@@ -3,6 +3,7 @@ description: either the xml source is not client or DTD parsing is disabled
 extends: whitelisted_files::whitelisted_files,comments::comments
 
 --- #!python
+extends: base
 diff: add
 description: "sax; etree; pulldom; minidom; xmlrpc: all vulnerable"
 file:
@@ -24,7 +25,7 @@ line:
     - match: SAXParser(Factory)+
 
 --- #!scala
-extends: java
+extends: base,java
 file:
     - match: ^.*\.scala$
 line:
