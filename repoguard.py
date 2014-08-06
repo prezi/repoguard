@@ -146,7 +146,7 @@ class RepoGuard:
         return skip_due_language or skip_due_repo_name
 
     def isCheckEnforcedForRepo(self, repo_name):
-        return True if repo_name in self.getConfigOptionValue('ENFORCE_CHECK_REPO_LIST') else False
+        return (repo_name in self.getConfigOptionValue('ENFORCE_CHECK_REPO_LIST'))
 
     def shouldSkipDueLanguageLimitation(self, repo_language):
         if self.getConfigOptionValue('REPO_LANGUAGE_LIMITATION') != ['']:
@@ -501,9 +501,5 @@ class RepoGuard:
         print "* run finished at %s" % now
 
 
-def createInitializedRepoguardInstance():
-    return RepoGuard()
-
-
 if __name__ == '__main__':
-    createInitializedRepoguardInstance().run()
+    RepoGuard().run()
