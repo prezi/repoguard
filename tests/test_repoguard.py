@@ -88,9 +88,9 @@ class LocalRepoTestCase(BaseTestCase):
     def test_update_local_repos_no_prev_dirs(self, *mocks):
         self.rg.updateLocalRepos()
         # check if git clone is called as required everywhere
-        self.assertEqual(mocks[1].call_args_list[0][0], ([u'git', u'clone', u'git@github.com:prezi/object-library-service.git', u'%s/object-library-service_6125572' % self.rg.WORKING_DIR],))
-        self.assertEqual(mocks[1].call_args_list[1][0], ([u'git', u'clone', u'git@github.com:prezi/project-startup.git', u'%s/project-startup_7092651' % self.rg.WORKING_DIR],))
-        self.assertEqual(mocks[1].call_args_list[2][0], ([u'git', u'clone', u'git@github.com:prezi/data-research.git', u'%s/data-research_7271766' % self.rg.WORKING_DIR],))
+        self.assertEqual(mocks[1].call_args_list[0][0], ([u'git', u'clone', u'git@github.com:prezi/repo2.git', u'%s/repo2_6125572' % self.rg.WORKING_DIR],))
+        self.assertEqual(mocks[1].call_args_list[1][0], ([u'git', u'clone', u'git@github.com:prezi/repo1.git', u'%s/repo1_7092651' % self.rg.WORKING_DIR],))
+        self.assertEqual(mocks[1].call_args_list[2][0], ([u'git', u'clone', u'git@github.com:prezi/repo3.git', u'%s/repo3_7271766' % self.rg.WORKING_DIR],))
         self.assertEqual(self.rg.repoStatus['6125572']['last_checked_hashes'], [])
         self.assertEqual(self.rg.repoStatus['7092651']['last_checked_hashes'], [])
         self.assertEqual(self.rg.repoStatus['7271766']['last_checked_hashes'], [])
@@ -100,11 +100,11 @@ class LocalRepoTestCase(BaseTestCase):
     @patch('subprocess.check_output')
     @patch('repoguard.RepoGuard.updateRepoStatusById')
     def test_update_local_repos_no_prev_dirs_skip_repo(self, *mocks):
-        self.rg.setSkipRepoList(('project-startup'))
+        self.rg.setSkipRepoList(('repo1'))
         self.rg.updateLocalRepos()
         # check if git clone is called as required everywhere
-        self.assertEqual(mocks[1].call_args_list[0][0], ([u'git', u'clone', u'git@github.com:prezi/object-library-service.git', u'%s/object-library-service_6125572' % self.rg.WORKING_DIR],))
-        self.assertEqual(mocks[1].call_args_list[1][0], ([u'git', u'clone', u'git@github.com:prezi/data-research.git', u'%s/data-research_7271766' % self.rg.WORKING_DIR],))
+        self.assertEqual(mocks[1].call_args_list[0][0], ([u'git', u'clone', u'git@github.com:prezi/repo2.git', u'%s/repo2_6125572' % self.rg.WORKING_DIR],))
+        self.assertEqual(mocks[1].call_args_list[1][0], ([u'git', u'clone', u'git@github.com:prezi/repo3.git', u'%s/repo3_7271766' % self.rg.WORKING_DIR],))
         self.assertEqual(self.rg.repoStatus['6125572']['last_checked_hashes'], [])
         self.assertEqual(self.rg.repoStatus['7271766']['last_checked_hashes'], [])
         self.assertEqual(len(mocks[1].call_args_list), 2)
@@ -116,40 +116,40 @@ class LocalRepoTestCase(BaseTestCase):
         self.rg.setRepoLanguageLimitation(('python'))
         self.rg.updateLocalRepos()
         # check if git clone is called as required everywhere
-        self.assertEqual(mocks[1].call_args_list[0][0], ([u'git', u'clone', u'git@github.com:prezi/object-library-service.git', u'%s/object-library-service_6125572' % self.rg.WORKING_DIR],))
-        self.assertEqual(mocks[1].call_args_list[1][0], ([u'git', u'clone', u'git@github.com:prezi/project-startup.git', u'%s/project-startup_7092651' % self.rg.WORKING_DIR],))
+        self.assertEqual(mocks[1].call_args_list[0][0], ([u'git', u'clone', u'git@github.com:prezi/repo2.git', u'%s/repo2_6125572' % self.rg.WORKING_DIR],))
+        self.assertEqual(mocks[1].call_args_list[1][0], ([u'git', u'clone', u'git@github.com:prezi/repo1.git', u'%s/repo1_7092651' % self.rg.WORKING_DIR],))
         self.assertEqual(self.rg.repoStatus['6125572']['last_checked_hashes'], [])
         self.assertEqual(self.rg.repoStatus['7092651']['last_checked_hashes'], [])
         self.assertEqual(len(mocks[1].call_args_list), 2)
 
     @patch('repoguard.RepoGuard.shouldSkip', return_value=False)
-    @patch('os.listdir', return_value=['project-startup_7092651'])
+    @patch('os.listdir', return_value=['repo1_7092651'])
     @patch('subprocess.check_output')
     @patch('repoguard.RepoGuard.updateRepoStatusById')
     def test_update_local_repos_both_clone_and_pull(self, *mocks):
         self.rg.updateLocalRepos()
         # check if git clones and pulls are called as required everywhere
-        self.assertEqual(mocks[1].call_args_list[0][0], ([u'git', u'clone', u'git@github.com:prezi/object-library-service.git', u'%s/object-library-service_6125572' % self.rg.WORKING_DIR],))
+        self.assertEqual(mocks[1].call_args_list[0][0], ([u'git', u'clone', u'git@github.com:prezi/repo2.git', u'%s/repo2_6125572' % self.rg.WORKING_DIR],))
         self.assertEqual(mocks[1].call_args_list[1][0], ([u'git', u'pull'],))
-        self.assertEqual(mocks[1].call_args_list[1][1], {'cwd': '%s/project-startup_7092651/' % self.rg.WORKING_DIR})
-        self.assertEqual(mocks[1].call_args_list[2][0], ([u'git', u'clone', u'git@github.com:prezi/data-research.git', u'%s/data-research_7271766' % self.rg.WORKING_DIR],))
+        self.assertEqual(mocks[1].call_args_list[1][1], {'cwd': '%s/repo1_7092651/' % self.rg.WORKING_DIR})
+        self.assertEqual(mocks[1].call_args_list[2][0], ([u'git', u'clone', u'git@github.com:prezi/repo3.git', u'%s/repo3_7271766' % self.rg.WORKING_DIR],))
         self.assertEqual(self.rg.repoStatus['6125572']['last_checked_hashes'], [])
         self.assertEqual(self.rg.repoStatus['7271766']['last_checked_hashes'], [])
         self.assertEqual(len(mocks[1].call_args_list), 3)
 
     @patch('repoguard.RepoGuard.shouldSkip', return_value=False)
-    @patch('os.listdir', return_value=['project-startup_7092651', 'object-library-service_6125572', 'data-research_7271766'])
+    @patch('os.listdir', return_value=['repo1_7092651', 'repo2_6125572', 'repo3_7271766'])
     @patch('subprocess.check_output')
     @patch('repoguard.RepoGuard.updateRepoStatusById')
     def test_update_local_repos_only_pulls(self, *mocks):
         self.rg.updateLocalRepos()
         # check if git pull is called as required everywhere
         self.assertEqual(mocks[1].call_args_list[0][0], ([u'git', u'pull'],))
-        self.assertEqual(mocks[1].call_args_list[0][1], {'cwd': '%s/object-library-service_6125572/' % self.rg.WORKING_DIR})
+        self.assertEqual(mocks[1].call_args_list[0][1], {'cwd': '%s/repo2_6125572/' % self.rg.WORKING_DIR})
         self.assertEqual(mocks[1].call_args_list[1][0], ([u'git', u'pull'],))
-        self.assertEqual(mocks[1].call_args_list[1][1], {'cwd': '%s/project-startup_7092651/' % self.rg.WORKING_DIR})
+        self.assertEqual(mocks[1].call_args_list[1][1], {'cwd': '%s/repo1_7092651/' % self.rg.WORKING_DIR})
         self.assertEqual(mocks[1].call_args_list[2][0], ([u'git', u'pull'],))
-        self.assertEqual(mocks[1].call_args_list[2][1], {'cwd': '%s/data-research_7271766/' % self.rg.WORKING_DIR})
+        self.assertEqual(mocks[1].call_args_list[2][1], {'cwd': '%s/repo3_7271766/' % self.rg.WORKING_DIR})
 
 
 class CheckNewCodeTest(BaseTestCase):
@@ -219,16 +219,16 @@ class CheckNewCodeTest(BaseTestCase):
         ]
         self.assertEqual(res, expected_res)
 
-    @patch('subprocess.check_output', return_value='1163bec4351413be354f7c88317647815b000000\n')
-    @patch('repoguard.RepoGuard.getNewHashes', return_value=['1163bec4351413be354f7c88317647815b000000'])
-    @patch('repoguard.RepoGuard.checkByRevHash', return_value=['test_alert', 'test_path/test_file.py', '1163bec4351413be354f7c88317647815b000000', 'matching line ...'])
+    @patch('subprocess.check_output', return_value='1163be000000\n')
+    @patch('repoguard.RepoGuard.getNewHashes', return_value=['1163be000000'])
+    @patch('repoguard.RepoGuard.checkByRevHash', return_value=['test_alert', 'test_path/test_file.py', '1163be000000', 'matching line ...'])
     def test_check_by_repo_id_with_new_hashes(self, *mocks):
         tres = self.rg.checkByRepoId('8742897', 'zuisite')
-        self.assertEqual(tres, ['test_alert', 'test_path/test_file.py', '1163bec4351413be354f7c88317647815b000000', 'matching line ...'])
+        self.assertEqual(tres, ['test_alert', 'test_path/test_file.py', '1163be000000', 'matching line ...'])
 
-    @patch('subprocess.check_output', return_value='1163bec4351413be354f7c88317647815b000000\n')
+    @patch('subprocess.check_output', return_value='1163be000000\n')
     @patch('repoguard.RepoGuard.getNewHashes', return_value=[])
-    @patch('repoguard.RepoGuard.checkByRevHash', return_value=['test_alert', 'test_path/test_file.py', '1163bec4351413be354f7c88317647815b000000', 'matching line ...'])
+    @patch('repoguard.RepoGuard.checkByRevHash', return_value=['test_alert', 'test_path/test_file.py', '1163be000000', 'matching line ...'])
     def test_check_by_repo_id_without_new_hashes(self, *mocks):
         tres = self.rg.checkByRepoId('8742897', 'zuisite')
         self.assertEqual(tres, [])
