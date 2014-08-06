@@ -32,3 +32,21 @@ extends: base
 diff: add
 line:
     - match: "preziMeta"
+
+--- #!jquery_html
+description: "Please HTML escape *everything* passed to the .html() function!"
+extends: base
+diff: add
+line:
+    - match: \.html\(.*
+file:
+    - match: .*\.(js|html|ts)
+
+--- #!html
+description: "Please HTML escape *everything* passed to the .innerHTML attribute!"
+extends: base
+diff: add
+line:
+    - match: \.innerHTML.*
+file:
+    - match: .*\.(js|html|ts)

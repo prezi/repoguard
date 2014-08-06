@@ -446,14 +446,6 @@ line:
 file:
     - match: .*\.(js|html|tpl)$
 
---- #!backbonejs_unsanitized_html
-extends: base
-diff: add
-line:
-    - match: this\..*\.html\(.*
-file:
-    - match: .*\.(js|html)
-
 --- #!java_interesting_net_calls
 extends: base
 diff: add
