@@ -1,5 +1,5 @@
 import sys
-from mock import patch, Mock
+from mock import patch, Mock, call
 from StringIO import StringIO
 
 from base import BaseTestCase
@@ -11,10 +11,8 @@ class LocalRepoTestCase(BaseTestCase):
         super(LocalRepoTestCase, self).setUp()
 
         # patch test repo list
-        self.rg.REPO_LIST_PATH = self.test_data_folder + 'test_repo_list.json'
-        self.rg.REPO_STATUS_PATH = self.test_data_folder + 'test_repo_status.json'
-        self.rg.loadRepoListFromFile()
-        self.rg.readRepoStatusFromFile()
+        self.rg.loadRepoListFromFile(self.test_data_folder + 'test_repo_list.json')
+        self.rg.readRepoStatusFromFile(self.test_data_folder + 'test_repo_status.json')
         self.rg.resetRepoLimits()
 
     def test_search_repo_dir(self):
@@ -102,6 +100,7 @@ class LocalRepoTestCase(BaseTestCase):
     def test_update_local_repos_no_prev_dirs_skip_repo(self, *mocks):
         self.rg.setSkipRepoList(('repo1'))
         self.rg.updateLocalRepos()
+
         # check if git clone is called as required everywhere
         self.assertEqual(mocks[1].call_args_list[0][0], ([u'git', u'clone', u'git@github.com:prezi/repo2.git', u'%s/repo2_6125572' % self.rg.WORKING_DIR],))
         self.assertEqual(mocks[1].call_args_list[1][0], ([u'git', u'clone', u'git@github.com:prezi/repo3.git', u'%s/repo3_7271766' % self.rg.WORKING_DIR],))
@@ -172,25 +171,21 @@ class CheckNewCodeTest(BaseTestCase):
             }
         }
         self.rg.code_checker = CodeCheckerFactory(rules).create()
-        self.rg.REPO_LIST_PATH = self.test_data_folder + 'test_repo_list.json'
-        self.rg.loadRepoListFromFile()
-        self.rg.REPO_STATUS_PATH = self.test_data_folder + 'test_repo_status.json'
-        self.rg.readRepoStatusFromFile()
+        self.rg.loadRepoListFromFile(self.test_data_folder + 'test_repo_list.json')
+        self.rg.readRepoStatusFromFile(self.test_data_folder + 'test_repo_status.json')
         self.rg.resetRepoLimits()
-        self.output = StringIO()
-        self.saved_stdout = sys.stdout
-        sys.stdout = self.output
-
-    def tearDown(self):
-        self.output.close()
-        sys.stdout = self.saved_stdout
 
     @patch('os.listdir', return_value=['aaaa-test', 'bbbb_test', '.444444_test3'])
     @patch('os.path.isdir', return_value=True)
     @patch('subprocess.check_output')
     def test_no_repo_dirs(self, *mocks):
         self.rg.checkNewCode()
-        self.assertEqual(self.output.getvalue(), "skip aaaa-test (not repo directory)\nskip bbbb_test (not repo directory)\nskip .444444_test3 (not repo directory)\n")
+        calls = [
+            call.debug('skip aaaa-test (not repo directory)'),
+            call.debug('skip bbbb_test (not repo directory)'),
+            call.debug('skip .444444_test3 (not repo directory)')
+        ]
+        self.mock_logger.assert_has_calls(calls)
 
     @patch('os.listdir', return_value=['newrepo_123456'])
     @patch('os.path.isdir', return_value=True)

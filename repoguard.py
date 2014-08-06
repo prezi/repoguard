@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import json
+import yaml
 import re
 import os
 import subprocess
@@ -20,26 +21,26 @@ from ruleparser import load_rules
 from notifier import EmailNotifier
 
 
+logger = logging.getLogger('repoguard')
+logger.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+logging.getLogger('elasticsearch').addHandler(ch)
+
+
 class RepoGuard:
-    def __init__(self):
+    def __init__(self, logger):
         self.CONFIG = {}
         self.RUNNING_ON_PROD = False
-
-        self.detectPaths()
-        self.readCommonConfig()
-        self.transformConfigOptionsToLists(('SKIP_REPO_LIST', 'REPO_LANGUAGE_LIMITATION', 'ENFORCE_CHECK_REPO_LIST'))
-
         self.repoList = {}
         self.repoStatus = {}
         self.repoStatusNew = {}
         self.checkResults = []
         self.parseArgs()
-        self.readAlertConfigFromFile()
+        self.detectPaths()
+        self.logger = logger
 
-        root_logger = logging.getLogger()
-        root_logger.setLevel(logging.DEBUG)
-        ch = logging.StreamHandler()
-        logging.getLogger('elasticsearch').addHandler(ch)
+        self.readConfig(self.CONFIG_PATH)
+        self.readAlertConfigFromFile()
 
     def parseArgs(self):
         parser = argparse.ArgumentParser(description='Watch git repos for changes...')
@@ -70,31 +71,26 @@ class RepoGuard:
         else:
             self.SECRET_CONFIG_PATH = "%s/etc/secret.ini" % os.path.dirname(os.path.realpath(__file__))
             self.APP_DIR = '%s/' % os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
-            self.WORKING_DIR = '%srepos' % self.APP_DIR
+            self.WORKING_DIR = '%srepos/' % self.APP_DIR
 
-        self.COMMON_CONFIG_PATH = "%s/etc/common.cfg" % os.path.dirname(os.path.realpath(__file__))
+        self.CONFIG_PATH = "%s/etc/config.yml" % os.path.dirname(os.path.realpath(__file__))
 
-        self.REPO_LIST_PATH = self.APP_DIR+'repo_list.json'
-        self.REPO_STATUS_PATH = self.APP_DIR+'repo_status.json'
+        self.REPO_LIST_PATH = self.WORKING_DIR+'repo_list.json'
+        self.REPO_STATUS_PATH = self.WORKING_DIR+'repo_status.json'
         self.ALERT_CONFIG_DIR = '%s/rules' % os.path.dirname(os.path.realpath(__file__))
 
-    def readCommonConfig(self):
-        parser = ConfigParser.ConfigParser()
-        parser.read(self.COMMON_CONFIG_PATH)
-        self.subscribers = {}
-        for config_option, config_value in parser.items('__main__'):
-            self.setConfigOptionValue(config_option, config_value)
-        for subscriber, rules in parser.items('subscribers'):
-            rule_list = [r.strip() for r in rules.split(',')]
-            for rule in rule_list:
-                if rule in self.subscribers:
-                    self.subscribers[rule].append(subscriber)
-                else:
-                    self.subscribers[rule] = [subscriber]
-
-    def transformConfigOptionsToLists(self, list_of_options_to_transform):
-        for config_option in list_of_options_to_transform:
-            self.setConfigOptionValue(config_option, self.getConfigOptionValue(config_option).replace(' ', '').split(','))
+    def readConfig(self, path):
+        try:
+            with open(path) as f:
+                self.config = yaml.load(f.read())
+                self.setRepoLanguageLimitation(self.config.get('repo_language_limitation', []))
+                self.setSkipRepoList(self.config.get('skip_repo_list', []))
+                self.setEnforceCheckRepoList(self.config.get('enforce_check_repo_list', []))
+                self.subscribers = self.config.get('subscribers', [])
+                for key in ['default_notification_src_address', 'default_notification_to_address', 'organization_urls']:
+                    self.setConfigOptionValue(key, self.config.get(key))
+        except Exception:
+            self.logger.exception("Error loading config file: %s\n" % path)
 
     def getConfigOptionValue(self, option_name):
         return self.CONFIG[option_name.upper()]
@@ -108,9 +104,12 @@ class RepoGuard:
     def setSkipRepoList(self, value):
         self.setConfigOptionValue('SKIP_REPO_LIST', value)
 
+    def setEnforceCheckRepoList(self, value):
+        self.setConfigOptionValue('ENFORCE_CHECK_REPO_LIST', value)
+
     def resetRepoLimits(self):
-        self.setRepoLanguageLimitation([''])
-        self.setSkipRepoList([''])
+        self.setRepoLanguageLimitation([])
+        self.setSkipRepoList([])
 
     def printRepoData(self):
         for repoId, repoData in self.repoList.iteritems():
@@ -134,10 +133,12 @@ class RepoGuard:
 
     def shouldSkip(self, repo_data):
         if self.isCheckEnforcedForRepo(repo_data["name"]):
+            self.logger.debug('Check is enforced for repo (%s), so not skipping.' % repo_data['name'])
             return False
 
         if self.args.limit:
             if repo_data["name"] not in self.args.limit:
+                self.logger.debug('Got --limit param and repo (%s) is not among them, skipping.' % repo_data['name'])
                 return True
 
         skip_due_language = self.shouldSkipDueLanguageLimitation(repo_data['language'])
@@ -149,14 +150,11 @@ class RepoGuard:
         return (repo_name in self.getConfigOptionValue('ENFORCE_CHECK_REPO_LIST'))
 
     def shouldSkipDueLanguageLimitation(self, repo_language):
-        if self.getConfigOptionValue('REPO_LANGUAGE_LIMITATION') != ['']:
-            return str(repo_language).lower() not in self.getConfigOptionValue('REPO_LANGUAGE_LIMITATION')
-        return False
+        return self.getConfigOptionValue('REPO_LANGUAGE_LIMITATION') and \
+            str(repo_language).lower() not in self.getConfigOptionValue('REPO_LANGUAGE_LIMITATION')
 
     def shouldSkipDueRepoNameIsOnSkipList(self, repo_name):
-        if self.getConfigOptionValue('SKIP_REPO_LIST') != ['']:
-            return repo_name in self.getConfigOptionValue('SKIP_REPO_LIST')
-        return False
+        return repo_name in self.getConfigOptionValue('SKIP_REPO_LIST')
 
     # repoList required
     def updateLocalRepos(self):
@@ -166,31 +164,31 @@ class RepoGuard:
             repoDir = self.searchRepoDir(working_dir, repoData["name"], repoId)
 
             if self.shouldSkip(repoData):
-                # print '... skipping %s ' % repoData["name"]
+                self.logger.debug('... skipping %s ' % repoData["name"])
                 continue
 
             if repoDir:
-                # print 'Updating *** %s (%s) ***' % (repoData["name"], repoId)
                 # DIRECTORY EXISTING --> git pull
+                self.logger.debug('git pull *** %s (%s) ***' % (repoData["name"], repoId))
                 cwd = "%s/%s/" % (self.WORKING_DIR, repoDir)
                 cmd = "git pull"
                 try:
                     subprocess.check_output(cmd.split(), cwd=cwd)
                     self.updateRepoStatusById(repoId, repoData["name"])
                 except subprocess.CalledProcessError, e:
-                    print "Error when updating %s (%s)" % (repoData["name"], e)
+                    self.logger.error("Error when updating %s (%s)" % (repoData["name"], e))
             else:
                 # DIRECTORY NOT EXISTING --> git clone
+                self.logger.debug('git clone *** %s (%s) ***' % (repoData["name"], repoId))
                 try:
                     cmd = "git clone %s %s/%s_%s" % (repoData["ssh_url"], self.WORKING_DIR, repoData["name"], repoId)
                     subprocess.check_output(cmd.split())
                     self.setInitialRepoStatusById(repoId, repoData["name"])
                     self.updateRepoStatusById(repoId, repoData["name"])
                 except Exception as e:
-                    print "Failed cloning %s: %s" % (repoData["name"], e)
+                    self.logger.exception("Failed cloning %s: %s" % (repoData["name"], e))
 
-    def readRepoStatusFromFile(self):
-        filename = self.REPO_STATUS_PATH
+    def readRepoStatusFromFile(self, filename):
         try:
             with open(filename) as repo_status:
                 self.repoStatus = json.load(repo_status)
@@ -198,7 +196,7 @@ class RepoGuard:
                 repo_status.seek(0, 0)
                 self.repoStatusNew = json.load(repo_status)
         except IOError:
-            print "repo_status.json not existing, no cache to load..."
+            self.logger.info("repo_status.json not existing, no cache to load...")
 
     def checkRepoStatusFile(self):
         return os.path.isfile(self.REPO_STATUS_PATH)
@@ -224,24 +222,23 @@ class RepoGuard:
                         continue
 
                 if repo_id not in self.repoStatus:
-                    print "%s (%s) not yet in status, initializing" % (repo_name, repo_id)
+                    self.logger.debug("%s (%s) not yet in status, initializing" % (repo_name, repo_id))
                     self.setInitialRepoStatusById(repo_id, repo_name)
                     self.updateRepoStatusById(repo_id, repo_name)
 
                 if repo_id in self.repoList:
                     if self.shouldSkip(self.repoList[repo_id]):
-                        # print '... %s skip code check' % repo_name
+                        self.logger.debug('... %s skip code check' % repo_name)
                         continue
                 else:
-                    # print '... skip code check (not in repoList)'
+                    self.logger.debug('... skip code check (not in repoList)')
                     continue
 
                 check_results = self.checkByRepoId(repo_id, repo_name)
                 if check_results:
-                    self.checkResults = self.checkResults + check_results
+                    self.checkResults += check_results
                     if not self.args.notify:
                         for issue in check_results:
-                            # print '### id: %s\nfile:\t%s\ncommit:\thttps://github.com/prezi/%s/commit/%s\nmatch:\t%s\n\n' % (issue[0],issue[1],issue[4],issue[2],issue[3])
                             try:
                                 print '%s\t%s\t%s\thttps://github.com/prezi/%s/commit/%s\t%s' % \
                                     (repo_name, issue[0], issue[1], issue[4], issue[2], issue[3][0:200].replace("\t", " ").decode('utf-8', 'replace'))
@@ -249,7 +246,7 @@ class RepoGuard:
                                 print '%s\t%s\t%s\thttps://github.com/prezi/%s/commit/%s\t%s' % \
                                     (repo_name, issue[0], issue[1], issue[4], issue[2], 'failed to get the details due to some unicode error madness')
             else:
-                print 'skip %s (not repo directory)' % repo_dir
+                self.logger.debug('skip %s (not repo directory)' % repo_dir)
 
     def storeResults(self):
         (host, port) = self.args.store.split(":")
@@ -270,7 +267,7 @@ class RepoGuard:
 
                 es.create(body=body, id=hashlib.sha1(str(body)).hexdigest(), index='repoguard', doc_type='repoguard')
             except Exception as e:
-                print e
+                self.logger.exception('Got exception during storing results to ES.')
 
     # TODO: test
     def sendResults(self):
@@ -278,7 +275,7 @@ class RepoGuard:
         if not self.checkResults:
             return False
 
-        print '### SENDING NOTIFICATION EMAIL ###'
+        self.logger.info('### SENDING NOTIFICATION EMAIL ###')
 
         for issue in self.checkResults:
             check_id = issue[0]
@@ -344,7 +341,7 @@ class RepoGuard:
                 rev_list_output = subprocess.check_output(["git", "rev-list", "--remotes", "--since=\"%s\"" % last_run, "HEAD"], cwd=cwd)
                 rev_list = rev_list_output.split("\n")[:-1]
             except Exception as e:
-                print "Failed getting commits from a given timestamp (exception: %s)" % e
+                self.logger.exception("Failed getting commits from a given timestamp")
         else:
             rev_list = self.getNewHashes(repo_id)
 
@@ -353,7 +350,7 @@ class RepoGuard:
             if rev_result:
                 matches_in_repo = matches_in_repo + rev_result
         if len(rev_list) > 0:
-            print "checked commits %s %s" % (repo_name, len(rev_list))
+            self.logger.info("checked commits %s %s" % (repo_name, len(rev_list)))
 
         return matches_in_repo
 
@@ -385,17 +382,16 @@ class RepoGuard:
                 extended_alerts = [(alert[0], filename, rev_hash, alert[1], repo_name, repo_id) for alert in alerts]
                 matches_in_rev.extend(extended_alerts)
         except subprocess.CalledProcessError as e:
-            print 'Failed running %s (exception: %s)' % (cmd, e)
+            self.logger.exception('Failed running: %s' % (cmd))
 
         return matches_in_rev
 
-    def loadRepoListFromFile(self):
-        filename = self.REPO_LIST_PATH
+    def loadRepoListFromFile(self, filename):
         try:
             with open(filename) as repo_file:
                 self.repoList = json.load(repo_file)
         except IOError:
-            print "repo_list.json not existing"
+            self.logger.info("repo_list.json not existing")
 
     def readAlertConfigFromFile(self):
         bare_rules = load_rules(self.ALERT_CONFIG_DIR)
@@ -424,7 +420,7 @@ class RepoGuard:
             if os.path.exists("/proc/%s" % pid):
                 return True
             else:
-                print 'Lock there but script not running, removing lock entering aborted state...'
+                self.logger.error('Lock there but script not running, removing lock entering aborted state...')
                 email_notification = EmailNotifier(
                     self.getConfigOptionValue("default_notification_src_address"),
                     self.getConfigOptionValue("default_notification_to_address"),
@@ -437,7 +433,7 @@ class RepoGuard:
                 self.setAborted()
                 return False
         else:
-            print "pid file not found, not locked..."
+            self.logger.debug("pid file not found, not locked...")
             return False
 
     def setAborted(self):
@@ -449,17 +445,16 @@ class RepoGuard:
         return os.path.isfile(self.APP_DIR+'aborted_state.lock')
 
     def run(self):
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print '* run started at %s' % now
+        self.logger.info('* run started')
 
         # only struggle with locking if running on prod env
         if self.RUNNING_ON_PROD:
             if self.isAborted():
-                print 'Aborted state, quiting!'
+                self.logger.info('Aborted state, quiting!')
                 return
 
             if self.isLocked():
-                print 'Locked, script running... waiting.'
+                self.logger.info('Locked, script running... waiting.')
                 return
 
             self.putLock()
@@ -497,9 +492,8 @@ class RepoGuard:
         if self.RUNNING_ON_PROD:
             self.releaseLock()
 
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print "* run finished at %s" % now
+        self.logger.info("* run finished")
 
 
 if __name__ == '__main__':
-    RepoGuard().run()
+    RepoGuard(logger).run()
