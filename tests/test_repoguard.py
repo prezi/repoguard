@@ -60,9 +60,9 @@ class LocalRepoTestCase(BaseTestCase):
     def test_update_local_repos_no_prev_dirs(self, *mocks):
         self.rg.updateLocalRepos()
         # check if git clone is called as required everywhere
-        self.assertEqual(mocks[1].call_args_list[0][0], ([u'git', u'clone', u'git@github.com:prezi/repo2.git', u'%s/repo2_6125572' % self.rg.WORKING_DIR],))
-        self.assertEqual(mocks[1].call_args_list[1][0], ([u'git', u'clone', u'git@github.com:prezi/repo1.git', u'%s/repo1_7092651' % self.rg.WORKING_DIR],))
-        self.assertEqual(mocks[1].call_args_list[2][0], ([u'git', u'clone', u'git@github.com:prezi/repo3.git', u'%s/repo3_7271766' % self.rg.WORKING_DIR],))
+        self.assertEqual(mocks[1].call_args_list[0][0], ([u'git', u'clone', u'git@github.com:prezi/repo2.git', u'%srepo2_6125572' % self.rg.WORKING_DIR],))
+        self.assertEqual(mocks[1].call_args_list[1][0], ([u'git', u'clone', u'git@github.com:prezi/repo1.git', u'%srepo1_7092651' % self.rg.WORKING_DIR],))
+        self.assertEqual(mocks[1].call_args_list[2][0], ([u'git', u'clone', u'git@github.com:prezi/repo3.git', u'%srepo3_7271766' % self.rg.WORKING_DIR],))
         self.assertEqual(self.rg.repoStatus['6125572']['last_checked_hashes'], [])
         self.assertEqual(self.rg.repoStatus['7092651']['last_checked_hashes'], [])
         self.assertEqual(self.rg.repoStatus['7271766']['last_checked_hashes'], [])
@@ -76,8 +76,8 @@ class LocalRepoTestCase(BaseTestCase):
         self.rg.updateLocalRepos()
 
         # check if git clone is called as required everywhere
-        self.assertEqual(mocks[1].call_args_list[0][0], ([u'git', u'clone', u'git@github.com:prezi/repo2.git', u'%s/repo2_6125572' % self.rg.WORKING_DIR],))
-        self.assertEqual(mocks[1].call_args_list[1][0], ([u'git', u'clone', u'git@github.com:prezi/repo3.git', u'%s/repo3_7271766' % self.rg.WORKING_DIR],))
+        self.assertEqual(mocks[1].call_args_list[0][0], ([u'git', u'clone', u'git@github.com:prezi/repo2.git', u'%srepo2_6125572' % self.rg.WORKING_DIR],))
+        self.assertEqual(mocks[1].call_args_list[1][0], ([u'git', u'clone', u'git@github.com:prezi/repo3.git', u'%srepo3_7271766' % self.rg.WORKING_DIR],))
         self.assertEqual(self.rg.repoStatus['6125572']['last_checked_hashes'], [])
         self.assertEqual(self.rg.repoStatus['7271766']['last_checked_hashes'], [])
         self.assertEqual(len(mocks[1].call_args_list), 2)
@@ -89,10 +89,10 @@ class LocalRepoTestCase(BaseTestCase):
     def test_update_local_repos_both_clone_and_pull(self, *mocks):
         self.rg.updateLocalRepos()
         # check if git clones and pulls are called as required everywhere
-        self.assertEqual(mocks[1].call_args_list[0][0], ([u'git', u'clone', u'git@github.com:prezi/repo2.git', u'%s/repo2_6125572' % self.rg.WORKING_DIR],))
+        self.assertEqual(mocks[1].call_args_list[0][0], ([u'git', u'clone', u'git@github.com:prezi/repo2.git', u'%srepo2_6125572' % self.rg.WORKING_DIR],))
         self.assertEqual(mocks[1].call_args_list[1][0], ([u'git', u'pull'],))
-        self.assertEqual(mocks[1].call_args_list[1][1], {'cwd': '%s/repo1_7092651/' % self.rg.WORKING_DIR})
-        self.assertEqual(mocks[1].call_args_list[2][0], ([u'git', u'clone', u'git@github.com:prezi/repo3.git', u'%s/repo3_7271766' % self.rg.WORKING_DIR],))
+        self.assertEqual(mocks[1].call_args_list[1][1], {'cwd': '%srepo1_7092651/' % self.rg.WORKING_DIR})
+        self.assertEqual(mocks[1].call_args_list[2][0], ([u'git', u'clone', u'git@github.com:prezi/repo3.git', u'%srepo3_7271766' % self.rg.WORKING_DIR],))
         self.assertEqual(self.rg.repoStatus['6125572']['last_checked_hashes'], [])
         self.assertEqual(self.rg.repoStatus['7271766']['last_checked_hashes'], [])
         self.assertEqual(len(mocks[1].call_args_list), 3)
@@ -105,11 +105,11 @@ class LocalRepoTestCase(BaseTestCase):
         self.rg.updateLocalRepos()
         # check if git pull is called as required everywhere
         self.assertEqual(mocks[1].call_args_list[0][0], ([u'git', u'pull'],))
-        self.assertEqual(mocks[1].call_args_list[0][1], {'cwd': '%s/repo2_6125572/' % self.rg.WORKING_DIR})
+        self.assertEqual(mocks[1].call_args_list[0][1], {'cwd': '%srepo2_6125572/' % self.rg.WORKING_DIR})
         self.assertEqual(mocks[1].call_args_list[1][0], ([u'git', u'pull'],))
-        self.assertEqual(mocks[1].call_args_list[1][1], {'cwd': '%s/repo1_7092651/' % self.rg.WORKING_DIR})
+        self.assertEqual(mocks[1].call_args_list[1][1], {'cwd': '%srepo1_7092651/' % self.rg.WORKING_DIR})
         self.assertEqual(mocks[1].call_args_list[2][0], ([u'git', u'pull'],))
-        self.assertEqual(mocks[1].call_args_list[2][1], {'cwd': '%s/repo3_7271766/' % self.rg.WORKING_DIR})
+        self.assertEqual(mocks[1].call_args_list[2][1], {'cwd': '%srepo3_7271766/' % self.rg.WORKING_DIR})
 
 
 class CheckNewCodeTest(BaseTestCase):

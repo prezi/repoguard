@@ -10,8 +10,8 @@ import hashlib
 import argparse
 import smtplib
 import logging
-import ConfigParser
-import git_repo_updater
+import sys
+from git_repo_updater import GitRepoUpdater
 from codechecker import CodeCheckerFactory
 from elasticsearch import Elasticsearch
 from email.mime.multipart import MIMEMultipart
@@ -55,7 +55,6 @@ class RepoGuard:
         parser.add_argument('--limit', '-l', default=False, help='Limit checks only to run on the given repos (comma separated list)')
         parser.add_argument('--alerts', '-a', default=False, help='Limit running only the given alert checks (comma separated list)')
         parser.add_argument('--nopull', action='store_true', default=False, help='No repo pull if set')
-        parser.add_argument('--forcerefresh', action='store_true', default=False, help='Force script to refresh local repo status file')
         parser.add_argument('--notify', '-N', action='store_true', default=False, help='Notify pre-defined contacts via e-mail')
         parser.add_argument('--silent', action="count", help='Supress log messages lower than warning')
         parser.add_argument('--store', '-S', default=False, help='ElasticSearch node (host:port)')
@@ -90,12 +89,17 @@ class RepoGuard:
         try:
             with open(path) as f:
                 self.config = yaml.load(f.read())
-                self.setSkipRepoList(self.config.get('skip_repo_list', []))
-                self.subscribers = self.config.get('subscribers', [])
-                for key in ['default_notification_src_address', 'default_notification_to_address', 'organization_url']:
-                    self.setConfigOptionValue(key, self.config.get(key))
+                self.setSkipRepoList(self.config['skip_repo_list'])
+                self.subscribers = self.config['subscribers']
+                self.org_name = self.config['github']['organization_name']
+                for key in ['default_notification_src_address', 'default_notification_to_address']:
+                    self.setConfigOptionValue(key, self.config[key])
+        except KeyError as e:
+            self.logger.critical('%s not found in config file' % e)
+            sys.exit()
         except Exception:
             self.logger.exception("Error loading config file: %s\n" % path)
+            sys.exit()
 
     def getConfigOptionValue(self, option_name):
         return self.CONFIG[option_name.upper()]
@@ -142,19 +146,17 @@ class RepoGuard:
         working_dir = os.listdir(self.WORKING_DIR)
 
         for repoId, repoData in self.repoList.iteritems():
-            repoDir = self.searchRepoDir(working_dir, repoData["name"], repoId)
-
             if self.shouldSkip(repoData):
                 self.logger.debug('... skipping %s ' % repoData["name"])
                 continue
 
+            repoDir = self.searchRepoDir(working_dir, repoData["name"], repoId)
             if repoDir:
                 # DIRECTORY EXISTING --> git pull
                 self.logger.debug('git pull *** %s (%s) ***' % (repoData["name"], repoId))
-                cwd = "%s/%s/" % (self.WORKING_DIR, repoDir)
-                cmd = "git pull"
+                cwd = "%s%s/" % (self.WORKING_DIR, repoDir)
                 try:
-                    subprocess.check_output(cmd.split(), cwd=cwd)
+                    subprocess.check_output(['git', 'pull'], cwd=cwd)
                     self.updateRepoStatusById(repoId, repoData["name"])
                 except subprocess.CalledProcessError, e:
                     self.logger.error("Error when updating %s (%s)" % (repoData["name"], e))
@@ -162,8 +164,8 @@ class RepoGuard:
                 # DIRECTORY NOT EXISTING --> git clone
                 self.logger.debug('git clone *** %s (%s) ***' % (repoData["name"], repoId))
                 try:
-                    cmd = "git clone %s %s/%s_%s" % (repoData["ssh_url"], self.WORKING_DIR, repoData["name"], repoId)
-                    subprocess.check_output(cmd.split())
+                    repo_dir = "%s%s_%s" % (self.WORKING_DIR, repoData["name"], repoId)
+                    subprocess.check_output(['git', 'clone', repoData["ssh_url"], repo_dir])
                     # only if there is no status yet (maybe someone deleted this directory from repos dir?)
                     self.setInitialRepoStatusById(repoId, repoData["name"])
                     self.updateRepoStatusById(repoId, repoData["name"])
@@ -221,11 +223,10 @@ class RepoGuard:
                     if not self.args.notify:
                         for issue in check_results:
                             try:
-                                print '%s\t%s\t%s\thttps://github.com/prezi/%s/commit/%s\t%s' % \
-                                    (repo_name, issue[0], issue[1], issue[4], issue[2], issue[3][0:200].replace("\t", " ").decode('utf-8', 'replace'))
+                                print '%s\t%s\thttps://github.com/%s/\t%s/%s/commit/%s\t%s' % \
+                                    (repo_name, issue[0], issue[1], self.org_name, issue[4], issue[2], issue[3][0:200].replace("\t", " ").decode('utf-8', 'replace'))
                             except UnicodeEncodeError:
-                                print '%s\t%s\t%s\thttps://github.com/prezi/%s/commit/%s\t%s' % \
-                                    (repo_name, issue[0], issue[1], issue[4], issue[2], 'failed to get the details due to some unicode error madness')
+                                self.logger.exception('failed to get the details due to some unicode error madness')
             else:
                 self.logger.debug('skip %s (not repo directory)' % repo_dir)
 
@@ -267,10 +268,10 @@ class RepoGuard:
 
             alert = (u"check_id: %s \n"
                      "path: %s \n"
-                     "commit: https://github.com/prezi/%s/commit/%s\n"
+                     "commit: https://github.com/%s/%s/commit/%s\n"
                      "matching line: %s\n"
                      "description: %s\n"
-                     "repo name: %s\n\n" % (check_id, filename, repo_name, commit_id, matching_line, "TODO", repo_name))
+                     "repo name: %s\n\n" % (check_id, filename, self.org_name, repo_name, commit_id, matching_line, "TODO", repo_name))
 
             notify_users = self.find_subscribed_users(check_id)
             for u in notify_users:
@@ -443,7 +444,7 @@ class RepoGuard:
 
         # skip online update by default (only if --refresh specified or status cache json files not exist)
         if self.args.refresh or not self.checkRepoStatusFile(repo_status_file):
-            git_repo_updater_obj = git_repo_updater.GitRepoUpdater(self.config['github']['token'], repo_list_file)
+            git_repo_updater_obj = GitRepoUpdater(self.org_name, self.config['github']['token'], repo_list_file, self.logger)
             git_repo_updater_obj.refreshRepoList()
             git_repo_updater_obj.writeRepoListToFile()
 
