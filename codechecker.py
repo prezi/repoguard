@@ -14,7 +14,7 @@ class CodeChecker:
         applicable_rules = filter(self._check_filename(context), self.rules)
         # check each line
         alerts, line_ctx = reduce(self._check_all(applicable_rules), lines, (list(), context))
-
+        # we do not use line_ctx at alerting, so we drop it
         return alerts
 
     def _check_filename(self, context):
@@ -26,20 +26,28 @@ class CodeChecker:
         def check_line(check_ctx, line):
             if len(line) > 512:
                 # probably not readable source, but it's hard to match regexes at least
+                # TODO: logging
                 return check_ctx
             alerts, line_ctx = check_ctx
             line_ctx = reduce(lambda ctx, cp: cp.preprocess(ctx, line), self.context_processors, line_ctx)
             for r in rules:
                 if all(e.matches(line_ctx, line) for e in r.evaluators):
-                    alerts.append((r.name, line))
+                    alerts.append(Alert(r, line))
             return (alerts, line_ctx)
         return check_line
 
 
+class Alert:
+    def __init__(self, rule, line):
+        self.rule = rule
+        self.line = line
+
+
 class Rule:
-    def __init__(self, name, evaluators):
+    def __init__(self, name, evaluators, rule_config):
         self.name = name
         self.evaluators = evaluators
+        self.rule_config = rule_config
 
 
 class CodeCheckerFactory:
@@ -55,4 +63,4 @@ class CodeCheckerFactory:
     def create_single(self, rule_name, factories):
         rule = self.ruleset[rule_name]
         evaluators = filter(lambda e: e is not None, [f.create(rule) for f in factories])
-        return Rule(rule_name, evaluators)
+        return Rule(rule_name, evaluators, rule)

@@ -126,7 +126,7 @@ class RepoGuard:
 
     def getLastCommitHashes(self, repo_id, repo_name):
         try:
-            cwd = '%s/%s_%s/' % (self.WORKING_DIR, repo_name, repo_id)
+            cwd = '%s%s_%s/' % (self.WORKING_DIR, repo_name, repo_id)
             output = subprocess.check_output("git rev-list --remotes --max-count=100".split(), cwd=cwd)
             output = output.strip().split('\n')
         except subprocess.CalledProcessError:
@@ -195,7 +195,7 @@ class RepoGuard:
         # go through local repo directories
         for repo_dir in working_dir:
             repodir_match = repodir_re.match(repo_dir)
-            if repodir_match and os.path.isdir('%s/%s/.git' % (self.WORKING_DIR, repo_dir)):
+            if repodir_match and os.path.isdir('%s%s/.git' % (self.WORKING_DIR, repo_dir)):
 
                 repo_id = repodir_match.groups()[1]
                 repo_name = repodir_match.groups()[0]
@@ -217,16 +217,16 @@ class RepoGuard:
                     self.logger.debug('... skip code check (not in repoList)')
                     continue
 
-                check_results = self.checkByRepoId(repo_id, repo_name)
-                if check_results:
-                    self.checkResults += check_results
-                    if not self.args.notify:
-                        for issue in check_results:
-                            try:
-                                print '%s\t%s\thttps://github.com/%s/\t%s/%s/commit/%s\t%s' % \
-                                    (repo_name, issue[0], issue[1], self.org_name, issue[4], issue[2], issue[3][0:200].replace("\t", " ").decode('utf-8', 'replace'))
-                            except UnicodeEncodeError:
-                                self.logger.exception('failed to get the details due to some unicode error madness')
+                self.checkResults += self.checkByRepoId(repo_id, repo_name)
+                # if check_results:
+                #     self.checkResults += check_results
+                #     if not self.args.notify:
+                #         for issue in check_results:
+                #             try:
+                #                 print '%s\t%s\thttps://github.com/%s/\t%s/%s/commit/%s\t%s' % \
+                #                     (repo_name, issue[0], issue[1], self.org_name, issue[4], issue[2], issue[3][0:200].replace("\t", " ").decode('utf-8', 'replace'))
+                #             except UnicodeEncodeError:
+                #                 self.logger.exception('failed to get the details due to some unicode error madness')
             else:
                 self.logger.debug('skip %s (not repo directory)' % repo_dir)
 
@@ -313,7 +313,7 @@ class RepoGuard:
 
     def checkByRepoId(self, repo_id, repo_name):
         matches_in_repo = []
-        cwd = "%s/%s_%s/" % (self.WORKING_DIR, repo_name, repo_id)
+        cwd = "%s%s_%s/" % (self.WORKING_DIR, repo_name, repo_id)
 
         # check by timestamp if --since specified, otherwise check for new commits
         if self.args.since:
@@ -338,7 +338,7 @@ class RepoGuard:
 
     def checkByRevHash(self, rev_hash, repo_name, repo_id):
         matches_in_rev = []
-        cwd = "%s/%s_%s/" % (self.WORKING_DIR, repo_name, repo_id)
+        cwd = "%s%s_%s/" % (self.WORKING_DIR, repo_name, repo_id)
         cmd = "git show --function-context %s" % rev_hash
 
         try:
@@ -347,10 +347,13 @@ class RepoGuard:
             filename = None
             # we ignore the first 3 lines which are commit info for sure
             for diff_line in diff_output.split("\n")[3:]:
+                print 'diff_line', diff_line
                 newfile = diff_line.startswith('diff --git a/')
                 if newfile and filename is not None:
                     alerts = self.code_checker.check(lines, filename)
-                    extended_alerts = [(alert[0], filename, rev_hash, alert[1], repo_name, repo_id) for alert in alerts]
+                    print 'alerts', alerts
+                    extended_alerts = [{'rule': alert.rule, 'line': alert.line, 'file': filename, 'commit': rev_hash,
+                                        'repo_name': repo_name} for alert in alerts]
                     matches_in_rev.extend(extended_alerts)
                     lines = []
                     filename = diff_line[12:diff_line.find(' b/')]
