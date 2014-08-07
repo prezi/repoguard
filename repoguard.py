@@ -419,13 +419,13 @@ class RepoGuard:
                 return True
             else:
                 self.logger.error('Lock there but script not running, removing lock entering aborted state...')
-                email_notification = EmailNotifier(
-                    self.getConfigOptionValue("default_notification_src_address"),
-                    self.getConfigOptionValue("default_notification_to_address"),
-                    "[repoguard] invalid lock, entering aborted state",
-                    "Found lock with PID %s, but process not found... entering aborted state (someone should check the logs and restart manually!)")
-
-                email_notification.send_if_fine()
+                # email_notification = EmailNotifier(
+                #     self.getConfigOptionValue("default_notification_src_address"),
+                #     self.getConfigOptionValue("default_notification_to_address"),
+                #     "[repoguard] invalid lock, entering aborted state",
+                #     "Found lock with PID %s, but process not found... entering aborted state (someone should check the logs and restart manually!)")
+                #
+                # email_notification.send_if_fine()
 
                 self.releaseLock()
                 self.setAborted()
