@@ -158,20 +158,24 @@ class CheckNewCodeTest(BaseTestCase):
     def test_check_by_rev_hash(self, *mocks):
         mocks[0].return_value = open(self.test_data_folder + 'test_git_show.txt', 'r').read()
         res = self.rg.checkByRevHash('de74d131fbcca4bacac02523ef8d45c1dc8e2bde', 'testdir', '123123')
-        expected_res = [
-            (	u'test::file_modified',
-                '/zuisite/my/views.py',
-                'de74d131fbcca4bacac02523ef8d45c1dc8e2bde', '--- a/zuisite/my/views.py', 'testdir', '123123'),
-            (	u'test::function_modified',
-                '/zuisite/my/views.py',
-                'de74d131fbcca4bacac02523ef8d45c1dc8e2bde',
-                ' def settings_and_license(request, tab=None, group_id=None, grouplicense=False):', 'testdir', '123123'),
-            (	u'test::string_matches',
-                '/zuisite/my/views.py',
-                'de74d131fbcca4bacac02523ef8d45c1dc8e2bde',
-                '+                    "expired": True if group_license_expiry < datetime.date.today() else False,', 'testdir', '123123')
-        ]
-        self.assertEqual(res, expected_res)
+
+        self.assertEqual(res[0].repo, 'testdir')
+        self.assertEqual(res[0].commit, 'de74d131fbcca4bacac02523ef8d45c1dc8e2bde')
+        self.assertEqual(res[0].line, '--- a/zuisite/my/views.py')
+        self.assertEqual(res[0].filename, 'zuisite/feature_switches.py')
+        self.assertEqual(res[0].rule.name, 'test::file_modified')
+
+        self.assertEqual(res[1].repo, 'testdir')
+        self.assertEqual(res[1].commit, 'de74d131fbcca4bacac02523ef8d45c1dc8e2bde')
+        self.assertEqual(res[1].line, ' def settings_and_license(request, tab=None, group_id=None, grouplicense=False):')
+        self.assertEqual(res[1].filename, 'zuisite/feature_switches.py')
+        self.assertEqual(res[1].rule.name, 'test::function_modified')
+
+        self.assertEqual(res[2].repo, 'testdir')
+        self.assertEqual(res[2].commit, 'de74d131fbcca4bacac02523ef8d45c1dc8e2bde')
+        self.assertEqual(res[2].line, '+                    "expired": True if group_license_expiry < datetime.date.today() else False,')
+        self.assertEqual(res[2].filename, 'zuisite/feature_switches.py')
+        self.assertEqual(res[2].rule.name, 'test::string_matches')
 
     @patch('subprocess.check_output', return_value='1163be000000\n')
     @patch('repoguard.RepoGuard.getNewHashes', return_value=['1163be000000'])

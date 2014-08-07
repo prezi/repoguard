@@ -64,10 +64,11 @@ class CodeCheckerTestCase(unittest.TestCase):
         rule.evaluators = [line_evaluator]
         code_checker = CodeChecker([], [rule])
 
-        alerts = code_checker.check(self.code, "macbeth.txt")
+        result = code_checker.check(self.code, "macbeth.txt")
+        print repr(result[0])
 
-        self.assertEquals(len(self.code), len(alerts))
-        self.assertIn(("test", self.code[0]), alerts)
+        self.assertEquals(len(self.code), len(result))
+        self.assertIn(self.code[0], result[0])
 
     '''
         Long lines are not readable, but very resource intensive to

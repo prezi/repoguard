@@ -12,7 +12,7 @@ import smtplib
 import logging
 import sys
 from git_repo_updater import GitRepoUpdater
-from codechecker import CodeCheckerFactory
+from codechecker import CodeCheckerFactory, Alert
 from elasticsearch import Elasticsearch
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -92,6 +92,7 @@ class RepoGuard:
                 self.setSkipRepoList(self.config['skip_repo_list'])
                 self.subscribers = self.config['subscribers']
                 self.org_name = self.config['github']['organization_name']
+                self.detect_rename = self.config['git']['detect_rename']
                 for key in ['default_notification_src_address', 'default_notification_to_address']:
                     self.setConfigOptionValue(key, self.config[key])
         except KeyError as e:
@@ -189,19 +190,24 @@ class RepoGuard:
         with open(filename, 'w') as repo_status:
             json.dump(self.repoStatusNew, repo_status)
 
-    def checkNewCode(self):
+    def checkNewCode(self, detect_rename=False):
+        # self.logger.debug('checkNewCode called %s' % detect_rename)
         working_dir = os.listdir(self.WORKING_DIR)
         repodir_re = re.compile('^([\w\-\._]+)\_([0-9]+)$')
         # go through local repo directories
         for repo_dir in working_dir:
+            # self.logger.debug('repo_dir %s' % repo_dir)
             repodir_match = repodir_re.match(repo_dir)
+            # self.logger.debug('repodir_match %s' % repodir_match)
             if repodir_match and os.path.isdir('%s%s/.git' % (self.WORKING_DIR, repo_dir)):
 
                 repo_id = repodir_match.groups()[1]
                 repo_name = repodir_match.groups()[0]
+                # self.logger.debug('repo_name %s' % repo_name)
 
                 if self.args.limit:
                     if repo_name not in self.args.limit:
+                        self.logger.debug('repo %s skipped because of --limit argument' % repo_name)
                         continue
 
                 if repo_id not in self.repoStatus:
@@ -211,24 +217,27 @@ class RepoGuard:
 
                 if repo_id in self.repoList:
                     if self.shouldSkip(self.repoList[repo_id]):
-                        self.logger.debug('... %s skip code check' % repo_name)
+                        self.logger.debug('%s in skip_repo list, skipping...' % repo_name)
                         continue
                 else:
                     self.logger.debug('... skip code check (not in repoList)')
                     continue
 
-                self.checkResults += self.checkByRepoId(repo_id, repo_name)
-                # if check_results:
-                #     self.checkResults += check_results
-                #     if not self.args.notify:
-                #         for issue in check_results:
-                #             try:
-                #                 print '%s\t%s\thttps://github.com/%s/\t%s/%s/commit/%s\t%s' % \
-                #                     (repo_name, issue[0], issue[1], self.org_name, issue[4], issue[2], issue[3][0:200].replace("\t", " ").decode('utf-8', 'replace'))
-                #             except UnicodeEncodeError:
-                #                 self.logger.exception('failed to get the details due to some unicode error madness')
+                self.checkResults += self.checkByRepoId(repo_id, repo_name, detect_rename=detect_rename)
             else:
                 self.logger.debug('skip %s (not repo directory)' % repo_dir)
+
+        print self.checkResults
+        # email notification is disabled, print to stdout
+        if not self.args.notify:
+            for alert in self.checkResults:
+                try:
+                    print '\t'.join([
+                        alert.rule.name, alert.repo, alert.commit, alert.filename, alert.rule.description,
+                        alert.line[0:200].replace("\t", " ").decode('utf-8', 'replace')
+                    ])
+                except UnicodeEncodeError:
+                    self.logger.exception('failed to get the details due to some unicode error madness')
 
     def storeResults(self):
         (host, port) = self.args.store.split(":")
@@ -311,7 +320,7 @@ class RepoGuard:
                 ret_arr.append(commit)
         return ret_arr
 
-    def checkByRepoId(self, repo_id, repo_name):
+    def checkByRepoId(self, repo_id, repo_name, detect_rename=False):
         matches_in_repo = []
         cwd = "%s%s_%s/" % (self.WORKING_DIR, repo_name, repo_id)
 
@@ -320,7 +329,8 @@ class RepoGuard:
             rev_list = []
             try:
                 last_run = self.args.since
-                rev_list_output = subprocess.check_output(["git", "rev-list", "--remotes", "--since=\"%s\"" % last_run, "HEAD"], cwd=cwd)
+                rev_list_output = subprocess.check_output(
+                    ["git", "rev-list", "--remotes", "--since=\"%s\"" % last_run, "HEAD"], cwd=cwd)
                 rev_list = rev_list_output.split("\n")[:-1]
             except Exception as e:
                 self.logger.exception("Failed getting commits from a given timestamp")
@@ -328,7 +338,7 @@ class RepoGuard:
             rev_list = self.getNewHashes(repo_id)
 
         for rev_hash in rev_list:
-            rev_result = self.checkByRevHash(rev_hash, repo_name, repo_id)
+            rev_result = self.checkByRevHash(rev_hash, repo_name, repo_id, detect_rename)
             if rev_result:
                 matches_in_repo = matches_in_repo + rev_result
         if len(rev_list) > 0:
@@ -336,36 +346,18 @@ class RepoGuard:
 
         return matches_in_repo
 
-    def checkByRevHash(self, rev_hash, repo_name, repo_id):
+    def checkByRevHash(self, rev_hash, repo_name, repo_id, detect_rename=False):
         matches_in_rev = []
         cwd = "%s%s_%s/" % (self.WORKING_DIR, repo_name, repo_id)
-        cmd = "git show --function-context %s" % rev_hash
+        cmd = "git show --function-context %s%s" % ('-M100% ' if detect_rename else '--no-renames ', rev_hash)
 
         try:
             diff_output = subprocess.check_output(cmd.split(), cwd=cwd)
-            lines = []
-            filename = None
-            # we ignore the first 3 lines which are commit info for sure
-            for diff_line in diff_output.split("\n")[3:]:
-                print 'diff_line', diff_line
-                newfile = diff_line.startswith('diff --git a/')
-                if newfile and filename is not None:
-                    alerts = self.code_checker.check(lines, filename)
-                    print 'alerts', alerts
-                    extended_alerts = [{'rule': alert.rule, 'line': alert.line, 'file': filename, 'commit': rev_hash,
-                                        'repo_name': repo_name} for alert in alerts]
-                    matches_in_rev.extend(extended_alerts)
-                    lines = []
-                    filename = diff_line[12:diff_line.find(' b/')]
-                elif newfile and filename is None:
-                    filename = diff_line[12:diff_line.find(' b/')]
-                    lines = []
-                else:
-                    lines.append(diff_line)
-            if filename is not None:
-                alerts = self.code_checker.check(lines, filename)
-                extended_alerts = [(alert[0], filename, rev_hash, alert[1], repo_name, repo_id) for alert in alerts]
-                matches_in_rev.extend(extended_alerts)
+            matches = re.findall(r'^diff --git a/\S* b/(\S+)(.*)', diff_output, flags=re.DOTALL | re.MULTILINE)
+            for filename, diff in matches:
+                result = self.code_checker.check(diff.split('\n'), filename)
+                alerts = [Alert(rule, filename, repo_name, rev_hash, line) for rule, line in result]
+                matches_in_rev.extend(alerts)
         except subprocess.CalledProcessError as e:
             self.logger.exception('Failed running: %s' % (cmd))
 
@@ -462,7 +454,7 @@ class RepoGuard:
             self.updateLocalRepos()
 
         # check for new code
-        self.checkNewCode()
+        self.checkNewCode(self.detect_rename)
 
         # send alert mail (only if prod)
         if self.args.notify:

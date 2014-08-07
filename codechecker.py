@@ -30,16 +30,19 @@ class CodeChecker:
                 return check_ctx
             alerts, line_ctx = check_ctx
             line_ctx = reduce(lambda ctx, cp: cp.preprocess(ctx, line), self.context_processors, line_ctx)
-            for r in rules:
-                if all(e.matches(line_ctx, line) for e in r.evaluators):
-                    alerts.append(Alert(r, line))
+            for rule in rules:
+                if all(e.matches(line_ctx, line) for e in rule.evaluators):
+                    alerts.append((rule, line))
             return (alerts, line_ctx)
         return check_line
 
 
 class Alert:
-    def __init__(self, rule, line):
+    def __init__(self, rule, filename, repo, commit, line):
         self.rule = rule
+        self.filename = filename
+        self.repo = repo
+        self.commit = commit
         self.line = line
 
 
@@ -47,7 +50,7 @@ class Rule:
     def __init__(self, name, evaluators, rule_config):
         self.name = name
         self.evaluators = evaluators
-        self.rule_config = rule_config
+        self.description = rule_config.get('description')
 
 
 class CodeCheckerFactory:
