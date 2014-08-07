@@ -75,8 +75,6 @@ class RepoGuard:
 
         self.CONFIG_PATH = "%s/etc/config.yml" % os.path.dirname(os.path.realpath(__file__))
 
-        self.REPO_LIST_PATH = self.WORKING_DIR+'repo_list.json'
-        self.REPO_STATUS_PATH = self.WORKING_DIR+'repo_status.json'
         self.ALERT_CONFIG_DIR = '%s/rules' % os.path.dirname(os.path.realpath(__file__))
 
     def readConfig(self, path):
@@ -198,11 +196,10 @@ class RepoGuard:
         except IOError:
             self.logger.info("repo_status.json not existing, no cache to load...")
 
-    def checkRepoStatusFile(self):
-        return os.path.isfile(self.REPO_STATUS_PATH)
+    def checkRepoStatusFile(self, filename):
+        return os.path.isfile(filename)
 
-    def writeNewRepoStatusToFile(self):
-        filename = self.REPO_STATUS_PATH
+    def writeNewRepoStatusToFile(self, filename):
         with open(filename, 'w') as repo_status:
             json.dump(self.repoStatusNew, repo_status)
 
@@ -446,6 +443,8 @@ class RepoGuard:
 
     def run(self):
         self.logger.info('* run started')
+        repo_status_file = self.WORKING_DIR + 'repo_status.json'
+        repo_list_file = self.WORKING_DIR + 'repo_list.json'
 
         # only struggle with locking if running on prod env
         if self.RUNNING_ON_PROD:
@@ -460,16 +459,16 @@ class RepoGuard:
             self.putLock()
 
         # skip online update by default (only if --refresh specified or status cache json files not exist)
-        if self.args.refresh or not self.checkRepoStatusFile():
-            git_repo_updater_obj = git_repo_updater.GitRepoUpdater(self.SECRET_CONFIG_PATH, self.REPO_LIST_PATH)
+        if self.args.refresh or not self.checkRepoStatusFile(repo_status_file):
+            git_repo_updater_obj = git_repo_updater.GitRepoUpdater(self.SECRET_CONFIG_PATH, repo_list_file)
             git_repo_updater_obj.refreshRepoList()
             git_repo_updater_obj.writeRepoListToFile()
 
         # read repo status json file
-        self.readRepoStatusFromFile()
+        self.readRepoStatusFromFile(repo_status_file)
 
         # working from cached repo list file
-        self.loadRepoListFromFile()
+        self.loadRepoListFromFile(repo_list_file)
 
         # updating local repos (and repo status files if necessary)
         if not self.args.nopull:
@@ -487,7 +486,7 @@ class RepoGuard:
             self.storeResults()
 
         # save repo status changes
-        self.writeNewRepoStatusToFile()
+        self.writeNewRepoStatusToFile(repo_status_file)
 
         if self.RUNNING_ON_PROD:
             self.releaseLock()

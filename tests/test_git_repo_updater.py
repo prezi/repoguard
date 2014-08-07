@@ -10,7 +10,7 @@ class GithubConnectionTestCase(BaseTestCase):
     def setUp(self, *mocks):
         super(GithubConnectionTestCase, self).setUp()
 
-        self.git_repo_updater_obj = git_repo_updater.GitRepoUpdater(self.rg.SECRET_CONFIG_PATH, self.rg.REPO_LIST_PATH)
+        self.git_repo_updater_obj = git_repo_updater.GitRepoUpdater(self.rg.SECRET_CONFIG_PATH, self.test_data_folder + 'test_repo_list.json')
         self.rg.resetRepoLimits()
 
     @httprettified
