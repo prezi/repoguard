@@ -81,9 +81,7 @@ class RepoGuard:
         try:
             with open(path) as f:
                 self.config = yaml.load(f.read())
-                self.setRepoLanguageLimitation(self.config.get('repo_language_limitation', []))
                 self.setSkipRepoList(self.config.get('skip_repo_list', []))
-                self.setEnforceCheckRepoList(self.config.get('enforce_check_repo_list', []))
                 self.subscribers = self.config.get('subscribers', [])
                 for key in ['default_notification_src_address', 'default_notification_to_address', 'organization_urls']:
                     self.setConfigOptionValue(key, self.config.get(key))
@@ -96,17 +94,10 @@ class RepoGuard:
     def setConfigOptionValue(self, option_name, value):
         self.CONFIG[option_name.upper()] = value
 
-    def setRepoLanguageLimitation(self, value):
-        self.setConfigOptionValue('REPO_LANGUAGE_LIMITATION', value)
-
     def setSkipRepoList(self, value):
         self.setConfigOptionValue('SKIP_REPO_LIST', value)
 
-    def setEnforceCheckRepoList(self, value):
-        self.setConfigOptionValue('ENFORCE_CHECK_REPO_LIST', value)
-
     def resetRepoLimits(self):
-        self.setRepoLanguageLimitation([])
         self.setSkipRepoList([])
 
     def printRepoData(self):
@@ -130,29 +121,12 @@ class RepoGuard:
         return output
 
     def shouldSkip(self, repo_data):
-        if self.isCheckEnforcedForRepo(repo_data["name"]):
-            self.logger.debug('Check is enforced for repo (%s), so not skipping.' % repo_data['name'])
-            return False
-
         if self.args.limit:
             if repo_data["name"] not in self.args.limit:
                 self.logger.debug('Got --limit param and repo (%s) is not among them, skipping.' % repo_data['name'])
                 return True
 
-        skip_due_language = self.shouldSkipDueLanguageLimitation(repo_data['language'])
-        skip_due_repo_name = self.shouldSkipDueRepoNameIsOnSkipList(repo_data['name'])
-
-        return skip_due_language or skip_due_repo_name
-
-    def isCheckEnforcedForRepo(self, repo_name):
-        return (repo_name in self.getConfigOptionValue('ENFORCE_CHECK_REPO_LIST'))
-
-    def shouldSkipDueLanguageLimitation(self, repo_language):
-        return self.getConfigOptionValue('REPO_LANGUAGE_LIMITATION') and \
-            str(repo_language).lower() not in self.getConfigOptionValue('REPO_LANGUAGE_LIMITATION')
-
-    def shouldSkipDueRepoNameIsOnSkipList(self, repo_name):
-        return repo_name in self.getConfigOptionValue('SKIP_REPO_LIST')
+        return repo_data["name"] in self.getConfigOptionValue('SKIP_REPO_LIST')
 
     # repoList required
     def updateLocalRepos(self):

@@ -41,22 +41,6 @@ class LocalRepoTestCase(BaseTestCase):
         self.assertEqual(mocks[0].call_args_list[0][0], (['git', 'rev-list', '--remotes', '--max-count=100'],))
         self.assertEqual(retVal, ['1163bec4351', 'AAAAbec49999'])
 
-    def test_should_skip_due_language(self):
-        rd = {}
-        rd["name"] = "to_skip"
-        rd["language"] = "python"
-        self.rg.resetRepoLimits()
-        self.rg.setRepoLanguageLimitation(["notpython"])
-        self.assertTrue(self.rg.shouldSkip(rd))
-
-    def test_should_skip_due_language_false(self):
-        rd = {}
-        rd["name"] = "to_skip"
-        rd["language"] = "python"
-        self.rg.resetRepoLimits()
-        self.rg.setRepoLanguageLimitation(["python"])
-        self.assertFalse(self.rg.shouldSkip(rd))
-
     def test_should_skip_due_name(self):
         rd = {}
         rd["name"] = "reponame"
@@ -106,19 +90,6 @@ class LocalRepoTestCase(BaseTestCase):
         self.assertEqual(mocks[1].call_args_list[1][0], ([u'git', u'clone', u'git@github.com:prezi/repo3.git', u'%s/repo3_7271766' % self.rg.WORKING_DIR],))
         self.assertEqual(self.rg.repoStatus['6125572']['last_checked_hashes'], [])
         self.assertEqual(self.rg.repoStatus['7271766']['last_checked_hashes'], [])
-        self.assertEqual(len(mocks[1].call_args_list), 2)
-
-    @patch('os.listdir', return_value=[])
-    @patch('subprocess.check_output')
-    @patch('repoguard.RepoGuard.updateRepoStatusById')
-    def test_update_local_repos_no_prev_dirs_limit_language(self, *mocks):
-        self.rg.setRepoLanguageLimitation(('python'))
-        self.rg.updateLocalRepos()
-        # check if git clone is called as required everywhere
-        self.assertEqual(mocks[1].call_args_list[0][0], ([u'git', u'clone', u'git@github.com:prezi/repo2.git', u'%s/repo2_6125572' % self.rg.WORKING_DIR],))
-        self.assertEqual(mocks[1].call_args_list[1][0], ([u'git', u'clone', u'git@github.com:prezi/repo1.git', u'%s/repo1_7092651' % self.rg.WORKING_DIR],))
-        self.assertEqual(self.rg.repoStatus['6125572']['last_checked_hashes'], [])
-        self.assertEqual(self.rg.repoStatus['7092651']['last_checked_hashes'], [])
         self.assertEqual(len(mocks[1].call_args_list), 2)
 
     @patch('repoguard.RepoGuard.shouldSkip', return_value=False)
