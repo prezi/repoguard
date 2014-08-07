@@ -92,7 +92,7 @@ class RepoGuard:
                 self.config = yaml.load(f.read())
                 self.setSkipRepoList(self.config.get('skip_repo_list', []))
                 self.subscribers = self.config.get('subscribers', [])
-                for key in ['default_notification_src_address', 'default_notification_to_address', 'organization_urls']:
+                for key in ['default_notification_src_address', 'default_notification_to_address', 'organization_url']:
                     self.setConfigOptionValue(key, self.config.get(key))
         except Exception:
             self.logger.exception("Error loading config file: %s\n" % path)
