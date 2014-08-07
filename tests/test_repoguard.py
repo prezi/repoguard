@@ -25,16 +25,6 @@ class LocalRepoTestCase(BaseTestCase):
         self.assertFalse(self.rg.searchRepoDir(dirlist, '', '12345'))
         self.assertEqual(self.rg.searchRepoDir(dirlist, 'test_other', '12345'), 'test_other_12345')
 
-    @patch('os.path.isfile', return_value=False)
-    def test_detect_paths_dev(self, *mocks):
-        self.rg.detectPaths()
-        self.assertFalse(self.rg.RUNNING_ON_PROD)
-
-    @patch('os.path.isfile', return_value=True)
-    def test_detect_paths_prod(self, *mocks):
-        self.rg.detectPaths()
-        self.assertTrue(self.rg.RUNNING_ON_PROD)
-
     @patch('subprocess.check_output', return_value='1163bec4351\nAAAAbec49999\n')
     def test_get_last_commit_hashes(self, *mocks):
         retVal = self.rg.getLastCommitHashes('123123', 'reponameABCD')

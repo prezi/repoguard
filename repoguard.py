@@ -30,7 +30,6 @@ logging.getLogger('elasticsearch').addHandler(ch)
 class RepoGuard:
     def __init__(self, logger):
         self.CONFIG = {}
-        self.RUNNING_ON_PROD = False
         self.repoList = {}
         self.repoStatus = {}
         self.repoStatusNew = {}
@@ -44,6 +43,10 @@ class RepoGuard:
 
     def parseArgs(self):
         parser = argparse.ArgumentParser(description='Watch git repos for changes...')
+        parser.add_argument('--config', '-c', default='etc/config.yml', help='Path to the config.yml file')
+        # parser.add_argument('--rule-dirs', default='rules', help='Path to rule directories (comma separated list)')
+        parser.add_argument('--rule-dir', default='rules/', help='Path to the rule directory')
+        parser.add_argument('--working-dir', default='../repos/', help='Path to the rule directory')
         parser.add_argument('--since', '-s', default=False, help='Search for alerts in older git commits (git rev-list since, e.g. 2013-05-05 01:00)')
         parser.add_argument('--refresh', '-r', action='store_true', default=False, help='Refresh repo list and locally stored repos from github api')
         parser.add_argument('--limit', '-l', default=False, help='Limit checks only to run on the given repos (comma separated list)')
@@ -55,27 +58,24 @@ class RepoGuard:
 
         self.args = parser.parse_args()
 
+        # if self.args.rule_dirs:
+        #     self.args.rule_dirs = self.args.rule_dirs.split(',')
         if self.args.limit:
             self.args.limit = self.args.limit.split(',')
         if self.args.alerts:
             self.args.alerts = self.args.alerts.split(',')
 
     def detectPaths(self):
-        if os.path.isfile('/etc/prezi/repoguard/secret.ini'):
-            self.RUNNING_ON_PROD = True
 
-        if self.RUNNING_ON_PROD:
-            self.SECRET_CONFIG_PATH = '/etc/prezi/repoguard/secret.ini'
-            self.APP_DIR = '/opt/prezi/repoguard/'
-            self.WORKING_DIR = '/mnt/prezi/repoguard/repos/'
-        else:
-            self.SECRET_CONFIG_PATH = "%s/etc/secret.ini" % os.path.dirname(os.path.realpath(__file__))
-            self.APP_DIR = '%s/' % os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
-            self.WORKING_DIR = '%srepos/' % self.APP_DIR
+        # if self.RUNNING_ON_PROD:
+        #     self.SECRET_CONFIG_PATH = '/etc/prezi/repoguard/secret.ini'
+        #     self.APP_DIR = '/opt/prezi/repoguard/'
+        #     self.WORKING_DIR = '/mnt/prezi/repoguard/repos/'
 
-        self.CONFIG_PATH = "%s/etc/config.yml" % os.path.dirname(os.path.realpath(__file__))
-
-        self.ALERT_CONFIG_DIR = '%s/rules' % os.path.dirname(os.path.realpath(__file__))
+        self.APP_DIR = '%s/' % os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
+        self.CONFIG_PATH = self.args.config
+        self.WORKING_DIR = self.args.working_dir
+        self.ALERT_CONFIG_DIR = self.args.rule_dir
 
     def readConfig(self, path):
         try:
@@ -181,6 +181,7 @@ class RepoGuard:
                 try:
                     cmd = "git clone %s %s/%s_%s" % (repoData["ssh_url"], self.WORKING_DIR, repoData["name"], repoId)
                     subprocess.check_output(cmd.split())
+                    # only if there is no status yet (maybe someone deleted this directory from repos dir?)
                     self.setInitialRepoStatusById(repoId, repoData["name"])
                     self.updateRepoStatusById(repoId, repoData["name"])
                 except Exception as e:
@@ -401,16 +402,16 @@ class RepoGuard:
         self.code_checker = CodeCheckerFactory(applied_alerts).create()
 
     def putLock(self):
-        lockfile = open(self.APP_DIR+"repoguard.pid", "w")
+        lockfile = open(self.APP_DIR + "repoguard.pid", "w")
         lockfile.write(str(os.getpid()))
         lockfile.close()
 
     def releaseLock(self):
-        os.remove(self.APP_DIR+"repoguard.pid")
+        os.remove(self.APP_DIR + "repoguard.pid")
 
     def isLocked(self):
-        if os.path.isfile(self.APP_DIR+"repoguard.pid"):
-            lockfile = open(self.APP_DIR+"repoguard.pid", "r")
+        if os.path.isfile(self.APP_DIR + "repoguard.pid"):
+            lockfile = open(self.APP_DIR + "repoguard.pid", "r")
             pid = lockfile.readline().strip()
             lockfile.close()
 
@@ -434,33 +435,32 @@ class RepoGuard:
             return False
 
     def setAborted(self):
-        aborted_state_file = open(self.APP_DIR+"aborted_state.lock", "w")
+        aborted_state_file = open(self.APP_DIR + "aborted_state.lock", "w")
         aborted_state_file.write('1')
         aborted_state_file.close()
 
     def isAborted(self):
-        return os.path.isfile(self.APP_DIR+'aborted_state.lock')
+        return os.path.isfile(self.APP_DIR + 'aborted_state.lock')
 
     def run(self):
         self.logger.info('* run started')
         repo_status_file = self.WORKING_DIR + 'repo_status.json'
         repo_list_file = self.WORKING_DIR + 'repo_list.json'
 
-        # only struggle with locking if running on prod env
-        if self.RUNNING_ON_PROD:
-            if self.isAborted():
-                self.logger.info('Aborted state, quiting!')
-                return
+        # locking
+        if self.isAborted():
+            self.logger.info('Aborted state, quiting!')
+            return
 
-            if self.isLocked():
-                self.logger.info('Locked, script running... waiting.')
-                return
+        if self.isLocked():
+            self.logger.info('Locked, script running... waiting.')
+            return
 
-            self.putLock()
+        self.putLock()
 
         # skip online update by default (only if --refresh specified or status cache json files not exist)
         if self.args.refresh or not self.checkRepoStatusFile(repo_status_file):
-            git_repo_updater_obj = git_repo_updater.GitRepoUpdater(self.SECRET_CONFIG_PATH, repo_list_file)
+            git_repo_updater_obj = git_repo_updater.GitRepoUpdater(self.config['github']['token'], repo_list_file)
             git_repo_updater_obj.refreshRepoList()
             git_repo_updater_obj.writeRepoListToFile()
 
@@ -488,8 +488,7 @@ class RepoGuard:
         # save repo status changes
         self.writeNewRepoStatusToFile(repo_status_file)
 
-        if self.RUNNING_ON_PROD:
-            self.releaseLock()
+        self.releaseLock()
 
         self.logger.info("* run finished")
 

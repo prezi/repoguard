@@ -5,12 +5,10 @@ import re
 
 
 class GitRepoUpdater:
-    def __init__(self, secret_config_path, repo_list_path):
+    def __init__(self, github_token, repo_list_path):
         self.REPO_LIST_PATH = repo_list_path
-        self.SECRET_CONFIG_PATH = secret_config_path
         self.PREZI_URL = 'https://api.github.com/orgs/prezi/repos'
-        self.TOKEN = 'invalid_initial_token'
-        self.parseSecretConfig()
+        self.TOKEN = github_token
 
         self.setToken(self.TOKEN)
 
@@ -23,11 +21,6 @@ class GitRepoUpdater:
     def setToken(self, token_value):
         self.TOKEN = token_value
         self.url = self.PREZI_URL + "?access_token=" + self.TOKEN
-
-    def parseSecretConfig(self):
-        parser = ConfigParser.ConfigParser()
-        parser.read(self.SECRET_CONFIG_PATH)
-        self.TOKEN = parser.get('github-api', 'token')
 
     def refreshRepoList(self):
         while self.actpage <= self.lastpage and not self.stop:

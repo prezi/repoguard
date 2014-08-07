@@ -1,0 +1,15 @@
+organization_urls: ["https://github.com/your_org/"]
+skip_repo_list: []
+
+repo_language_limitation: []
+
+enforce_check_repo_list: []
+
+default_notification_src_address: ""
+default_notification_to_address: ""
+
+subscribers:
+    root@localhost: "*"
+
+github-api:
+    token: "<token>"

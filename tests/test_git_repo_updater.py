@@ -6,11 +6,12 @@ from base import BaseTestCase
 
 
 class GithubConnectionTestCase(BaseTestCase):
-    @patch('repoguard.git_repo_updater.GitRepoUpdater.parseSecretConfig')
+
     def setUp(self, *mocks):
         super(GithubConnectionTestCase, self).setUp()
 
-        self.git_repo_updater_obj = git_repo_updater.GitRepoUpdater(self.rg.SECRET_CONFIG_PATH, self.test_data_folder + 'test_repo_list.json')
+        repo_list_file = self.test_data_folder + 'test_repo_list.json'
+        self.git_repo_updater_obj = git_repo_updater.GitRepoUpdater('foobar_token', repo_list_file)
         self.rg.resetRepoLimits()
 
     @httprettified
