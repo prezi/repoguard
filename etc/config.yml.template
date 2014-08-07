@@ -11,5 +11,5 @@ default_notification_to_address: ""
 subscribers:
     root@localhost: "*"
 
-github-api:
+github:
     token: "<token>"

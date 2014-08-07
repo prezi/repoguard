@@ -21,23 +21,26 @@ from ruleparser import load_rules
 from notifier import EmailNotifier
 
 
-logger = logging.getLogger('repoguard')
-logger.setLevel(logging.DEBUG)
-ch = logging.StreamHandler()
-logging.getLogger('elasticsearch').addHandler(ch)
-
-
 class RepoGuard:
-    def __init__(self, logger):
+    def __init__(self):
         self.CONFIG = {}
         self.repoList = {}
         self.repoStatus = {}
         self.repoStatusNew = {}
         self.checkResults = []
+
+        self.logger = logging.getLogger()
+        # create formatter and add it to the handlers
+        formatter = logging.Formatter('%(asctime)s %(processName)-10s %(name)s %(levelname)-8s %(message)s')
+        # create console handler with a higher log level
+        ch = logging.StreamHandler()
+        ch.setFormatter(formatter)
+        # Setup logger output
+        self.logger.addHandler(ch)
+        # Supress logging
+
         self.parseArgs()
         self.detectPaths()
-        self.logger = logger
-
         self.readConfig(self.CONFIG_PATH)
         self.readAlertConfigFromFile()
 
@@ -54,6 +57,7 @@ class RepoGuard:
         parser.add_argument('--nopull', action='store_true', default=False, help='No repo pull if set')
         parser.add_argument('--forcerefresh', action='store_true', default=False, help='Force script to refresh local repo status file')
         parser.add_argument('--notify', '-N', action='store_true', default=False, help='Notify pre-defined contacts via e-mail')
+        parser.add_argument('--silent', action="count", help='Supress log messages lower than warning')
         parser.add_argument('--store', '-S', default=False, help='ElasticSearch node (host:port)')
 
         self.args = parser.parse_args()
@@ -64,6 +68,11 @@ class RepoGuard:
             self.args.limit = self.args.limit.split(',')
         if self.args.alerts:
             self.args.alerts = self.args.alerts.split(',')
+
+        if self.args.silent:
+            self.logger.setLevel(logging.WARNING)
+        else:
+            self.logger.setLevel(logging.DEBUG)
 
     def detectPaths(self):
 
@@ -435,12 +444,12 @@ class RepoGuard:
             return False
 
     def setAborted(self):
-        aborted_state_file = open(self.APP_DIR + "aborted_state.lock", "w")
+        aborted_state_file = open(self.WORKING_DIR + "aborted_state.lock", "w")
         aborted_state_file.write('1')
         aborted_state_file.close()
 
     def isAborted(self):
-        return os.path.isfile(self.APP_DIR + 'aborted_state.lock')
+        return os.path.isfile(self.WORKING_DIR + 'aborted_state.lock')
 
     def run(self):
         self.logger.info('* run started')
@@ -448,9 +457,9 @@ class RepoGuard:
         repo_list_file = self.WORKING_DIR + 'repo_list.json'
 
         # locking
-        if self.isAborted():
-            self.logger.info('Aborted state, quiting!')
-            return
+        # if self.isAborted():
+        #     self.logger.info('Aborted state, quiting!')
+        #     return
 
         if self.isLocked():
             self.logger.info('Locked, script running... waiting.')
@@ -494,4 +503,4 @@ class RepoGuard:
 
 
 if __name__ == '__main__':
-    RepoGuard(logger).run()
+    RepoGuard().run()

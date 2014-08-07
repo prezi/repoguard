@@ -170,12 +170,10 @@ class CheckNewCodeTest(BaseTestCase):
     @patch('subprocess.check_output')
     def test_no_repo_dirs(self, *mocks):
         self.rg.checkNewCode()
-        calls = [
-            call.debug('skip aaaa-test (not repo directory)'),
-            call.debug('skip bbbb_test (not repo directory)'),
-            call.debug('skip .444444_test3 (not repo directory)')
-        ]
-        self.mock_logger.assert_has_calls(calls)
+
+        self.mock_logger.assert_call_with('skip aaaa-test (not repo directory)')
+        self.mock_logger.assert_call_with('skip bbbb_test (not repo directory)')
+        self.mock_logger.assert_call_with('skip .444444_test3 (not repo directory)')
 
     @patch('os.listdir', return_value=['newrepo_123456'])
     @patch('os.path.isdir', return_value=True)
