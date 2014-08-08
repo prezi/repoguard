@@ -101,7 +101,7 @@ class RepoGuard:
             # sys.exit()
         except Exception:
             self.logger.exception("Error loading config file: %s\n" % path)
-            sys.exit()
+            # sys.exit()
 
     def getConfigOptionValue(self, option_name):
         return self.CONFIG[option_name.upper()]
