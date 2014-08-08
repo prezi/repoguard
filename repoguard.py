@@ -98,7 +98,7 @@ class RepoGuard:
                 self.detect_rename = self.config['git']['detect_rename']
         except KeyError as e:
             self.logger.critical('%s not found in config file' % e)
-            sys.exit()
+            # sys.exit()
         except Exception:
             self.logger.exception("Error loading config file: %s\n" % path)
             sys.exit()
