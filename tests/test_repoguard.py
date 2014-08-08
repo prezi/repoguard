@@ -1,18 +1,14 @@
 import sys
-from mock import patch, Mock, call
+from mock import patch, Mock, call, MagicMock
 from StringIO import StringIO
 
 from base import BaseTestCase
-from codechecker import CodeCheckerFactory, Alert, Rule
+from codechecker import CodeCheckerFactory
 
 
 class LocalRepoTestCase(BaseTestCase):
     def setUp(self):
         super(LocalRepoTestCase, self).setUp()
-
-        # patch test repo list
-        self.rg.loadRepoListFromFile(self.test_data_folder + 'test_repo_list.json')
-        self.rg.readRepoStatusFromFile(self.test_data_folder + 'test_repo_status.json')
         self.rg.resetRepoLimits()
 
     def test_search_repo_dir(self):
@@ -97,19 +93,17 @@ class LocalRepoTestCase(BaseTestCase):
         self.assertEqual(self.rg.repoStatus['7271766']['last_checked_hashes'], [])
         self.assertEqual(len(mocks[1].call_args_list), 3)
 
-    @patch('repoguard.RepoGuard.shouldSkip', return_value=False)
     @patch('os.listdir', return_value=['repo1_7092651', 'repo2_6125572', 'repo3_7271766'])
-    @patch('subprocess.check_output')
-    @patch('repoguard.RepoGuard.updateRepoStatusById')
+    @patch('repoguard.RepoGuard.shouldSkipByName', return_value=False)
+    @patch('repository_handler.Repository.gitClone')
+    @patch('repository_handler.Repository.gitResetToOldestHash')
+    @patch('repository_handler.Repository.callCommand')
     def test_update_local_repos_only_pulls(self, *mocks):
         self.rg.updateLocalRepos()
-        # check if git pull is called as required everywhere
-        self.assertEqual(mocks[1].call_args_list[0][0], ([u'git', u'pull'],))
-        self.assertEqual(mocks[1].call_args_list[0][1], {'cwd': '%srepo2_6125572/' % self.rg.WORKING_DIR})
-        self.assertEqual(mocks[1].call_args_list[1][0], ([u'git', u'pull'],))
-        self.assertEqual(mocks[1].call_args_list[1][1], {'cwd': '%srepo1_7092651/' % self.rg.WORKING_DIR})
-        self.assertEqual(mocks[1].call_args_list[2][0], ([u'git', u'pull'],))
-        self.assertEqual(mocks[1].call_args_list[2][1], {'cwd': '%srepo3_7271766/' % self.rg.WORKING_DIR})
+        #self.assertEqual(mocks, '')
+        self.assertTrue(mocks[0].called)
+        self.assertTrue(mocks[1].called)
+        self.assertFalse(mocks[2].called)
 
 
 class CheckNewCodeTest(BaseTestCase):
@@ -214,12 +208,10 @@ class AlertSubscriptionTestCase(BaseTestCase):
 
     @patch('notifier.EmailNotifier.create_notification')
     def test_send_alerts(self, *mocks):
-        rule1 = Rule("xxe::test", Mock(), {'description': 'descr1'})
-        rule2 = Rule("xxe::simple", Mock(), {'description': 'descr2'})
         self.rg.checkResults = [
-            Alert(rule1, "file", "repo", "1231commit", "line1"),
-            Alert(rule2, "file", "repo", "1231commit", "line1"),
-            Alert(rule1, "file", "repo", "1231commit", "line1")
+            ("xxe::test", "file", "1231commit", "line1", "repo"),
+            ("xxe::simple", "file", "1231commit", "line1", "repo"),
+            ("test::test", "file", "1231commit", "line1", "repo")
         ]
         mock_notification = Mock()
         mocks[0].return_value = mock_notification

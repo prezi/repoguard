@@ -2,3 +2,4 @@ requests==1.1.0
 argparse==1.2.1
 elasticsearch
 pyyaml
+jsonpickle
