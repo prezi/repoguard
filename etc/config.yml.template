@@ -1,15 +1,23 @@
-organization_urls: ["https://github.com/your_org/"]
+github:
+    token: "<github_api_token>"
+    organization_name: "<your_github_organization_name>"
+
+git:
+    # whether to run git diffs with rename detection or not
+    # if disabled, file renames act like file additions
+    detect_rename: false
+
+# repository names which should not be checked/fetched from github
 skip_repo_list: []
 
-repo_language_limitation: []
-
-enforce_check_repo_list: []
-
+# emails will be sent with this from address by default
 default_notification_src_address: ""
+
+# emails will be sent to this address by default
 default_notification_to_address: ""
 
+# defines where to send the alerts
+# '*' and '?' are wildcards
 subscribers:
-    root@localhost: "*"
-
-github:
-    token: "<token>"
+    "*": "root@localhost"
+    "secrets::possible_aws_key": "security@localhost"
