@@ -1,6 +1,6 @@
 import unittest
 import os
-from mock import patch
+from mock import patch, MagicMock
 from repoguard import RepoGuard
 
 
@@ -12,7 +12,7 @@ class BaseTestCase(unittest.TestCase):
         self.rg = RepoGuard()
         self.test_data_folder = "%s/test_data/" % os.path.dirname(os.path.realpath(__file__))
         self.rg.WORKING_DIRECTORY = self.test_data_folder
-        self.rg.setUpRepositoryHandler()
+        self.rg.repositoryHandler = MagicMock()
 
     def tearDown(self):
         self.mock_logger_patcher.stop()

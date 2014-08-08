@@ -2,6 +2,7 @@ import json
 import jsonpickle
 import logging
 import subprocess
+import sys
 
 
 class Repository():
@@ -105,13 +106,15 @@ class RepositoryHandler():
                 return json.load(repo_status)
         except IOError:
             self.logger.info("repo status file %s doesn't exist" % self.repo_status_file)
+            return {}
 
     def loadRepoListFromFile(self):
         try:
             with open(self.repo_list_file) as repo_list:
                 return json.load(repo_list)
         except IOError:
-            self.logger.error("repo list file %s doesn't exist" % self.repo_list_file)
+            self.logger.critical("repo list file %s doesn't exist" % self.repo_list_file)
+            return {}
 
     def saveRepoStatusToFile(self):
         with open(self.repo_status_file, 'w') as repo_status:
