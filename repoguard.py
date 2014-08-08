@@ -19,6 +19,7 @@ from email.mime.text import MIMEText
 from ruleparser import build_resolved_ruleset
 from ruleparser import load_rules
 from notifier import EmailNotifier
+import repository_handler
 
 
 class RepoGuard:
@@ -115,118 +116,49 @@ class RepoGuard:
     def resetRepoLimits(self):
         self.setSkipRepoList([])
 
-    def printRepoData(self):
-        for repoId, repoData in self.repoList.iteritems():
-            print "%s -> (id: %s, ssh_url: %s) " % (repoId, repoData["name"], repoData["ssh_url"])
-
-    def searchRepoDir(self, directory_contents, name, repo_id):
-        dirname = '%s_%s' % (name, repo_id)
-        if dirname in directory_contents:
-            return dirname
-        else:
-            return False
-
-    def getLastCommitHashes(self, repo_id, repo_name):
-        try:
-            cwd = '%s%s_%s/' % (self.WORKING_DIR, repo_name, repo_id)
-            output = subprocess.check_output("git rev-list --remotes --max-count=100".split(), cwd=cwd)
-            output = output.strip().split('\n')
-        except subprocess.CalledProcessError:
-            return []
-        return output
-
-    def shouldSkip(self, repo_data):
+    def shouldSkipByName(self, repo_name):
         if self.args.limit:
-            if repo_data["name"] not in self.args.limit:
-                self.logger.debug('Got --limit param and repo (%s) is not among them, skipping.' % repo_data['name'])
+            if repo_name not in self.args.limit:
+                self.logger.debug('Got --limit param and repo (%s) is not among them, skipping.' % repo_name)
                 return True
 
-        return repo_data["name"] in self.getConfigOptionValue('SKIP_REPO_LIST')
+        return repo_name in self.getConfigOptionValue('SKIP_REPO_LIST')
 
-    # repoList required
+    def setUpRepositoryHandler(self):
+        self.repositoryHandler = repository_handler.RepositoryHandler(self.WORKING_DIR)
+
     def updateLocalRepos(self):
-        working_dir = os.listdir(self.WORKING_DIR)
+        existing_repo_dirs = os.listdir(self.WORKING_DIR)
 
-        for repoId, repoData in self.repoList.iteritems():
-            if self.shouldSkip(repoData):
-                self.logger.debug('... skipping %s ' % repoData["name"])
+        for repo in self.repositoryHandler.getRepoList():
+            if self.shouldSkipByName(repo.name):
+                self.logger.debug('skipping %s' % repo.name)
                 continue
 
-            repoDir = self.searchRepoDir(working_dir, repoData["name"], repoId)
-            if repoDir:
-                # DIRECTORY EXISTING --> git pull
-                self.logger.debug('git pull *** %s (%s) ***' % (repoData["name"], repoId))
-                cwd = "%s%s/" % (self.WORKING_DIR, repoDir)
+            if repo.dir_name in existing_repo_dirs:
+                repo.gitResetToOldestHash()
                 try:
-                    subprocess.check_output(['git', 'pull'], cwd=cwd)
-                    self.updateRepoStatusById(repoId, repoData["name"])
-                except subprocess.CalledProcessError, e:
-                    self.logger.error("Error when updating %s (%s)" % (repoData["name"], e))
+                    repo.callCommand("git pull", raise_exception=True)
+                    repo.detectNewCommitHashes()
+                except:
+                    pass
             else:
-                # DIRECTORY NOT EXISTING --> git clone
-                self.logger.debug('git clone *** %s (%s) ***' % (repoData["name"], repoId))
-                try:
-                    repo_dir = "%s%s_%s" % (self.WORKING_DIR, repoData["name"], repoId)
-                    subprocess.check_output(['git', 'clone', repoData["ssh_url"], repo_dir])
-                    # only if there is no status yet (maybe someone deleted this directory from repos dir?)
-                    self.setInitialRepoStatusById(repoId, repoData["name"])
-                    self.updateRepoStatusById(repoId, repoData["name"])
-                except Exception as e:
-                    self.logger.exception("Failed cloning %s: %s" % (repoData["name"], e))
-
-    def readRepoStatusFromFile(self, filename):
-        try:
-            with open(filename) as repo_status:
-                self.repoStatus = json.load(repo_status)
-                # load again for the new timestamps
-                repo_status.seek(0, 0)
-                self.repoStatusNew = json.load(repo_status)
-        except IOError:
-            self.logger.info("repo_status.json not existing, no cache to load...")
-
-    def checkRepoStatusFile(self, filename):
-        return os.path.isfile(filename)
-
-    def writeNewRepoStatusToFile(self, filename):
-        with open(filename, 'w') as repo_status:
-            json.dump(self.repoStatusNew, repo_status)
+                if repo.gitClone():
+                    repo.detectNewCommitHashes()
 
     def checkNewCode(self, detect_rename=False):
-        # self.logger.debug('checkNewCode called %s' % detect_rename)
-        working_dir = os.listdir(self.WORKING_DIR)
-        repodir_re = re.compile('^([\w\-\._]+)\_([0-9]+)$')
-        # go through local repo directories
-        for repo_dir in working_dir:
-            # self.logger.debug('repo_dir %s' % repo_dir)
-            repodir_match = repodir_re.match(repo_dir)
-            # self.logger.debug('repodir_match %s' % repodir_match)
-            if repodir_match and os.path.isdir('%s%s/.git' % (self.WORKING_DIR, repo_dir)):
+        existing_repo_dirs = os.listdir(self.WORKING_DIR)
 
-                repo_id = repodir_match.groups()[1]
-                repo_name = repodir_match.groups()[0]
-                # self.logger.debug('repo_name %s' % repo_name)
-
-                if self.args.limit:
-                    if repo_name not in self.args.limit:
-                        self.logger.debug('repo %s skipped because of --limit argument' % repo_name)
-                        continue
-
-                if repo_id not in self.repoStatus:
-                    self.logger.debug("%s (%s) not yet in status, initializing" % (repo_name, repo_id))
-                    self.setInitialRepoStatusById(repo_id, repo_name)
-                    self.updateRepoStatusById(repo_id, repo_name)
-
-                if repo_id in self.repoList:
-                    if self.shouldSkip(self.repoList[repo_id]):
-                        self.logger.debug('%s in skip_repo list, skipping...' % repo_name)
-                        continue
-                else:
-                    self.logger.debug('... skip code check (not in repoList)')
-                    continue
-
-                self.checkResults += self.checkByRepoId(repo_id, repo_name, detect_rename=detect_rename)
+        for repo in self.repositoryHandler.getRepoList():
+            if self.shouldSkipByName(repo.name):
+                self.logger.debug('skipping code check for %s' % repo.name)
+            if self.args.limit and repo.name not in self.args.limit:
+                self.logger.debug('repo %s skipped because of --limit argument' % repo.name)
+                continue
+            if repo.dir_name in existing_repo_dirs:
+                self.checkResults += self.checkByRepo(repo, detect_rename=detect_rename)
             else:
-                self.logger.debug('skip %s (not repo directory)' % repo_dir)
+                self.logger.debug('skip repo %s because directory doesnt exist' % repo.dir_name)
 
         # print self.checkResults
         # email notification is disabled, print to stdout
@@ -311,46 +243,20 @@ class RepoGuard:
         matching_subscriptions = [users for pattern, users in self.subscribers.iteritems() if fnmatch.fnmatch(alert, pattern)]
         return set(itertools.chain(*matching_subscriptions))
 
-    def setInitialRepoStatusById(self, repo_id, repo_name):
-        self.repoStatus[repo_id] = {
-            "name": repo_name,
-            "last_run": False,
-            "last_checked_hashes": []
-        }
-
-    def updateRepoStatusById(self, repo_id, repo_name):
-        self.repoStatusNew[repo_id] = {
-            "name": repo_name,
-            "last_run": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "last_checked_hashes": self.getLastCommitHashes(repo_id, repo_name)
-        }
-
-    def getNewHashes(self, repo_id):
-        ret_arr = []
-        for commit in self.repoStatusNew[repo_id]["last_checked_hashes"]:
-            if commit not in self.repoStatus[repo_id]["last_checked_hashes"]:
-                ret_arr.append(commit)
-        return ret_arr
-
-    def checkByRepoId(self, repo_id, repo_name, detect_rename=False):
+    def checkByRepo(self, repo, detect_rename=False):
+        repo_id = repo.repo_id
+        repo_name = repo.name
+        cwd = repo.full_dir_path
         matches_in_repo = []
-        cwd = "%s%s_%s/" % (self.WORKING_DIR, repo_name, repo_id)
 
-        # check by timestamp if --since specified, otherwise check for new commits
         if self.args.since:
-            rev_list = []
-            try:
-                last_run = self.args.since
-                rev_list_output = subprocess.check_output(
-                    ["git", "rev-list", "--remotes", "--since=\"%s\"" % last_run, "HEAD"], cwd=cwd)
-                rev_list = rev_list_output.split("\n")[:-1]
-            except Exception as e:
-                self.logger.exception("Failed getting commits from a given timestamp")
+            rev_list = repo.gitRevListSinceDate(self.args.since)
         else:
-            rev_list = self.getNewHashes(repo_id)
+            rev_list = repo.getNotCheckedCommitHashes()
 
         for rev_hash in rev_list:
-            rev_result = self.checkByRevHash(rev_hash, repo_name, repo_id, detect_rename)
+            repo.addCommitHashToChecked(rev_hash)
+            rev_result = self.checkByRevHash(rev_hash, repo, detect_rename)
             if rev_result:
                 matches_in_repo = matches_in_repo + rev_result
         if len(rev_list) > 0:
@@ -358,29 +264,21 @@ class RepoGuard:
 
         return matches_in_repo
 
-    def checkByRevHash(self, rev_hash, repo_name, repo_id, detect_rename=False):
+    def checkByRevHash(self, rev_hash, repo, detect_rename=False):
         matches_in_rev = []
-        cwd = "%s%s_%s/" % (self.WORKING_DIR, repo_name, repo_id)
         cmd = "git show --function-context %s%s" % ('-M100% ' if detect_rename else '--no-renames ', rev_hash)
 
         try:
-            diff_output = subprocess.check_output(cmd.split(), cwd=cwd)
+            diff_output = subprocess.check_output(cmd.split(), cwd=repo.full_dir_path)
             matches = re.findall(r'^diff --git a/\S* b/(\S+)(.*)', diff_output, flags=re.DOTALL | re.MULTILINE)
             for filename, diff in matches:
                 result = self.code_checker.check(diff.split('\n'), filename)
-                alerts = [Alert(rule, filename, repo_name, rev_hash, line) for rule, line in result]
+                alerts = [Alert(rule, filename, repo.name, rev_hash, line) for rule, line in result]
                 matches_in_rev.extend(alerts)
         except subprocess.CalledProcessError as e:
             self.logger.exception('Failed running: %s' % (cmd))
 
         return matches_in_rev
-
-    def loadRepoListFromFile(self, filename):
-        try:
-            with open(filename) as repo_file:
-                self.repoList = json.load(repo_file)
-        except IOError:
-            self.logger.info("repo_list.json not existing")
 
     def readAlertConfigFromFile(self):
         bare_rules = load_rules(self.ALERT_CONFIG_DIR)
@@ -435,8 +333,6 @@ class RepoGuard:
 
     def run(self):
         self.logger.info('* run started')
-        repo_status_file = self.WORKING_DIR + 'repo_status.json'
-        repo_list_file = self.WORKING_DIR + 'repo_list.json'
 
         # locking
         # if self.isAborted():
@@ -449,38 +345,26 @@ class RepoGuard:
 
         self.putLock()
 
-        # skip online update by default (only if --refresh specified or status cache json files not exist)
-        if self.args.refresh or not self.checkRepoStatusFile(repo_status_file):
-            git_repo_updater_obj = GitRepoUpdater(self.org_name, self.config['github']['token'], repo_list_file, self.logger)
+        self.setUpRepositoryHandler()
+
+        if self.args.refresh or not self.repositoryHandler.getRepoList():
+            git_repo_updater_obj = GitRepoUpdater(self.org_name, self.config['github']['token'], self.repositoryHandler.repo_list_file, self.logger)
             git_repo_updater_obj.refreshRepoList()
             git_repo_updater_obj.writeRepoListToFile()
 
-        # read repo status json file
-        self.readRepoStatusFromFile(repo_status_file)
-
-        # working from cached repo list file
-        self.loadRepoListFromFile(repo_list_file)
-
-        # updating local repos (and repo status files if necessary)
         if not self.args.nopull:
             self.updateLocalRepos()
 
-        # check for new code
         self.checkNewCode(self.detect_rename)
 
-        # send alert mail (only if prod)
         if self.args.notify:
             self.sendResults()
 
-        # store things in ES:
         if self.args.store:
             self.storeResults()
 
-        # save repo status changes
-        self.writeNewRepoStatusToFile(repo_status_file)
-
+        self.repositoryHandler.saveRepoStatusToFile()
         self.releaseLock()
-
         self.logger.info("* run finished")
 
 
