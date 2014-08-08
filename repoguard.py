@@ -97,11 +97,11 @@ class RepoGuard:
                 self.smtp_conn_string = self.config['smtp_connection_string']
                 self.detect_rename = self.config['git']['detect_rename']
         except KeyError as e:
-            self.logger.critical('%s not found in config file' % e)
-            # sys.exit()
+            print('%s not found in config file' % e)
+            sys.exit()
         except Exception:
-            self.logger.exception("Error loading config file: %s\n" % path)
-            # sys.exit()
+            print("Error loading config file: %s\n" % path)
+            sys.exit()
 
     def getConfigOptionValue(self, option_name):
         return self.CONFIG[option_name.upper()]
