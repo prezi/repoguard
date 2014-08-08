@@ -42,8 +42,6 @@ class RepoGuard:
 
         self.parseArgs()
         self.detectPaths()
-        self.readConfig(self.CONFIG_PATH)
-        self.readAlertConfigFromFile()
 
     def parseArgs(self):
         parser = argparse.ArgumentParser(description='Watch git repos for changes...')
@@ -75,12 +73,6 @@ class RepoGuard:
             self.logger.setLevel(logging.DEBUG)
 
     def detectPaths(self):
-
-        # if self.RUNNING_ON_PROD:
-        #     self.SECRET_CONFIG_PATH = '/etc/prezi/repoguard/secret.ini'
-        #     self.APP_DIR = '/opt/prezi/repoguard/'
-        #     self.WORKING_DIR = '/mnt/prezi/repoguard/repos/'
-
         self.APP_DIR = '%s/' % os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
         self.CONFIG_PATH = self.args.config
         self.WORKING_DIR = self.args.working_dir
@@ -333,6 +325,8 @@ class RepoGuard:
 
     def run(self):
         self.logger.info('* run started')
+        self.readConfig(self.CONFIG_PATH)
+        self.readAlertConfigFromFile()
 
         # locking
         # if self.isAborted():
