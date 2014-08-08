@@ -6,7 +6,7 @@ import smtplib
 
 
 class EmailNotifier:
-    def __init__(self, email_from, email_to, subject, text, connection_string):
+    def __init__(self, email_from, email_to, subject, text, connection_string='localhost'):
         self.email_from = email_from
         self.email_to = email_to
         self.connection_string = connection_string
