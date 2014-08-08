@@ -135,8 +135,8 @@ class RepoGuard:
                 except:
                     pass
             else:
-                if repo.gitClone():
-                    repo.detectNewCommitHashes()
+                repo.gitClone()
+                repo.detectNewCommitHashes()
 
     def checkNewCode(self, detect_rename=False):
         existing_repo_dirs = os.listdir(self.WORKING_DIR)
