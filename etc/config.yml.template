@@ -19,5 +19,5 @@ default_notification_to_address: ""
 # defines where to send the alerts
 # '*' and '?' are wildcards
 subscribers:
-    "*": "root@localhost"
-    "secrets::possible_aws_key": "security@localhost"
+    "*": ["root@localhost"]
+    "secrets::*": ["security@localhost"]

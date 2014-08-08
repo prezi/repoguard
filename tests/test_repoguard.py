@@ -3,7 +3,7 @@ from mock import patch, Mock, call
 from StringIO import StringIO
 
 from base import BaseTestCase
-from codechecker import CodeCheckerFactory
+from codechecker import CodeCheckerFactory, Alert, Rule
 
 
 class LocalRepoTestCase(BaseTestCase):
@@ -214,10 +214,12 @@ class AlertSubscriptionTestCase(BaseTestCase):
 
     @patch('notifier.EmailNotifier.create_notification')
     def test_send_alerts(self, *mocks):
+        rule1 = Rule("xxe::test", Mock(), {'description': 'descr1'})
+        rule2 = Rule("xxe::simple", Mock(), {'description': 'descr2'})
         self.rg.checkResults = [
-            ("xxe::test", "file", "1231commit", "line1", "repo"),
-            ("xxe::simple", "file", "1231commit", "line1", "repo"),
-            ("test::test", "file", "1231commit", "line1", "repo")
+            Alert(rule1, "file", "repo", "1231commit", "line1"),
+            Alert(rule2, "file", "repo", "1231commit", "line1"),
+            Alert(rule1, "file", "repo", "1231commit", "line1")
         ]
         mock_notification = Mock()
         mocks[0].return_value = mock_notification

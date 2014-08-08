@@ -90,11 +90,12 @@ class RepoGuard:
             with open(path) as f:
                 self.config = yaml.load(f.read())
                 self.setSkipRepoList(self.config['skip_repo_list'])
+                self.default_notification_src_address = self.config['default_notification_src_address']
+                self.default_notification_to_address = self.config['default_notification_to_address']
                 self.subscribers = self.config['subscribers']
                 self.org_name = self.config['github']['organization_name']
+                self.smtp_conn_string = self.config['smtp_connection_string']
                 self.detect_rename = self.config['git']['detect_rename']
-                for key in ['default_notification_src_address', 'default_notification_to_address']:
-                    self.setConfigOptionValue(key, self.config[key])
         except KeyError as e:
             self.logger.critical('%s not found in config file' % e)
             sys.exit()
@@ -227,7 +228,7 @@ class RepoGuard:
             else:
                 self.logger.debug('skip %s (not repo directory)' % repo_dir)
 
-        print self.checkResults
+        # print self.checkResults
         # email notification is disabled, print to stdout
         if not self.args.notify:
             for alert in self.checkResults:
@@ -243,21 +244,21 @@ class RepoGuard:
         (host, port) = self.args.store.split(":")
         es = Elasticsearch([{"host": host, "port": port}])
 
-        for issue in self.checkResults:
+        for alert in self.checkResults:
             try:
                 body = {
-                    "check_id": issue[0],
-                    "description": "",  # TODO
-                    "filename": issue[1],
-                    "commit_id": issue[2],
-                    "matching_line": issue[3][0:200].decode('utf-8', 'replace'),
-                    "repo_name": issue[4],
+                    "check_id": alert.rule.name,
+                    "description": alert.rule.description,
+                    "filename": alert.filename,
+                    "commit_id": alert.commit,
+                    "matching_line": alert.line[0:200].replace("\t", " ").decode('utf-8', 'replace'),
+                    "repo_name": alert.repo,
                     "@timestamp": datetime.datetime.utcnow().isoformat(),
                     "type": "repoguard"
                 }
 
                 es.create(body=body, id=hashlib.sha1(str(body)).hexdigest(), index='repoguard', doc_type='repoguard')
-            except Exception as e:
+            except Exception:
                 self.logger.exception('Got exception during storing results to ES.')
 
     # TODO: test
@@ -266,31 +267,42 @@ class RepoGuard:
         if not self.checkResults:
             return False
 
+        def add_alert(email):
+            if email not in alert_per_notify_person:
+                alert_per_notify_person[email] = "The following change(s) might introduce new security risks:\n\n"
+            alert_per_notify_person[email] += alert
+
         self.logger.info('### SENDING NOTIFICATION EMAIL ###')
 
-        for issue in self.checkResults:
-            check_id = issue[0]
-            filename = issue[1]
-            commit_id = issue[2]
-            matching_line = issue[3][0:200].decode('utf-8', 'replace')
-            repo_name = issue[4]
+        for alert in self.checkResults:
+            check_id = alert.rule.name
+            filename = alert.filename
+            commit_id = alert.commit
+            matching_line = alert.line[0:200].replace("\t", " ").decode('utf-8', 'replace')
+            repo_name = alert.repo
+            description = alert.rule.description
 
             alert = (u"check_id: %s \n"
                      "path: %s \n"
                      "commit: https://github.com/%s/%s/commit/%s\n"
                      "matching line: %s\n"
                      "description: %s\n"
-                     "repo name: %s\n\n" % (check_id, filename, self.org_name, repo_name, commit_id, matching_line, "TODO", repo_name))
+                     "repo name: %s\n\n" % (check_id, filename, self.org_name, repo_name,
+                                            commit_id, matching_line, description, repo_name))
 
             notify_users = self.find_subscribed_users(check_id)
+            self.logger.debug('notify_users %s' % repr(notify_users))
             for u in notify_users:
-                if u not in alert_per_notify_person:
-                    alert_per_notify_person[u] = "The following change(s) might introduce new security risks:\n\n"
-                alert_per_notify_person[u] += alert
+                add_alert(u)
 
-        from_addr = self.getConfigOptionValue("default_notification_src_address")
+            # no subscribed email, send it to default address
+            if not notify_users:
+                add_alert(self.default_notification_to_address)
+
+        from_addr = self.default_notification_src_address
+        self.logger.debug('Notifiying them: %s', repr(alert_per_notify_person))
         for to_addr, text in alert_per_notify_person.iteritems():
-            email_notification = EmailNotifier.create_notification(from_addr, to_addr, text)
+            email_notification = EmailNotifier.create_notification(from_addr, to_addr, text, self.smtp_conn_string)
             email_notification.send_if_fine()
 
     def find_subscribed_users(self, alert):
