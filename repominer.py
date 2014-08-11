@@ -4,9 +4,9 @@ import os.path
 import re
 import sys
 
-from codechecker import CodeCheckerFactory
-from evaluators import LineEvalFactory
-from ruleparser import load_rules, build_resolved_ruleset
+from core.codechecker import CodeCheckerFactory
+from core.evaluators import LineEvalFactory
+from core.ruleparser import load_rules, build_resolved_ruleset
 
 
 parser = argparse.ArgumentParser(description='Check a sourcecode repo')

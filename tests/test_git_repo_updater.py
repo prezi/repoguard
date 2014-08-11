@@ -1,7 +1,7 @@
 from mock import patch
 from httpretty import HTTPretty, httprettified
 
-from git_repo_updater import GitRepoUpdater
+from core.git_repo_updater import GitRepoUpdater
 from base import BaseTestCase
 
 

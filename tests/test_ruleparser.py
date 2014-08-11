@@ -1,6 +1,6 @@
 import unittest
 
-from ruleparser import RuleLoader, merge_rules, merge_many_rules, resolve_rule
+from core.ruleparser import RuleLoader, merge_rules, merge_many_rules, resolve_rule
 
 
 class RuleLoaderTestCase(unittest.TestCase):

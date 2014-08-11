@@ -1,6 +1,6 @@
 import unittest
 
-from notifier import EmailNotifier
+from core.notifier import EmailNotifier
 
 
 class EmailNotifierTestCase(unittest.TestCase):

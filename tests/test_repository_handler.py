@@ -1,6 +1,7 @@
 import unittest
 from mock import patch
-from repository_handler import Repository, RepositoryHandler
+
+from core.repository_handler import Repository, RepositoryHandler
 
 
 class RepositoryTestCase(unittest.TestCase):
@@ -22,14 +23,14 @@ class RepositoryTestCase(unittest.TestCase):
         self.repo.addCommitHashToChecked("zzzzzzz")
         self.assertEquals(len(self.repo.last_checked_commit_hashes), 2)
 
-    @patch('repository_handler.Repository.callCommand', side_effect=Exception())
+    @patch('core.repository_handler.Repository.callCommand', side_effect=Exception())
     def test_get_last_commit_hashes(self, *mocks):
         self.assertEquals(self.repo.getLastCommitHashes(), [])
         self.assertTrue(mocks[0].called)
 
-    @patch('repository_handler.Repository.getLastCommitHashes', return_value=["aaa", "bbb", "ccc"])
-    @patch('repository_handler.Repository.getLastCheckedCommitHashes', return_value=["aaa"])
-    @patch('repository_handler.Repository.getNotCheckedCommitHashes', return_value=["ccc"])
+    @patch('core.repository_handler.Repository.getLastCommitHashes', return_value=["aaa", "bbb", "ccc"])
+    @patch('core.repository_handler.Repository.getLastCheckedCommitHashes', return_value=["aaa"])
+    @patch('core.repository_handler.Repository.getNotCheckedCommitHashes', return_value=["ccc"])
     def test_detect_new_commit_hashes(self, *mocks):
         original_length = len(self.repo.not_checked_commit_hashes)
         self.repo.detectNewCommitHashes()
@@ -41,12 +42,12 @@ class RepositoryHandlerTestCase(unittest.TestCase):
     def setUp(self):
         pass
 
-    @patch('repository_handler.RepositoryHandler.loadRepoListFromFile',
+    @patch('core.repository_handler.RepositoryHandler.loadRepoListFromFile',
            return_value={"11111": {"ssh_url": "git@github.com:prezi/repo1.git", "name": "test_repo", "language": "Python"}})
-    @patch('repository_handler.RepositoryHandler.loadRepoStatusFromFile',
+    @patch('core.repository_handler.RepositoryHandler.loadRepoStatusFromFile',
            return_value={"11111": {"last_checked_hashes": ["aaaa"], "name": "test_repo"}})
-    @patch('repository_handler.Repository')
-    @patch('repository_handler.RepositoryHandler.getRepoById')
+    @patch('core.repository_handler.Repository')
+    @patch('core.repository_handler.RepositoryHandler.getRepoById')
     def test_create_repo_list_and_status_from_files(self, *mocks):
         self.repository_handler = RepositoryHandler("test_work_dir")
         self.repository_handler.createRepoListAndStatusFromFiles()

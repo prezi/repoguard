@@ -1,6 +1,6 @@
 import unittest
 
-from evaluators import LineEvalFactory, FileEvalFactory
+from core.evaluators import LineEvalFactory, FileEvalFactory
 
 
 class LineEvaluatorTestCase(unittest.TestCase):

@@ -1,6 +1,7 @@
 from mock import patch, Mock
 from base import BaseTestCase
-from codechecker import Alert, Rule
+
+from core.codechecker import Alert, Rule
 
 
 class RepoguardTestCase(BaseTestCase):
@@ -48,7 +49,7 @@ class AlertSubscriptionTestCase(BaseTestCase):
         self.assertNotIn("C", users)
         self.assertIn("D", users)
 
-    @patch('notifier.EmailNotifier.create_notification')
+    @patch('core.notifier.EmailNotifier.create_notification')
     def test_send_alerts(self, *mocks):
         rule1 = Rule("xxe::test", Mock(), {'description': 'descr1'})
         rule2 = Rule("xxe::simple", Mock(), {'description': 'descr2'})

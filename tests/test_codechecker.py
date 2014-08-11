@@ -1,7 +1,7 @@
 import unittest
 from mock import Mock
 
-from codechecker import CodeChecker
+from core.codechecker import CodeChecker
 
 
 class CodeCheckerTestCase(unittest.TestCase):

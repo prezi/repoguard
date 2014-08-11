@@ -11,15 +11,15 @@ import argparse
 import smtplib
 import logging
 import sys
-from git_repo_updater import GitRepoUpdater
-from codechecker import CodeCheckerFactory, Alert
 from elasticsearch import Elasticsearch
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from ruleparser import build_resolved_ruleset
-from ruleparser import load_rules
-from notifier import EmailNotifier
-import repository_handler
+
+from core.git_repo_updater import GitRepoUpdater
+from core.codechecker import CodeCheckerFactory, Alert
+from core.ruleparser import build_resolved_ruleset, load_rules
+from core.notifier import EmailNotifier
+from core.repository_handler import RepositoryHandler
 
 
 class RepoGuard:
@@ -116,7 +116,7 @@ class RepoGuard:
         return repo_name in self.getConfigOptionValue('SKIP_REPO_LIST')
 
     def setUpRepositoryHandler(self):
-        self.repositoryHandler = repository_handler.RepositoryHandler(self.WORKING_DIR)
+        self.repositoryHandler = RepositoryHandler(self.WORKING_DIR)
 
     def updateLocalRepos(self):
         existing_repo_dirs = os.listdir(self.WORKING_DIR)
