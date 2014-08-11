@@ -2,7 +2,6 @@ import json
 import jsonpickle
 import logging
 import subprocess
-import sys
 
 
 class Repository():
@@ -23,17 +22,22 @@ class Repository():
         self.last_checked_commit_hashes = repo_status_info_json["last_checked_commit_hashes"]
 
     def addCommitHashToChecked(self, rev_hash):
-        if rev_hash not in self.last_checked_commit_hashes:
+        if rev_hash not in self.getLastCheckedCommitHashes():
             self.last_checked_commit_hashes.append(rev_hash)
 
-    def detectNewCommitHashes(self):
+    def getLastCommitHashes(self):
         try:
-            last_commit_hashes = self.callCommand("git rev-list --remotes --max-count=100", raise_exception=True).split('\n')[:-1]
+            return self.callCommand("git rev-list --remotes --max-count=100", raise_exception=True).split('\n')[:-1]
         except:
-            last_commit_hashes = []
-        for commit_sha in last_commit_hashes:
-            if commit_sha not in self.last_checked_commit_hashes and commit_sha not in self.not_checked_commit_hashes:
+            return []
+
+    def detectNewCommitHashes(self):
+        for commit_sha in self.getLastCommitHashes():
+            if commit_sha not in self.getLastCheckedCommitHashes() and commit_sha not in self.getNotCheckedCommitHashes():
                 self.not_checked_commit_hashes.append(commit_sha)
+
+    def getLastCheckedCommitHashes(self):
+        return self.last_checked_commit_hashes
 
     def getNotCheckedCommitHashes(self):
         return self.not_checked_commit_hashes

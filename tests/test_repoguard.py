@@ -1,9 +1,31 @@
-import sys
-from mock import patch, Mock, call
-from StringIO import StringIO
-
+from mock import patch, Mock
 from base import BaseTestCase
-from codechecker import CodeCheckerFactory, Alert, Rule
+from codechecker import Alert, Rule
+
+
+class RepoguardTestCase(BaseTestCase):
+    def setUp(self):
+        super(RepoguardTestCase, self).setUp()
+
+    def test_should_skip_by_name_with_limits_arg(self):
+        self.rg.args.limit = ['alice', 'bob']
+        self.assertFalse(self.rg.shouldSkipByName('alice'))
+        self.assertFalse(self.rg.shouldSkipByName('bob'))
+        self.assertTrue(self.rg.shouldSkipByName('whatever_else'))
+
+    @patch('repoguard.RepoGuard.getConfigOptionValue', return_value=['alice', 'bob'])
+    def test_should_skip_by_name_with_config_option(self, *mocks):
+        self.assertTrue(self.rg.shouldSkipByName('alice'))
+        self.assertTrue(self.rg.shouldSkipByName('bob'))
+        self.assertFalse(self.rg.shouldSkipByName('whatever_else'))
+
+    @patch('repoguard.RepoGuard.getConfigOptionValue', return_value=['alice', 'bob'])
+    def test_should_skip_by_name_bot_arg_and_config(self, *mocks):
+        self.rg.args.limit = ['alice', 'joe']
+        self.assertTrue(self.rg.shouldSkipByName('alice'))
+        self.assertTrue(self.rg.shouldSkipByName('bob'))
+        self.assertFalse(self.rg.shouldSkipByName('joe'))
+        self.assertTrue(self.rg.shouldSkipByName('whatever_else'))
 
 
 class AlertSubscriptionTestCase(BaseTestCase):
