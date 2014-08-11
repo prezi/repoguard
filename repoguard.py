@@ -123,7 +123,10 @@ class RepoGuard:
     def updateLocalRepos(self):
         existing_repo_dirs = os.listdir(self.WORKING_DIR)
 
-        for repo in self.repositoryHandler.getRepoList():
+        repo_list = list(self.repositoryHandler.getRepoList())
+        for idx, repo in enumerate(repo_list):
+            self.logger.debug('Pulling repo "%s/%s" (%d/%d) %2.2f%%' % (self.org_name, repo.name, idx, len(repo_list), float(idx) * 100 / len(repo_list)))
+
             if self.shouldSkipByName(repo.name):
                 # self.logger.debug('Got --limit param and repo (%s) is not among them, skipping git pull/clone.' % repo.name)
                 continue

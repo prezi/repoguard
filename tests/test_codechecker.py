@@ -65,7 +65,6 @@ class CodeCheckerTestCase(unittest.TestCase):
         code_checker = CodeChecker([], [rule])
 
         result = code_checker.check(self.code, "macbeth.txt")
-        print repr(result[0])
 
         self.assertEquals(len(self.code), len(result))
         self.assertIn(self.code[0], result[0])
