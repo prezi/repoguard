@@ -47,10 +47,8 @@ class RepositoryHandlerTestCase(unittest.TestCase):
     @patch('core.repository_handler.RepositoryHandler.loadRepoStatusFromFile',
            return_value={"11111": {"last_checked_hashes": ["aaaa"], "name": "test_repo"}})
     @patch('core.repository_handler.Repository')
-    @patch('core.repository_handler.RepositoryHandler.getRepoById')
     def test_create_repo_list_and_status_from_files(self, *mocks):
         self.repository_handler = RepositoryHandler("test_work_dir")
         self.repository_handler.createRepoListAndStatusFromFiles()
-        mocks[0].assert_called_with('11111')
-        mocks[1].assert_called_with('11111', {'name': 'test_repo', 'language': 'Python', 'ssh_url': 'git@github.com:prezi/repo1.git'}, 'test_work_dir')
+        mocks[0].assert_called_with('11111', {'name': 'test_repo', 'language': 'Python', 'ssh_url': 'git@github.com:prezi/repo1.git'}, 'test_work_dir')
         pass
