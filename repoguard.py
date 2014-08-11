@@ -358,7 +358,8 @@ class RepoGuard:
         if self.args.store:
             self.storeResults()
 
-        self.repositoryHandler.saveRepoStatusToFile()
+        if not self.args.since:
+            self.repositoryHandler.saveRepoStatusToFile()
         self.releaseLock()
         self.logger.info("* run finished")
 
