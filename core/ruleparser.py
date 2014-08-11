@@ -84,7 +84,7 @@ def resolve_rule(rule_name, ruleset, in_progress=()):
     if rule_name not in ruleset:
         abstract_name = "%s::~%s" % (namespace, localname)
         if abstract_name not in ruleset:
-            raise Exception("Unknown rule: %s" % rule_name)
+            raise Exception("Unknown rule: %s, ruleset: %s" % (rule_name, ruleset))
         else:
             rule_name = abstract_name
     if rule_name in in_progress:

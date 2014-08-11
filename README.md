@@ -36,7 +36,8 @@ github:
 ```
 
 It is possible to send specific alerts to specific email addresses, therefore it is possible to define
-custom rules which is only interesting for a subset of people (e.g. our data team defined).
+custom rules which is only interesting for a subset of people (e.g. our data team has their own rules
+for detecting changes in the log format).
 
 ## The status file
 
@@ -58,9 +59,10 @@ on the same change twice.
 ## How do we use it at Prezi?
 
 We run it periodically every 10 minutes and also every hour with the ```--refresh``` option (which fetches new repositories
-from Github). The alerts are sent to ElasticSearch and then an internal tool creates Trac tickets from them but for a long time we received the alerts via email which was a feasible workflow as well.
+from Github). The alerts are sent to ElasticSearch and then an internal tool creates Trac tickets from them but
+for a long time we received the alerts via email which was a feasible workflow as well.
 
-## Do you want to contribute?
+## How can you contribute?
 
 Extend or fine-tune the ruleset, improve the code or the documentation and send a pull request!
 Tests are highly appreciated.

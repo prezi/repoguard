@@ -269,16 +269,15 @@ class RepoGuard:
 
         try:
             diff_output = subprocess.check_output(cmd.split(), cwd=repo.full_dir_path)
-            splitted = re.split(r'^diff --git a/\S* b/(\S+)$', diff_output, flags=re.MULTILINE)
+            splitted = re.split(r'^diff --git a/\S* b/(\S+)$', diff_output, flags=re.MULTILINE)[1:]
 
             for i in xrange(len(splitted) / 2):
-                filename = splitted[i+1]
-                diff = splitted[i+2]
+                filename = splitted[i * 2]
+                diff = splitted[i * 2 + 1]
 
                 result = self.code_checker.check(diff.split('\n'), filename)
                 alerts = [Alert(rule, filename, repo.name, rev_hash, line) for rule, line in result]
-                # self.logger.debug('filename: %s, diff: %s' % (filename, diff))
-                # self.logger.debug('result: %s, alerts: %s' % (result, alerts))
+
                 matches_in_rev.extend(alerts)
         except subprocess.CalledProcessError as e:
             self.logger.exception('Failed running: %s' % (cmd))
@@ -293,6 +292,7 @@ class RepoGuard:
         applied_alerts = {aid: adata for aid, adata in resolved_rules.iteritems()
                           if not self.args.alerts or aid in self.args.alerts}
 
+        self.logger.debug('applied_alerts: %s' % repr(applied_alerts))
         self.code_checker = CodeCheckerFactory(applied_alerts).create()
 
     def putLock(self):
