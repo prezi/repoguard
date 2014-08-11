@@ -46,25 +46,16 @@ class RuleLoader:
             return "%s::gen%d" % (self.namespace, self.autoincr_base)
 
 
-# walk directory recursively
-def walk_dir(rule_dir):
-    for f in os.listdir(rule_dir):
-        path = os.path.join(rule_dir, f)
-        if os.path.isfile(path) and f.endswith(".yml"):
-            yield path
-        elif os.path.isdir(path):
-            walk_dir(path)
-
-
 # Helper method to load configs in a dir
 def load_rules(rule_dir):
-    rule_files = walk_dir(rule_dir)
     rules = {}
-    for rf in rule_files:
-        try:
-            rules.update(RuleLoader(rf).load())
-        except Exception as e:
-            raise Exception("Error parsing file %s: %s" % (rf, e.message)), None, sys.exc_info()[2]
+    for (dirpath, dirnames, filenames) in os.walk(rule_dir, followlinks=True):
+        for filename in filenames:
+            if filename.endswith(".yml"):
+                try:
+                    rules.update(RuleLoader(os.path.join(dirpath, filename)).load())
+                except Exception as e:
+                    raise Exception("Error parsing file %s: %s" % (filename, e.message)), None, sys.exc_info()[2]
     return rules
 
 

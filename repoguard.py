@@ -125,7 +125,7 @@ class RepoGuard:
 
         for repo in self.repositoryHandler.getRepoList():
             if self.shouldSkipByName(repo.name):
-                #self.logger.debug('Got --limit param and repo (%s) is not among them, skipping git pull/clone.' % repo.name)
+                # self.logger.debug('Got --limit param and repo (%s) is not among them, skipping git pull/clone.' % repo.name)
                 continue
 
             if repo.dir_name in existing_repo_dirs:
@@ -145,7 +145,7 @@ class RepoGuard:
         for idx, repo in enumerate(repo_list):
             self.logger.debug('Checking repo "%s/%s" (%d/%d) %2.2f%%' % (self.org_name, repo.name, idx, len(repo_list), float(idx) * 100 / len(repo_list)))
             if self.shouldSkipByName(repo.name):
-                #self.logger.debug('Skipping code check for %s' % repo.name)
+                # self.logger.debug('Skipping code check for %s' % repo.name)
                 continue
             if self.args.limit and repo.name not in self.args.limit:
                 self.logger.debug('repo %s skipped because of --limit argument' % repo.name)
