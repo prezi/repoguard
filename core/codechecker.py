@@ -50,7 +50,7 @@ class Rule:
     def __init__(self, name, evaluators, rule_config):
         self.name = name
         self.evaluators = evaluators
-        self.description = rule_config.get('description')
+        self.description = rule_config.get('description','no description')
 
 
 class CodeCheckerFactory:
