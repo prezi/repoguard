@@ -92,9 +92,12 @@ class RepositoryHandler():
 
     def createRepoListAndStatusFromFiles(self):
         repo_list = self.loadRepoListFromFile()
-        repo_status_info = self.loadRepoStatusFromFile()
         for repo_id, repo_data in repo_list.iteritems():
             self.repo_list[repo_id] = Repository(repo_id, repo_data, self.working_directory)
+
+    def loadStatusInfoFromFile(self):
+        repo_status_info = self.loadRepoStatusFromFile()
+        for repo_id, repo_data in self.repo_list.iteritems():
             if repo_status_info and repo_id in repo_status_info:
                 self.getRepoById(repo_id).addStatusInfoFromJson(repo_status_info[repo_id])
 

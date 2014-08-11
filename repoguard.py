@@ -56,6 +56,7 @@ class RepoGuard:
         parser.add_argument('--notify', '-N', action='store_true', default=False, help='Notify pre-defined contacts via e-mail')
         parser.add_argument('--silent', action="count", help='Supress log messages lower than warning')
         parser.add_argument('--store', '-S', default=False, help='ElasticSearch node (host:port)')
+        parser.add_argument('--ignorestatus', action='store_true', default=False, help='If true repoguard will not skip commits which are were already checked based on the status file')
 
         self.args = parser.parse_args()
 
@@ -116,20 +117,21 @@ class RepoGuard:
 
     def setUpRepositoryHandler(self):
         self.repositoryHandler = RepositoryHandler(self.WORKING_DIR)
+        if not self.args.since:
+            self.repositoryHandler.loadStatusInfoFromFile()
 
     def updateLocalRepos(self):
         existing_repo_dirs = os.listdir(self.WORKING_DIR)
 
         for repo in self.repositoryHandler.getRepoList():
             if self.shouldSkipByName(repo.name):
-                self.logger.debug('Got --limit param and repo (%s) is not among them, skipping git pull/clone.' % repo.name)
+                #self.logger.debug('Got --limit param and repo (%s) is not among them, skipping git pull/clone.' % repo.name)
                 continue
 
             if repo.dir_name in existing_repo_dirs:
                 repo.gitResetToOldestHash()
                 try:
                     repo.callCommand("git pull", raise_exception=True)
-                    repo.detectNewCommitHashes()
                 except:
                     pass
             else:
@@ -143,7 +145,7 @@ class RepoGuard:
         for idx, repo in enumerate(repo_list):
             self.logger.debug('Checking repo "%s/%s" (%d/%d) %2.2f%%' % (self.org_name, repo.name, idx, len(repo_list), float(idx) * 100 / len(repo_list)))
             if self.shouldSkipByName(repo.name):
-                self.logger.debug('Skipping code check for %s' % repo.name)
+                #self.logger.debug('Skipping code check for %s' % repo.name)
                 continue
             if self.args.limit and repo.name not in self.args.limit:
                 self.logger.debug('repo %s skipped because of --limit argument' % repo.name)
@@ -243,17 +245,21 @@ class RepoGuard:
         matches_in_repo = []
 
         if self.args.since:
-            rev_list = repo.gitRevListSinceDate(self.args.since)
+            rev_list_to_check = repo.gitRevListSinceDate(self.args.since)
         else:
-            rev_list = repo.getNotCheckedCommitHashes()
+            if self.args.ignorestatus:
+                rev_list_to_check = repo.getLastCommitHashes()
+            else:
+                repo.detectNewCommitHashes()
+                rev_list_to_check = repo.getNotCheckedCommitHashes()
 
-        for rev_hash in rev_list:
+        for rev_hash in rev_list_to_check:
             repo.addCommitHashToChecked(rev_hash)
             rev_result = self.checkByRevHash(rev_hash, repo, detect_rename)
             if rev_result:
                 matches_in_repo = matches_in_repo + rev_result
-        if len(rev_list) > 0:
-            self.logger.info("checked commits %s %s" % (repo_name, len(rev_list)))
+        if len(rev_list_to_check) > 0:
+            self.logger.info("checked commits %s %s" % (repo_name, len(rev_list_to_check)))
 
         return matches_in_repo
 
