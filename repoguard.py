@@ -269,10 +269,16 @@ class RepoGuard:
 
         try:
             diff_output = subprocess.check_output(cmd.split(), cwd=repo.full_dir_path)
-            matches = re.findall(r'^diff --git a/\S* b/(\S+)(.*)', diff_output, flags=re.DOTALL | re.MULTILINE)
-            for filename, diff in matches:
+            splitted = re.split(r'^diff --git a/\S* b/(\S+)$', diff_output, flags=re.MULTILINE)
+
+            for i in xrange(len(splitted) / 2):
+                filename = splitted[i+1]
+                diff = splitted[i+2]
+
                 result = self.code_checker.check(diff.split('\n'), filename)
                 alerts = [Alert(rule, filename, repo.name, rev_hash, line) for rule, line in result]
+                # self.logger.debug('filename: %s, diff: %s' % (filename, diff))
+                # self.logger.debug('result: %s, alerts: %s' % (result, alerts))
                 matches_in_rev.extend(alerts)
         except subprocess.CalledProcessError as e:
             self.logger.exception('Failed running: %s' % (cmd))
