@@ -1,6 +1,7 @@
 import copy
 import sys
 import yaml
+import os
 
 
 class RuleLoader:
@@ -45,11 +46,19 @@ class RuleLoader:
             return "%s::gen%d" % (self.namespace, self.autoincr_base)
 
 
-# Helper method to load configs in a dir:
+# walk directory recursively
+def walk_dir(rule_dir):
+    for f in os.listdir(rule_dir):
+        path = os.path.join(rule_dir, f)
+        if os.path.isfile(path) and f.endswith(".yml"):
+            return path
+        elif os.path.isdir(path):
+            walk_dir(path)
+
+
+# Helper method to load configs in a dir
 def load_rules(rule_dir):
-    from os import listdir
-    from os.path import isfile, join
-    rule_files = [join(rule_dir, f) for f in listdir(rule_dir) if isfile(join(rule_dir, f)) and f.endswith(".yml")]
+    rule_files = [walk_dir(rule_dir)]
     rules = {}
     for rf in rule_files:
         try:
