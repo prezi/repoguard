@@ -51,14 +51,14 @@ def walk_dir(rule_dir):
     for f in os.listdir(rule_dir):
         path = os.path.join(rule_dir, f)
         if os.path.isfile(path) and f.endswith(".yml"):
-            return path
+            yield path
         elif os.path.isdir(path):
             walk_dir(path)
 
 
 # Helper method to load configs in a dir
 def load_rules(rule_dir):
-    rule_files = [walk_dir(rule_dir)]
+    rule_files = walk_dir(rule_dir)
     rules = {}
     for rf in rule_files:
         try:
