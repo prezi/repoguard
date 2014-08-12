@@ -1,6 +1,7 @@
 # Repoguard
 
-Repoguard is a simple tool to check and alert on interesting changes in a git repository.
+We created repoguard to help us (the security team at Prezi) to detect changes which might lead to security issues in the high amount of commits and repositories we have.
+Repoguard is a simple generic tool to check and alert on any change in git repositories which might be interesting for you.
 It can track all the repositories in a Github organization and send email (or store the result in Elasticsearch)
 if it founds a dangerous or interesting line. It uses an easily extendable ruleset (regular expressions) with
 existing rules for languages like Python, Java, Javascript, C(++), Chef or Scala.
@@ -9,7 +10,7 @@ We encourage everyone to add new rules or improve the existing ones! :)
 
 ## Repominer
 
-Repominer is the little brother of Repoguard. It can be used to check a local directory for dangerous lines.
+Repominer is the little brother of Repoguard. It can be used to check a local directory for dangerous lines. We believe it could be useful for security code reviews, where you don't have to care about previous commits, but just the current state.
 It uses the same ruleset and configuration.
 
 ## Installation
@@ -24,6 +25,28 @@ $ python repoguard.py --config <file> --working-dir '../repos' --since '2014-08-
 ```
 
 And setup a cron job which calls this script periodically.
+
+## Usage
+
+Syncing with Github API, pulling changes and alerting in mail:
+```
+python repoguard.py --refresh --notify --rule-dir ../prezi_rules --working-dir ../repos/
+```
+
+Pulling new changes, checking for alerts and notifying in mail + send results to ElasticSearch:
+```
+python repoguard.py --notify --store elasticsearch.host:9200 --rule-dir ../prezi_rules --working-dir ../repos/
+```
+
+Don't pull new changes, check for alerts since given time:
+```
+python repoguard.py --nopull --since "2014-08-12 03:00" --rule-dir ../prezi_rules --working-dir ../repos/
+```
+
+Pull new changes and check commits which were already checked:
+```
+python repoguard.py --ignorestatus --rule-dir ../prezi_rules --working-dir ../repos/
+```
 
 ## The configuration file
 
