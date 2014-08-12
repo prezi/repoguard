@@ -4,18 +4,24 @@ import os.path
 import re
 import sys
 
-from core.codechecker import CodeCheckerFactory
+from core.codechecker import CodeCheckerFactory, Alert
 from core.evaluators import LineEvalFactory
 from core.ruleparser import load_rules, build_resolved_ruleset
 
 
+def check_alerts_in_file(code_checker, file, filename):
+    content = file.readlines()
+    result = code_checker.check(content, filename)
+    actual_alerts = [Alert(rule, filename, '', '', line) for rule, line in result]
+    return actual_alerts
+
 parser = argparse.ArgumentParser(description='Check a sourcecode repo')
-parser.add_argument('--rules', '-r', default="etc/", help='Directory of rules')
+parser.add_argument('--rule-dir', default="rules/", help='Directory of rules')
 parser.add_argument('--alerts', '-a', default=False, help='Limit running only the given alert checks (comma separated list)')
 parser.add_argument('files', metavar='file', nargs='*', default=None, help='Files to check')
 args = parser.parse_args()
 
-bare_rules = load_rules(args.rules)
+bare_rules = load_rules(args.rule_dir)
 resolved_rules = build_resolved_ruleset(bare_rules)
 
 # filter for items in --alerts parameter
@@ -24,7 +30,11 @@ applied_alerts = {aid: adata for aid, adata in resolved_rules.iteritems()
                   if not enabled_alerts or any(aid.startswith(ea) for ea in enabled_alerts)}
 
 if not applied_alerts:
-    print "No matching alers"
+    print "No matching alerts"
+    sys.exit()
+if not args.files:
+    print "No files given."
+    parser.print_help()
     sys.exit()
 
 code_checker = CodeCheckerFactory(applied_alerts).create(LineEvalFactory.MODE_SINGLE)
@@ -44,13 +54,13 @@ for path in args.files:
                             continue
                         else:
                             f.seek(0)
-                        content = f.readlines()
-                        actual_alert = [(fpath, alert, line) for alert, line in code_checker.check(content, fname)]
-                        alerts.extend(actual_alert)
+                        alerts.extend(check_alerts_in_file(code_checker, f, fname))
     else:
         with open(path) as f:
-            content = f.readlines()
-            actual_alert = [(path, alert, line) for alert, line in code_checker.check(content, path)]
-            alerts.extend(actual_alert)
-    for fname, alert, line in alerts:
-        print "%s\n%s\n%s\n\n" % (fname, alert, line.strip())
+            alerts.extend(check_alerts_in_file(code_checker, f, path))
+
+    for alert in alerts:
+        print 'file:\t%s\nrule:\t%s\nline:\t%s\ndescr:\t%s\n' % (
+            alert.filename, alert.rule.name,
+            alert.line[0:200].strip().replace("\t", " ").decode('utf-8', 'replace'), alert.rule.description,
+        )
