@@ -1,7 +1,9 @@
 # Repoguard
 
-We created repoguard to help us (the security team at Prezi) to detect changes which might lead to security issues in the high amount of commits and repositories we have.
 Repoguard is a simple generic tool to check and alert on any change in git repositories which might be interesting for you.
+
+We created repoguard to help us (the security team at Prezi) to detect changes which might lead to security issues in the high amount of commits and repositories we have.
+
 It can track all the repositories in a Github organization and send email (or store the result in Elasticsearch)
 if it founds a dangerous or interesting line. It uses an easily extendable ruleset (regular expressions) with
 existing rules for languages like Python, Java, Javascript, C(++), Chef or Scala.
