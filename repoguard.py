@@ -18,7 +18,7 @@ from email.mime.text import MIMEText
 from core.git_repo_updater import GitRepoUpdater
 from core.codechecker import CodeCheckerFactory, Alert
 from core.ruleparser import build_resolved_ruleset, load_rules
-from core.notifier import EmailNotifier
+from core.notifier import EmailNotifier, EmailNotifierException
 from core.repository_handler import RepositoryHandler
 
 
@@ -87,7 +87,12 @@ class RepoGuard:
                 self.default_notification_to_address = self.config['default_notification_to_address']
                 self.subscribers = self.config['subscribers']
                 self.org_name = self.config['github']['organization_name']
-                self.smtp_conn_string = self.config['smtp_connection_string']
+                self.smtp_host = self.config['smtp']['host']
+                self.smtp_port = self.config['smtp']['port']
+                self.smtp_conn_string = self.smtp_host + ":" + str(self.smtp_port)
+                self.smtp_username = self.config['smtp']['username']
+                self.smtp_password = self.config['smtp']['password']
+                self.use_tls = self.config['smtp']['use_tls']
                 self.detect_rename = self.config['git']['detect_rename']
         except KeyError as e:
             print('%s not found in config file' % e)
@@ -232,8 +237,13 @@ class RepoGuard:
         from_addr = self.default_notification_src_address
         self.logger.debug('Notifiying them: %s', repr(alert_per_notify_person))
         for to_addr, text in alert_per_notify_person.iteritems():
-            email_notification = EmailNotifier.create_notification(from_addr, to_addr, text, self.smtp_conn_string)
-            email_notification.send_if_fine()
+            email_notification = EmailNotifier.create_notification(from_addr, to_addr, text, self.smtp_conn_string,
+                                                                   self.smtp_username,
+                                                                   self.smtp_password, self.use_tls)
+            try:
+                email_notification.send_if_fine()
+            except EmailNotifierException, e:
+                self.logger.exception("Error while sending email: " + str(e))
 
     def find_subscribed_users(self, alert):
         import fnmatch
