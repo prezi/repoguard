@@ -24,6 +24,11 @@ smtp:
     password: ""
     use_tls: false
 
+# debug mode
+debug: false
+
+# send email notifications on errors?
+notifications: false
 # defines where to send the alerts
 # '*' and '?' are wildcards
 subscribers:
