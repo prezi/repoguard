@@ -16,8 +16,13 @@ default_notification_src_address: ""
 # emails will be sent to this address by default
 default_notification_to_address: ""
 
-# SMTP connection string
-smtp_connection_string: "localhost"
+# SMTP defaults
+smtp:
+    host: "localhost"
+    port: 25
+    username: null
+    password: null
+    use_tls: false
 
 # defines where to send the alerts
 # '*' and '?' are wildcards
