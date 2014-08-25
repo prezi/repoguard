@@ -52,7 +52,7 @@ class EmailNotifier:
             smtp = smtplib.SMTP(self.connection_string)
             if self.use_tls:
                 smtp.starttls()
-            if self.username and self.password:
+            if self.username is not None and self.password is not None:
                 smtp.login(self.username, self.password)
             # this needs a separate try/catch because in other cases, the connection is automatically
             # closed (and attempts to close it throws a SMTPServerDisconnected exception, but in this case,

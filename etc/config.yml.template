@@ -20,8 +20,8 @@ default_notification_to_address: ""
 smtp:
     host: "localhost"
     port: 25
-    username: ""
-    password: ""
+    username: null
+    password: null
     use_tls: false
 
 # defines where to send the alerts
