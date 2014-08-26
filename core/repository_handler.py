@@ -4,6 +4,13 @@ import logging
 import subprocess
 
 
+class RepositoryException(Exception):
+    def __init__(self, error):
+        self.error = error
+
+    def __str__(self):
+        return repr(self.error)
+
 class Repository():
     def __init__(self, repo_id, repo_data_json, working_directory):
         self._status_json_attributes = ("name", "last_checked_commit_hashes")
@@ -18,31 +25,32 @@ class Repository():
         self.not_checked_commit_hashes = []
         self.logger = logging.getLogger()
 
-    def addStatusInfoFromJson(self, repo_status_info_json):
+    def add_status_info_from_json(self, repo_status_info_json):
         self.last_checked_commit_hashes = repo_status_info_json["last_checked_commit_hashes"]
 
-    def addCommitHashToChecked(self, rev_hash):
-        if rev_hash not in self.getLastCheckedCommitHashes():
+    def add_commit_hash_to_checked(self, rev_hash):
+        if rev_hash not in self.get_last_checked_commit_hashes():
             self.last_checked_commit_hashes.append(rev_hash)
 
-    def getLastCommitHashes(self):
+    def get_last_commit_hashes(self):
         try:
-            return self.callCommand("git rev-list --remotes --max-count=100", raise_exception=True).split('\n')[:-1]
-        except:
+            return self.call_command("git rev-list --remotes --max-count=100", raise_exception=True).split('\n')[:-1]
+        except RepositoryException:
             return []
 
-    def detectNewCommitHashes(self):
-        for commit_sha in self.getLastCommitHashes():
-            if commit_sha not in self.getLastCheckedCommitHashes() and commit_sha not in self.getNotCheckedCommitHashes():
+    def detect_new_commit_hashes(self):
+        for commit_sha in self.get_last_commit_hashes():
+            if commit_sha not in self.get_last_checked_commit_hashes() \
+                    and commit_sha not in self.get_not_checked_commit_hashes():
                 self.not_checked_commit_hashes.append(commit_sha)
 
-    def getLastCheckedCommitHashes(self):
+    def get_last_checked_commit_hashes(self):
         return self.last_checked_commit_hashes
 
-    def getNotCheckedCommitHashes(self):
+    def get_not_checked_commit_hashes(self):
         return self.not_checked_commit_hashes
 
-    def gitRevListSinceDate(self, since):
+    def get_rev_list_since_date(self, since):
         cmd = "git", "rev-list", "--remotes", "--since=\"%s\"" % since, "HEAD"
         try:
             cmd_output = subprocess.check_output(cmd, cwd=self.full_dir_path).split("\n")[:-1]
@@ -52,14 +60,14 @@ class Repository():
             cmd_output = []
         return cmd_output
 
-    def gitResetToOldestHash(self):
+    def git_reset_to_oldest_hash(self):
         if self.last_checked_commit_hashes:
-            self.callCommand("git reset --hard %s" % self.last_checked_commit_hashes[0])
+            self.call_command("git reset --hard %s" % self.last_checked_commit_hashes[0])
 
-    def gitClone(self):
-        self.callCommand("git clone %s %s" % (self.ssh_url, self.dir_name), cwd=self.working_directory)
+    def git_clone(self):
+        self.call_command("git clone %s %s" % (self.ssh_url, self.dir_name), cwd=self.working_directory)
 
-    def callCommand(self, cmd, cwd=None, raise_exception=False):
+    def call_command(self, cmd, cwd=None, raise_exception=False):
         cmd_output = None
         cwd = self.full_dir_path if not cwd else cwd
         self.logger.debug("calling %s (cwd: %s)" % (cmd, cwd))
@@ -69,7 +77,7 @@ class Repository():
             error_msg = "Error when calling %s (cwd: %s): %s" % (cmd, cwd, e)
             self.logger.error(error_msg)
             if raise_exception:
-                raise Exception(error_msg)
+                raise RepositoryException(error_msg)
         return cmd_output
 
     def __getstate__(self):
@@ -87,27 +95,27 @@ class RepositoryHandler():
         self.repo_list_file = working_directory + 'repo_list.json'
         self.repo_status_file = working_directory + 'repo_status.json'
         self.repo_list = {}
-        self.createRepoListAndStatusFromFiles()
+        self.create_repo_list_and_status_from_files()
         self.logger.debug("repository handler started")
 
-    def createRepoListAndStatusFromFiles(self):
-        repo_list = self.loadRepoListFromFile()
+    def create_repo_list_and_status_from_files(self):
+        repo_list = self.load_repo_list_from_file()
         for repo_id, repo_data in repo_list.iteritems():
             self.repo_list[repo_id] = Repository(repo_id, repo_data, self.working_directory)
 
-    def loadStatusInfoFromFile(self):
-        repo_status_info = self.loadRepoStatusFromFile()
+    def load_status_info_from_file(self):
+        repo_status_info = self.load_repo_status_from_file()
         for repo_id, repo_data in self.repo_list.iteritems():
             if repo_status_info and repo_id in repo_status_info:
-                self.getRepoById(repo_id).addStatusInfoFromJson(repo_status_info[repo_id])
+                self.get_repo_by_id(repo_id).add_status_info_from_json(repo_status_info[repo_id])
 
-    def getRepoList(self):
+    def get_repo_list(self):
         return (v for k, v in self.repo_list.iteritems())
 
-    def getRepoById(self, repo_id):
+    def get_repo_by_id(self, repo_id):
         return self.repo_list[repo_id]
 
-    def loadRepoStatusFromFile(self):
+    def load_repo_status_from_file(self):
         try:
             with open(self.repo_status_file) as repo_status:
                 return json.load(repo_status)
@@ -115,7 +123,7 @@ class RepositoryHandler():
             self.logger.info("repo status file %s doesn't exist" % self.repo_status_file)
             return {}
 
-    def loadRepoListFromFile(self):
+    def load_repo_list_from_file(self):
         try:
             with open(self.repo_list_file) as repo_list:
                 return json.load(repo_list)
@@ -123,6 +131,6 @@ class RepositoryHandler():
             self.logger.critical("repo list file %s doesn't exist" % self.repo_list_file)
             return {}
 
-    def saveRepoStatusToFile(self):
+    def save_repo_status_to_file(self):
         with open(self.repo_status_file, 'w') as repo_status:
             repo_status.write(jsonpickle.encode(self.repo_list, unpicklable=False))

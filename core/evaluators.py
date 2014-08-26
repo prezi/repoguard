@@ -1,6 +1,14 @@
 import re
 
 
+class EvaluatorException(Exception):
+    def __init__(self, error):
+        self.error = error
+
+    def __str__(self):
+        return repr(self.error)
+
+
 class InScriptEvalFactory:
     def __init__(self):
         self.evaluator = self.InScriptEvaluator()
@@ -111,7 +119,7 @@ class FileEvalFactory:
                 elif "except" in rule:
                     self.negative_patterns.append(re.compile(rule["except"], flags=re.IGNORECASE))
                 else:
-                    raise Exception("Unknown key in %s" % str(rule))
+                    raise EvaluatorException("Unknown key in %s" % str(rule))
 
         def matches(self, line_context, line):
             if line is not None:
@@ -123,6 +131,7 @@ class FileEvalFactory:
 
             filename = line_context["filename"]
 
-            pos = not self.positive_patterns or reduce(lambda ctx, p: ctx or p.match(filename), self.positive_patterns, False)
+            pos = not self.positive_patterns or reduce(lambda ctx, p: ctx or p.match(filename),
+                                                       self.positive_patterns, False)
             neg = reduce(lambda ctx, p: ctx and not p.match(filename), self.negative_patterns, True)
             return pos and neg

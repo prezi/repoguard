@@ -3,6 +3,12 @@ import sys
 import yaml
 import os
 
+class RuleLoaderException(Exception):
+    def __init__(self, error):
+        self.error = error
+
+    def __str__(self):
+        return repr(self.error)
 
 class RuleLoader:
     file_name = None
@@ -18,11 +24,12 @@ class RuleLoader:
             content = f.read()
             return {self._get_key(c): self._load_yaml(c) for c in content.split('---') if len(c) > 0}
 
-    def _load_yaml(self, text):
+    @staticmethod
+    def _load_yaml(text):
         try:
             return yaml.load(text)
-        except Exception:
-            raise Exception("Error loading yaml:\n" + text)
+        except yaml.YAMLError, exc:
+            raise RuleLoaderException("Error loading yaml:\n" + text)
 
     def _find_default_namespace(self):
         dpos = self.file_name.rfind("/")
@@ -54,8 +61,10 @@ def load_rules(rule_dir):
             if filename.endswith(".yml"):
                 try:
                     rules.update(RuleLoader(os.path.join(dirpath, filename)).load())
+                # TODO (KR): Figure out what gets thrown here, and handle more specifically.
                 except Exception as e:
-                    raise Exception("Error parsing file %s: %s" % (filename, e.message)), None, sys.exc_info()[2]
+                    raise RuleLoaderException("Error parsing file %s: %s" % (filename, e.message)), \
+                        None, sys.exc_info()[2]
     return rules
 
 
@@ -75,11 +84,11 @@ def resolve_rule(rule_name, ruleset, in_progress=()):
     if rule_name not in ruleset:
         abstract_name = "%s::~%s" % (namespace, localname)
         if abstract_name not in ruleset:
-            raise Exception("Unknown rule: %s, ruleset: %s" % (rule_name, ruleset))
+            raise RuleLoaderException("Unknown rule: %s, ruleset: %s" % (rule_name, ruleset))
         else:
             rule_name = abstract_name
     if rule_name in in_progress:
-        raise Exception("Circular depencencies found: %s -> %s" % (" -> ".join(in_progress), rule_name))
+        raise RuleLoaderException("Circular depencencies found: %s -> %s" % (" -> ".join(in_progress), rule_name))
     rule_specs = ruleset[rule_name]
     if "extends" in rule_specs:
         base_rule_names = [b.strip() for b in rule_specs["extends"].split(",")]

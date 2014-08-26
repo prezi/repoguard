@@ -21,4 +21,5 @@ class EmailNotifierTestCase(unittest.TestCase):
         self.notifier.create_mime_message("modified message text")
         self.assertEqual(
             self.notifier.mime_message.get_payload()[0].as_string(),
-            'Content-Type: text/plain; charset="us-ascii"\nMIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\n\nmessage text')
+            'Content-Type: text/plain; charset="us-ascii"\nMIME-Version: 1.0\nContent-Transfer-Encoding: 7bit'
+            '\n\nmessage text')

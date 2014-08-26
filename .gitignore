@@ -4,5 +4,5 @@
 *.pid
 virtualenv
 repos
-repoguard/etc/config.yml
+*config.yml
 .idea

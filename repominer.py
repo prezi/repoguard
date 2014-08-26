@@ -17,7 +17,8 @@ def check_alerts_in_file(code_checker, file, filename):
 
 parser = argparse.ArgumentParser(description='Check a sourcecode repo')
 parser.add_argument('--rule-dir', default="rules/", help='Directory of rules')
-parser.add_argument('--alerts', '-a', default=False, help='Limit running only the given alert checks (comma separated list)')
+parser.add_argument('--alerts', '-a', default=False,
+                    help='Limit running only the given alert checks (comma separated list)')
 parser.add_argument('files', metavar='file', nargs='*', default=None, help='Files to check')
 args = parser.parse_args()
 
