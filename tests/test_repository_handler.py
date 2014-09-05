@@ -1,7 +1,7 @@
 import unittest
 from mock import patch
 
-from core.repository_handler import Repository, RepositoryHandler
+from core.repository_handler import Repository, RepositoryHandler, RepositoryException
 
 
 class RepositoryTestCase(unittest.TestCase):
@@ -23,8 +23,9 @@ class RepositoryTestCase(unittest.TestCase):
         self.repo.add_commit_hash_to_checked("zzzzzzz")
         self.assertEquals(len(self.repo.last_checked_commit_hashes), 2)
 
-    @patch('core.repository_handler.Repository.call_command', side_effect=Exception())
+    @patch('core.repository_handler.Repository.call_command', side_effect=RepositoryException())
     def test_get_last_commit_hashes(self, *mocks):
+        print self.repo.get_last_commit_hashes()
         self.assertEquals(self.repo.get_last_commit_hashes(), [])
         self.assertTrue(mocks[0].called)
 
@@ -44,7 +45,7 @@ class RepositoryHandlerTestCase(unittest.TestCase):
 
     @patch('core.repository_handler.RepositoryHandler.load_repo_list_from_file',
            return_value={"11111": {"ssh_url": "git@github.com:prezi/repo1.git", "name":
-               "test_repo", "language": "Python"}})
+                                   "test_repo", "language": "Python"}})
     @patch('core.repository_handler.RepositoryHandler.load_repo_status_from_file',
            return_value={"11111": {"last_checked_hashes": ["aaaa"], "name": "test_repo"}})
     @patch('core.repository_handler.Repository')

@@ -5,11 +5,8 @@ import subprocess
 
 
 class RepositoryException(Exception):
-    def __init__(self, error):
-        self.error = error
+    pass
 
-    def __str__(self):
-        return repr(self.error)
 
 class Repository():
     def __init__(self, repo_id, repo_data_json, working_directory):

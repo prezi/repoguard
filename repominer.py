@@ -1,7 +1,8 @@
+# !/usr/bin/env python
+# -*- coding: utf-8 -*-
 import argparse
 import os
 import os.path
-import re
 import sys
 
 from core.codechecker import CodeCheckerFactory, Alert
