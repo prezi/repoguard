@@ -68,7 +68,7 @@ class Repository():
         try:
             cmd_output = subprocess.check_output(cmd.split(), cwd=cwd)
             return cmd_output
-        except subprocess.CalledProcessError:
+        except:
             self.logger.exception("Error when calling %s (cwd: %s)" % (cmd, cwd))
         return None
 
