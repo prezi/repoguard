@@ -84,7 +84,7 @@ class RepoGuard:
         try:
             with open(path) as f:
                 config = yaml.load(f.read())
-                self.set_skip_repo_list(config['skip_repo_list'])
+                self.skip_repo_list = config['skip_repo_list']
                 self.default_notification_src_address = config['default_notification_src_address']
                 self.default_notification_to_address = config['default_notification_to_address']
                 self.subscribers = config['subscribers']
@@ -111,24 +111,12 @@ class RepoGuard:
             self.logger.exception("IO Error loading configuration file:" + e.strerror)
             sys.exit()
 
-    def get_config_option_value(self, option_name):
-        return self.CONFIG[option_name.upper()]
-
-    def set_config_option_value(self, option_name, value):
-        self.CONFIG[option_name.upper()] = value
-
-    def set_skip_repo_list(self, value):
-        self.set_config_option_value('SKIP_REPO_LIST', value)
-
-    def reset_repo_limits(self):
-        self.set_skip_repo_list([])
-
     def should_skip_by_name(self, repo_name):
         if self.args.limit:
             if repo_name not in self.args.limit:
                 return True
 
-        return repo_name in self.get_config_option_value('SKIP_REPO_LIST')
+        return repo_name in self.skip_repo_list
 
     def set_up_repository_handler(self):
         self.repository_handler = RepositoryHandler(self.WORKING_DIR)
@@ -344,11 +332,11 @@ class RepoGuard:
                 self.logger.error('Lock there but script not running, removing lock entering aborted state...')
                 if self.notifications:
                     email_notification = EmailNotifier(
-                         self.get_config_option_value("default_notification_src_address"),
-                         self.get_config_option_value("default_notification_to_address"),
-                         "[repoguard] invalid lock, entering aborted state",
-                         "Found lock with PID %s, but process not found... "
-                         "entering aborted state (someone should check the logs and restart manually!)")
+                        self.default_notification_src_address,
+                        self.default_notification_to_address,
+                        "[repoguard] invalid lock, entering aborted state",
+                        "Found lock with PID %s, but process not found... "
+                        "entering aborted state (someone should check the logs and restart manually!)")
 
                     email_notification.send_if_fine()
 

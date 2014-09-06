@@ -12,7 +12,7 @@ class GithubConnectionTestCase(BaseTestCase):
 
         repo_list_file = self.test_data_folder + 'test_repo_list.json'
         self.git_repo_updater_obj = GitRepoUpdater('some_org', 'foobar_token', repo_list_file, self.mock_logger)
-        self.rg.reset_repo_limits()
+        self.rg.skip_repo_list = []
 
     @httprettified
     def test_fetch_repo_list_wrong_response_status(self):

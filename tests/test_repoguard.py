@@ -14,14 +14,14 @@ class RepoguardTestCase(BaseTestCase):
         self.assertFalse(self.rg.should_skip_by_name('bob'))
         self.assertTrue(self.rg.should_skip_by_name('whatever_else'))
 
-    @patch('repoguard.RepoGuard.get_config_option_value', return_value=['alice', 'bob'])
     def test_should_skip_by_name_with_config_option(self, *mocks):
+        self.rg.skip_repo_list = ['alice', 'bob']
         self.assertTrue(self.rg.should_skip_by_name('alice'))
         self.assertTrue(self.rg.should_skip_by_name('bob'))
         self.assertFalse(self.rg.should_skip_by_name('whatever_else'))
 
-    @patch('repoguard.RepoGuard.get_config_option_value', return_value=['alice', 'bob'])
     def test_should_skip_by_name_bot_arg_and_config(self, *mocks):
+        self.rg.skip_repo_list = ['alice', 'bob']
         self.rg.args.limit = ['alice', 'joe']
         self.assertTrue(self.rg.should_skip_by_name('alice'))
         self.assertTrue(self.rg.should_skip_by_name('bob'))
