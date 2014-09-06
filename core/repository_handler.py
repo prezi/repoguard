@@ -30,10 +30,8 @@ class Repository():
             self.last_checked_commit_hashes.append(rev_hash)
 
     def get_last_commit_hashes(self):
-        try:
-            return self.call_command("git rev-list --remotes --max-count=100", raise_exception=True).split('\n')[:-1]
-        except RepositoryException:
-            return []
+        result = self.call_command("git rev-list --remotes --max-count=100")
+        return result.split('\n')[:-1] if result is not None else []
 
     def detect_new_commit_hashes(self):
         for commit_sha in self.get_last_commit_hashes():
@@ -64,18 +62,15 @@ class Repository():
     def git_clone(self):
         self.call_command("git clone %s %s" % (self.ssh_url, self.dir_name), cwd=self.working_directory)
 
-    def call_command(self, cmd, cwd=None, raise_exception=False):
-        cmd_output = None
+    def call_command(self, cmd, cwd=None):
         cwd = self.full_dir_path if not cwd else cwd
         self.logger.debug("calling %s (cwd: %s)" % (cmd, cwd))
         try:
             cmd_output = subprocess.check_output(cmd.split(), cwd=cwd)
-        except subprocess.CalledProcessError, e:
-            error_msg = "Error when calling %s (cwd: %s): %s" % (cmd, cwd, e)
-            self.logger.error(error_msg)
-            if raise_exception:
-                raise RepositoryException(error_msg)
-        return cmd_output
+            return cmd_output
+        except subprocess.CalledProcessError:
+            self.logger.exception("Error when calling %s (cwd: %s)" % (cmd, cwd))
+        return None
 
     def __getstate__(self):
         state = self.__dict__.copy()

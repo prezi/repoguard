@@ -139,10 +139,7 @@ class RepoGuard:
 
             if repo.dir_name in existing_repo_dirs:
                 repo.git_reset_to_oldest_hash()
-                try:
-                    repo.call_command("git pull", raise_exception=True)
-                except RepositoryException:
-                    pass
+                repo.call_command("git pull")
             else:
                 repo.git_clone()
                 repo.detect_new_commit_hashes()

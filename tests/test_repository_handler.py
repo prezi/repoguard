@@ -23,9 +23,8 @@ class RepositoryTestCase(unittest.TestCase):
         self.repo.add_commit_hash_to_checked("zzzzzzz")
         self.assertEquals(len(self.repo.last_checked_commit_hashes), 2)
 
-    @patch('core.repository_handler.Repository.call_command', side_effect=RepositoryException())
+    @patch('core.repository_handler.Repository.call_command', return_value=None)
     def test_get_last_commit_hashes(self, *mocks):
-        print self.repo.get_last_commit_hashes()
         self.assertEquals(self.repo.get_last_commit_hashes(), [])
         self.assertTrue(mocks[0].called)
 
