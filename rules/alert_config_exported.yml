@@ -16,12 +16,6 @@ diff: add
 line:
     - match: request.*\.get\(('next'|redirect_field).*
 
---- #!csrf_exempt
-extends: base
-diff: add
-line:
-    - match: csrf\_exempt.*
-
 --- #!sql_query_cursor_execute
 extends: base
 diff: add
@@ -64,15 +58,6 @@ extends: base
 diff: add
 line:
     - match: (HttpResponse|render\_to\_response|render)\s*\((simplejson|json)(?!.*application/json).*
-
---- #!secret_in_source
-extends: base
-diff: add
-line:
-    - match: (secret|password|S3Connection)+[\w_]*[\s]*=.*
-    - except: .+=.*(get_encrypted_data|export [\w_]\s*=\s*['"`]<%=.*(password|secret)|{{ S3_SECRET_KEY }}|prezi_app_secrets\['django_secret_key'\]|chef_secrets\['encrypted_data_bag_secret|StringOption\(\)|AWS_SECRET=<%=|aws_secret => aws_secret|<%=/s*@/w+/s*%>)
-file:
-    - except: .*(/scripts/build|/scripts/common|/scripts/release|/scripts/bootstrap)
 
 --- #!dangerous_redirect
 extends: base

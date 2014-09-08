@@ -1,0 +1,15 @@
+--- #!~base
+description: Cross-site request forgery vulns
+extends: whitelisted_files::whitelisted_files,comments::comments
+
+--- #!csrf_exempt
+extends: base
+diff: add
+line:
+    - match: csrf\_exempt.*
+
+--- #!csrf_remove
+extends: base
+diff: del
+line:
+    - match: csrf.*
