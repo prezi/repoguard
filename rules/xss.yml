@@ -6,7 +6,7 @@ extends: whitelisted_files::whitelisted_files,comments::comments
 extends: base
 diff: add
 line:
-    - match: "|\\s*safe"
+    - match: "\\|\\s*safe"
     - match: "{% autoescape off %}"
 
 --- #!django_inscripttags
