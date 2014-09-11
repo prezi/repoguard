@@ -53,12 +53,6 @@ line:
 file:
     - match: .*\.(erb|conf)
 
---- #!json_no_content_type
-extends: base
-diff: add
-line:
-    - match: (HttpResponse|render\_to\_response|render)\s*\((simplejson|json)(?!.*application/json).*
-
 --- #!dangerous_redirect
 extends: base
 diff: add

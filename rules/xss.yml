@@ -16,6 +16,12 @@ line:
     - match: "{{((?!urlencode).)+}}"
 inscripttag: true
 
+--- #!django_json_no_content_type
+extends: base
+diff: add
+line:
+    - match: '(HttpResponse|render\_to\_response|render)\s*\((simplejson|json)(?!.*application/json)'
+
 --- #!haskell
 description: "error messages and responses should be sanitized"
 extends: base
