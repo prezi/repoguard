@@ -53,10 +53,14 @@ class AlertSubscriptionTestCase(BaseTestCase):
     def test_send_alerts(self, *mocks):
         rule1 = Rule("xxe::test", Mock(), {'description': 'descr1'})
         rule2 = Rule("xxe::simple", Mock(), {'description': 'descr2'})
+        repo = Mock()
+        repo.name = "repo"
+        repo.private = True
+        repo.fork = False
         self.rg.check_results = [
-            Alert(rule1, "file", "repo", "1231commit", "line1"),
-            Alert(rule2, "file", "repo", "1231commit", "line1"),
-            Alert(rule1, "file", "repo", "1231commit", "line1")
+            Alert(rule1, "file", repo, "1231commit", "line1"),
+            Alert(rule2, "file", repo, "1231commit", "line1"),
+            Alert(rule1, "file", repo, "1231commit", "line1")
         ]
         mock_notification = Mock()
         mocks[0].return_value = mock_notification

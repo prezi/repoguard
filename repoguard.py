@@ -169,7 +169,7 @@ class RepoGuard:
             for alert in self.check_results:
                 try:
                     print '\t'.join([
-                        alert.rule.name, alert.repo, alert.commit, alert.filename, alert.rule.description,
+                        alert.rule.name, alert.repo.name, alert.commit, alert.filename, alert.rule.description,
                         alert.line[0:200].replace("\t", " ").decode('utf-8', 'replace')
                     ])
                 except UnicodeEncodeError:
@@ -187,7 +187,9 @@ class RepoGuard:
                     "filename": alert.filename,
                     "commit_id": alert.commit,
                     "matching_line": alert.line[0:200].replace("\t", " ").decode('utf-8', 'replace'),
-                    "repo_name": alert.repo,
+                    "repo_name": alert.repo.name,
+                    "repo_private": alert.repo.private,
+                    "repo_fork": alert.repo.fork,
                     "@timestamp": datetime.datetime.utcnow().isoformat(),
                     "type": "repoguard"
                 }
@@ -214,7 +216,6 @@ class RepoGuard:
             filename = alert.filename
             commit_id = alert.commit
             matching_line = alert.line[0:200].replace("\t", " ").decode('utf-8', 'replace')
-            repo_name = alert.repo
             description = alert.rule.description
 
             alert = (u"check_id: %s \n"
@@ -222,8 +223,12 @@ class RepoGuard:
                      "commit: https://github.com/%s/%s/commit/%s\n"
                      "matching line: %s\n"
                      "description: %s\n"
-                     "repo name: %s\n\n" % (check_id, filename, self.org_name, repo_name,
-                                            commit_id, matching_line, description, repo_name))
+                     "repo name: %s\n"
+                     "repo is private: %s\n"
+                     "repo is fork: %s\n"
+                     "\n" % (check_id, filename, self.org_name, alert.repo.name,
+                                            commit_id, matching_line, description, 
+                                            alert.repo.private, alert.repo.fork, alert.repo.name))
 
             notify_users = self.find_subscribed_users(check_id)
             self.logger.debug('notify_users %s' % repr(notify_users))
@@ -290,7 +295,7 @@ class RepoGuard:
                 diff = splitted[i * 2 + 1]
 
                 result = self.code_checker.check(diff.split('\n'), filename)
-                alerts = [Alert(rule, filename, repo.name, rev_hash, line) for rule, line in result]
+                alerts = [Alert(rule, filename, repo, rev_hash, line) for rule, line in result]
 
                 matches_in_rev.extend(alerts)
         except subprocess.CalledProcessError as e:
