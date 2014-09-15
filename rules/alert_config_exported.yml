@@ -281,12 +281,6 @@ line:
 file:
     - match: .*\.(hx|js)
 
---- #!new_token_related_method
-extends: base
-diff: add
-line:
-    - match: (def .*\_token|MacToken\.generate)\(.*
-
 --- #!scala_interesting_calls
 extends: base
 diff: add
