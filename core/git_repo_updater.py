@@ -9,7 +9,8 @@ import re
 class GitRepoUpdater:
     def __init__(self, org_name, github_token, repo_list_path, logger):
         self.REPO_LIST_PATH = repo_list_path
-        self.api_url = 'https://api.github.com/orgs/%s/repos?access_token=%s' % (org_name, github_token)
+        self.api_url = 'https://api.github.com/orgs/%s/repos' % (org_name)
+        self.request_headers = {'Authorization': 'token %s' % github_token}
         self.logger = logger
 
         self.actpage = 0
@@ -20,13 +21,13 @@ class GitRepoUpdater:
 
     def refresh_repo_list(self):
         while self.actpage <= self.lastpage and not self.stop:
-            self.fetch_repo_list("%s&page=%s" % (self.api_url, self.actpage))
+            self.fetch_repo_list("%s?page=%s" % (self.api_url, self.actpage))
             self.actpage += 1
 
     def fetch_repo_list(self, url):
         try:
             self.logger.debug('Fetching %s...' % url)
-            r = requests.get(url, verify=True)
+            r = requests.get(url, verify=True, headers=self.request_headers)
 
             if r.status_code == 200:
                 if 'X-RateLimit-Remaining' in r.headers:
@@ -35,7 +36,7 @@ class GitRepoUpdater:
                         self.stop = True
                         return
                 try:
-                    lasturl_re = re.compile('.*<([\w\:\/\.]+)\?access_token=[^&]+&page=([0-9]+)>; rel="last"')
+                    lasturl_re = re.compile('.*<([\w\:\/\.]+)\?page=([0-9]+)>; rel="last"')
                     lasturl = lasturl_re.match(r.headers['link']).groups()
                     self.lastpage = int(lasturl[1])
                     print "PAGE %s/%s" % (self.actpage, self.lastpage)

@@ -34,21 +34,21 @@ class GithubConnectionTestCase(BaseTestCase):
             HTTPretty.Response(
                 body=open(self.test_data_folder + 'test_response_01.json').read(),
                 status=200,
-                link='<https://api.github.com/organizations/1989101/repos?access_token=sdsadfdsadfadfadsfsdf&page=2>;'
+                link='<https://api.github.com/organizations/1989101/repos?page=2>;'
                      ' rel="next", '
-                     '<https://api.github.com/organizations/1989101/repos?access_token=sdsadfdsadfadfadsfsdf&page=3>; '
+                     '<https://api.github.com/organizations/1989101/repos?page=3>; '
                      'rel="last"'),
             HTTPretty.Response(
                 body=open(self.test_data_folder + 'test_response_02.json').read(),
                 status=200,
-                link='<https://api.github.com/organizations/1989101/reposaccess_token=sdsadfdsadfadfadsfsdf&page=3>; '
+                link='<https://api.github.com/organizations/1989101/repos?page=3>; '
                      'rel="next", '
-                     '<https://api.github.com/organizations/1989101/reposaccess_token=sdsadfdsadfadfadsfsdf&page=3>;'
+                     '<https://api.github.com/organizations/1989101/repos?page=3>;'
                      ' rel="last"'),
             HTTPretty.Response(
                 body=open(self.test_data_folder + 'test_response_03.json').read(),
                 status=200,
-                link='<https://api.github.com/organizations/1989101/repos?access_token=sdsadfdsadfadfadsfsdf&page=3>; '
+                link='<https://api.github.com/organizations/1989101/repos?page=3>; '
                      'rel="last"'),
         ]
         HTTPretty.register_uri(HTTPretty.GET, "https://api.github.com/orgs/some_org/repos", responses=responses)
