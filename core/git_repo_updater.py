@@ -11,6 +11,7 @@ class GitRepoUpdater:
         self.REPO_LIST_PATH = repo_list_path
         self.api_url = 'https://api.github.com/orgs/%s/repos' % (org_name)
         self.request_headers = {'Authorization': 'token %s' % github_token}
+        self.repo_attributes_to_store = ('name', 'ssh_url', 'language', 'private', 'fork')
         self.logger = logger
 
         self.actpage = 0
@@ -23,6 +24,17 @@ class GitRepoUpdater:
         while self.actpage <= self.lastpage and not self.stop:
             self.fetch_repo_list("%s?page=%s" % (self.api_url, self.actpage))
             self.actpage += 1
+
+    def get_repo_attributes_from_repo_json_obj(self, repo_json_obj):
+        repo_info_to_store = {}
+        for repo_attribute in self.repo_attributes_to_store:
+            repo_info_to_store[repo_attribute] = repo_json_obj[repo_attribute]
+        return repo_info_to_store
+
+    def store_repo_attributes_from_response_json(self, response_json):
+        for repo in response_json:
+            if repo["name"] not in self.repo_list_cache:
+                self.repo_list_cache[repo["id"]] = self.get_repo_attributes_from_repo_json_obj(repo)
 
     def fetch_repo_list(self, url):
         try:
@@ -44,11 +56,7 @@ class GitRepoUpdater:
                 except:
                     print "... finished (PAGE: %s)" % self.actpage
                     print "(rate limit: %s / %s)" % (r.headers['X-RateLimit-Remaining'], r.headers['X-RateLimit-Limit'])
-                repo_items = json.loads(r.text or r.content)
-                for r_item in repo_items:
-                    if r_item["name"] not in self.repo_list_cache:
-                        self.repo_list_cache[r_item["id"]] = {"name": r_item["name"],
-                                                             "ssh_url": r_item["ssh_url"], "language": r_item["language"]}
+                self.store_repo_attributes_from_response_json(json.loads(r.text or r.content))
             else:
                 self.logger.error('github.com returned non-200 status code: %s' % r.text)
                 self.stop = True
