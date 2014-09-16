@@ -228,7 +228,7 @@ class RepoGuard:
                      "repo is fork: %s\n"
                      "\n" % (check_id, filename, self.org_name, alert.repo.name,
                                             commit_id, matching_line, description, 
-                                            alert.repo.private, alert.repo.fork, alert.repo.name))
+                                            alert.repo.name, alert.repo.private, alert.repo.fork))
 
             notify_users = self.find_subscribed_users(check_id)
             self.logger.debug('notify_users %s' % repr(notify_users))
