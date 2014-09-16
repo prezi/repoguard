@@ -16,6 +16,8 @@ class Repository():
         self.working_directory = working_directory
         self.ssh_url = repo_data_json["ssh_url"]
         self.language = repo_data_json["language"]
+        self.fork = repo_data_json["fork"]
+        self.private = repo_data_json["private"]
         self.dir_name = '%s_%s' % (self.name, self.repo_id)
         self.full_dir_path = '%s%s' % (working_directory, self.dir_name)
         self.last_checked_commit_hashes = []

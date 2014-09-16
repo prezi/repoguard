@@ -6,7 +6,7 @@ from core.repository_handler import Repository, RepositoryHandler, RepositoryExc
 
 class RepositoryTestCase(unittest.TestCase):
     def setUp(self):
-        self.repo_data = {"ssh_url": "git@github.com:prezi/repo1.git", "name": "test_repo", "language": "Python"}
+        self.repo_data = {"ssh_url": "git@github.com:prezi/repo1.git", "name": "test_repo", "language": "Python", "private": True, "fork": False}
         self.repo = Repository("repo_id", self.repo_data, "working_directory")
 
     def test_add_status_info_from_json(self):
