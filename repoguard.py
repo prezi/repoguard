@@ -21,7 +21,7 @@ from copy import deepcopy
 
 
 class RepoGuard:
-    def __init__(self, instance_id):
+    def __init__(self, instance_id="main"):
         self.CONFIG = {}
         self.repo_list = {}
         self.repo_status = {}
@@ -120,6 +120,8 @@ class RepoGuard:
         if self.args.limit:
             if repo_name not in self.args.limit:
                 return True
+            else:
+                return False
         else:
             return repo_name in self.skip_repo_list
 
