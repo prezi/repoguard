@@ -21,7 +21,7 @@ from copy import deepcopy
 
 
 class RepoGuard:
-    def __init__(self, instance_id="main"):
+    def __init__(self, instance_id="root"):
         self.CONFIG = {}
         self.repo_list = {}
         self.repo_status = {}
@@ -104,7 +104,7 @@ class RepoGuard:
                 self.detect_rename = config['git']['detect_rename']
                 self.debug = config['debug']
                 self.notifications = config['notifications']
-                self.full_scan_triggering_rules = config.get('full_scan_triggering_rules', False)
+                self.full_scan_triggered_rules = config.get('full_scan_triggered_rules', False)
         except KeyError as e:
             print '%s not found in config file' % e
             sys.exit()
@@ -347,7 +347,7 @@ class RepoGuard:
         full_scan_repoguard.args.ignorestatus = True
         full_scan_repoguard.args.since = "1970-01-01"
         full_scan_repoguard.args.limit = [repo_name]
-        full_scan_repoguard.args.alerts = self.full_scan_triggering_rules
+        full_scan_repoguard.args.alerts = self.full_scan_triggered_rules
         full_scan_repoguard.es_type = "repoguard_fullscan"
         full_scan_repoguard.run()
 
@@ -364,7 +364,7 @@ class RepoGuard:
         if self.args.refresh or not self.repository_handler.get_repo_list():
             git_repo_updater_obj = GitRepoUpdater(self.org_name, self.github_token,
                                                   self.repository_handler.repo_list_file, self.logger)
-            if self.full_scan_triggering_rules:
+            if self.full_scan_triggered_rules:
                 for new_public_repo in git_repo_updater_obj.refresh_repos_and_detect_new_public_repos():
                     self.launch_full_repoguard_scan_on_repo(new_public_repo["name"])
             else:
@@ -391,4 +391,4 @@ class RepoGuard:
 
 
 if __name__ == '__main__':
-    RepoGuard("main").run()
+    RepoGuard("root").run()
