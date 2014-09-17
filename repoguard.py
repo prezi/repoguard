@@ -362,11 +362,13 @@ class RepoGuard:
             git_repo_updater_obj = GitRepoUpdater(self.org_name, self.github_token,
                                                   self.repository_handler.repo_list_file, self.logger)
             if self.full_scan_triggered_rules:
-                for new_public_repo in git_repo_updater_obj.refresh_repos_and_detect_new_public_repos():
+                new_public_repo_list = git_repo_updater_obj.refresh_repos_and_detect_new_public_repos()
+                git_repo_updater_obj.write_repo_list_to_file()
+                for new_public_repo in new_public_repo_list:
                     self.launch_full_repoguard_scan_on_repo(new_public_repo["name"])
             else:
                 git_repo_updater_obj.refresh_repo_list()
-            git_repo_updater_obj.write_repo_list_to_file()
+                git_repo_updater_obj.write_repo_list_to_file()
 
         if not self.args.nopull:
             self.update_local_repos()
