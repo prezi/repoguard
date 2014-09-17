@@ -12,21 +12,24 @@ import sys
 from elasticsearch import Elasticsearch, ElasticsearchException
 
 from core.git_repo_updater import GitRepoUpdater
+from core.lock_handler import LockHandler, LockHandlerException
 from core.codechecker import CodeCheckerFactory, Alert
 from core.ruleparser import build_resolved_ruleset, load_rules
 from core.notifier import EmailNotifier, EmailNotifierException
 from core.repository_handler import RepositoryHandler, RepositoryException
+from copy import deepcopy
 
 
 class RepoGuard:
-    def __init__(self):
+    def __init__(self, instance_id):
         self.CONFIG = {}
         self.repo_list = {}
         self.repo_status = {}
         self.repo_status_new = {}
         self.check_results = []
+        self.instance_id = instance_id
 
-        self.logger = logging.getLogger()
+        self.logger = logging.getLogger(instance_id)
         # create formatter and add it to the handlers
         formatter = logging.Formatter('%(asctime)s %(processName)-10s %(name)s %(levelname)-8s %(message)s')
         # create console handler with a higher log level
@@ -57,8 +60,9 @@ class RepoGuard:
         parser.add_argument('--silent', action="count", help='Supress log messages lower than warning')
         parser.add_argument('--store', '-S', default=False, help='ElasticSearch node (host:port)')
         parser.add_argument('--ignorestatus', action='store_true', default=False,
-                            help='If true repoguard will not skip commits which are were already '
+                            help='If true repoguard will not skip commits which were already '
                                  'checked based on the status file')
+        parser.add_argument('--overridelock', default=False, help='Ignores the lock file so multiple repoguard can run in parallel')
 
         self.args = parser.parse_args()
 
@@ -99,6 +103,7 @@ class RepoGuard:
                 self.detect_rename = config['git']['detect_rename']
                 self.debug = config['debug']
                 self.notifications = config['notifications']
+                self.full_scan_triggering_rules = config.get('full_scan_triggering_rules', False)
         except KeyError as e:
             print '%s not found in config file' % e
             sys.exit()
@@ -115,8 +120,8 @@ class RepoGuard:
         if self.args.limit:
             if repo_name not in self.args.limit:
                 return True
-
-        return repo_name in self.skip_repo_list
+        else:
+            return repo_name in self.skip_repo_list
 
     def set_up_repository_handler(self):
         self.repository_handler = RepositoryHandler(self.WORKING_DIR)
@@ -128,14 +133,15 @@ class RepoGuard:
 
         repo_list = list(self.repository_handler.get_repo_list())
         for idx, repo in enumerate(repo_list):
-            self.logger.debug('Pulling repo "%s/%s" (%d/%d) %2.2f%%' % (self.org_name, repo.name, idx, len(repo_list),
-                                                                        float(idx) * 100 / len(repo_list)))
-
             if self.should_skip_by_name(repo.name):
-                if self.debug:
-                    self.logger.debug('Got --limit param and repo (%s) is not among them, skipping git pull/clone.'
-                                      % repo.name)
+                #if self.debug:
+                #    self.logger.debug('Got --limit param and repo (%s) is not among them, skipping git pull/clone.'
+                #                      % repo.name)
                 continue
+
+            if self.debug:
+                self.logger.debug('Pulling repo "%s/%s" (%d/%d) %2.2f%%' % (self.org_name, repo.name, idx, len(repo_list),
+                                                                        float(idx) * 100 / len(repo_list)))
 
             if repo.dir_name in existing_repo_dirs:
                 repo.git_reset_to_oldest_hash()
@@ -149,16 +155,13 @@ class RepoGuard:
 
         repo_list = list(self.repository_handler.get_repo_list())
         for idx, repo in enumerate(repo_list):
-            self.logger.debug('Checking repo "%s/%s" (%d/%d) %2.2f%%' % (self.org_name, repo.name, idx, len(repo_list),
-                                                                         float(idx) * 100 / len(repo_list)))
             if self.should_skip_by_name(repo.name):
-                if self.debug:
-                    self.logger.debug('Skipping code check for %s' % repo.name)
-                continue
-            if self.args.limit and repo.name not in self.args.limit:
-                self.logger.debug('repo %s skipped because of --limit argument' % repo.name)
+                #if self.debug:
+                #    self.logger.debug('Skipping code check for %s' % repo.name)
                 continue
             if repo.dir_name in existing_repo_dirs:
+                self.logger.debug('Checking repo "%s/%s" (%d/%d) %2.2f%%' % (self.org_name, repo.name, idx, len(repo_list),
+                                                                         float(idx) * 100 / len(repo_list)))
                 self.check_results += self.check_by_repo(repo, detect_rename=detect_rename)
             else:
                 self.logger.debug('skip repo %s because directory doesnt exist' % repo.dir_name)
@@ -227,7 +230,7 @@ class RepoGuard:
                      "repo is private: %s\n"
                      "repo is fork: %s\n"
                      "\n" % (check_id, filename, self.org_name, alert.repo.name,
-                                            commit_id, matching_line, description, 
+                                            commit_id, matching_line, description,
                                             alert.repo.name, alert.repo.private, alert.repo.fork))
 
             notify_users = self.find_subscribed_users(check_id)
@@ -314,48 +317,22 @@ class RepoGuard:
         self.logger.debug('applied_alerts: %s' % repr(applied_alerts))
         self.code_checker = CodeCheckerFactory(applied_alerts).create()
 
-    def put_lock(self):
-        lockfile = open(self.APP_DIR + "repoguard.pid", "w")
-        lockfile.write(str(os.getpid()))
-        lockfile.close()
+    def set_up_lock_handler(self):
+        self.lock_handler = LockHandler(self.WORKING_DIR, self.logger, self.args.overridelock, self.debug)
 
-    def release_lock(self):
-        os.remove(self.APP_DIR + "repoguard.pid")
+    def try_to_lock(self):
+        try:
+            self.lock_handler.start()
+        except LockHandlerException as e:
+            if self.notifications:
+                email_notification = EmailNotifier(
+                    self.default_notification_src_address,
+                    self.default_notification_to_address,
+                    "[repoguard] invalid lock, entering aborted state",
+                    e.error)
 
-    def is_locked(self):
-        if os.path.isfile(self.APP_DIR + "repoguard.pid"):
-            lockfile = open(self.APP_DIR + "repoguard.pid", "r")
-            pid = lockfile.readline().strip()
-            lockfile.close()
-
-            if os.path.exists("/proc/%s" % pid):
-                return True
-            else:
-                self.logger.error('Lock there but script not running, removing lock entering aborted state...')
-                if self.notifications:
-                    email_notification = EmailNotifier(
-                        self.default_notification_src_address,
-                        self.default_notification_to_address,
-                        "[repoguard] invalid lock, entering aborted state",
-                        "Found lock with PID %s, but process not found... "
-                        "entering aborted state (someone should check the logs and restart manually!)")
-
-                    email_notification.send_if_fine()
-
-                self.release_lock()
-                self.set_aborted()
-                return False
-        else:
-            self.logger.debug("pid file not found, not locked...")
-            return False
-
-    def set_aborted(self):
-        aborted_state_file = open(self.WORKING_DIR + "aborted_state.lock", "w")
-        aborted_state_file.write('1')
-        aborted_state_file.close()
-
-    def is_aborted(self):
-        return os.path.isfile(self.WORKING_DIR + 'aborted_state.lock')
+                email_notification.send_if_fine()
+            sys.exit()
 
     def run(self):
         self.logger.info('* run started')
@@ -363,22 +340,32 @@ class RepoGuard:
         self.read_alert_config_from_file()
 
         # locking
-        if self.is_aborted() and self.debug:
-            self.logger.info('Aborted state, quiting!')
-            return
-
-        if self.is_locked():
-            self.logger.info('Locked, script running... waiting.')
-            return
-
-        self.put_lock()
+        self.set_up_lock_handler()
+        self.try_to_lock()
 
         self.set_up_repository_handler()
 
         if self.args.refresh or not self.repository_handler.get_repo_list():
             git_repo_updater_obj = GitRepoUpdater(self.org_name, self.github_token,
                                                   self.repository_handler.repo_list_file, self.logger)
-            git_repo_updater_obj.refresh_repo_list()
+            if self.full_scan_triggering_rules:
+                full_scan_alert_config = ",".join(self.full_scan_triggering_rules)
+                for new_public_repo in git_repo_updater_obj.refresh_repos_and_detect_new_public_repos():
+                    self.logger.debug("spawning a new repoguard for %s with alerts: %s" % (new_public_repo["name"], full_scan_alert_config))
+                    full_scan_repoguard = RepoGuard("full_scan_%s" % new_public_repo["name"])
+                    full_scan_repoguard.args = deepcopy(self.args)
+                    full_scan_repoguard.args.overridelock = True
+                    full_scan_repoguard.args.refresh = False
+                    full_scan_repoguard.args.nopull = False
+                    full_scan_repoguard.args.ignorestatus = True
+                    full_scan_repoguard.args.since = "1970-01-01"
+                    full_scan_repoguard.args.limit = [new_public_repo["name"]]
+                    full_scan_repoguard.args.alerts = self.full_scan_triggering_rules
+                    print "spawned args: " + repr(full_scan_repoguard.args)
+                    full_scan_repoguard.run()
+                    del full_scan_repoguard
+            else:
+                git_repo_updater_obj.refresh_repo_list()
             git_repo_updater_obj.write_repo_list_to_file()
 
         if not self.args.nopull:
@@ -394,9 +381,11 @@ class RepoGuard:
 
         if not self.args.since:
             self.repository_handler.save_repo_status_to_file()
-        self.release_lock()
+
+        self.lock_handler.release_lock()
+
         self.logger.info("* run finished")
 
 
 if __name__ == '__main__':
-    RepoGuard().run()
+    RepoGuard("main").run()

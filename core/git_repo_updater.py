@@ -33,8 +33,9 @@ class GitRepoUpdater:
 
     def store_repo_attributes_from_response_json(self, response_json):
         for repo in response_json:
-            if repo["name"] not in self.repo_list_cache:
-                self.repo_list_cache[repo["id"]] = self.get_repo_attributes_from_repo_json_obj(repo)
+            repo_id = str(repo["id"])
+            if repo_id not in self.repo_list_cache:
+                self.repo_list_cache[repo_id] = self.get_repo_attributes_from_repo_json_obj(repo)
 
     def fetch_repo_list(self, url):
         try:
@@ -64,6 +65,23 @@ class GitRepoUpdater:
             self.logger.exception('Exception during HTTP request.')
 
     def write_repo_list_to_file(self):
-        filename = self.REPO_LIST_PATH
-        with open(filename, 'w') as repo_file:
+        with open(self.REPO_LIST_PATH, 'w') as repo_file:
             json.dump(self.repo_list_cache, repo_file)
+
+    def read_repo_list_from_file(self):
+        with open(self.REPO_LIST_PATH, 'r') as repo_file:
+            return json.load(repo_file)
+
+    def refresh_repos_and_detect_new_public_repos(self):
+        new_public_repos = []
+        self.refresh_repo_list()
+        original_repo_status = self.read_repo_list_from_file()
+        for repo_id in self.repo_list_cache:
+            if self.repo_list_cache[repo_id]["private"] == False:
+                if repo_id not in original_repo_status:
+                    self.logger.debug("Totally new public repo %s" % self.repo_list_cache[repo_id]["name"])
+                    new_public_repos.append(self.repo_list_cache[repo_id])
+                elif original_repo_status[repo_id]["private"] == True:
+                    self.logger.debug("Previously private repo set to public %s" % self.repo_list_cache[repo_id]["name"])
+                    new_public_repos.append(self.repo_list_cache[repo_id])
+        return new_public_repos

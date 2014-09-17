@@ -34,3 +34,6 @@ notifications: false
 subscribers:
     "*": ["root@localhost"]
     "secrets::*": ["security@localhost"]
+
+# list of full scan triggering rules (or false if there are none)
+full_scan_triggering_rules: false
