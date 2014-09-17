@@ -28,6 +28,7 @@ class RepoGuard:
         self.repo_status_new = {}
         self.check_results = []
         self.instance_id = instance_id
+        self.es_type = "repoguard"
 
         self.logger = logging.getLogger(instance_id)
         # create formatter and add it to the handlers
@@ -196,7 +197,7 @@ class RepoGuard:
                     "repo_private": alert.repo.private,
                     "repo_fork": alert.repo.fork,
                     "@timestamp": datetime.datetime.utcnow().isoformat(),
-                    "type": "repoguard"
+                    "type": self.es_type
                 }
 
                 es.create(body=body, id=hashlib.sha1(str(body)).hexdigest(), index='repoguard', doc_type='repoguard')
@@ -336,12 +337,25 @@ class RepoGuard:
                 email_notification.send_if_fine()
             sys.exit()
 
+    def launch_full_repoguard_scan_on_repo(self, repo_name):
+        self.logger.debug("spawning a new repoguard for %s " % (repo_name))
+        full_scan_repoguard = RepoGuard("full_scan_%s" % repo_name)
+        full_scan_repoguard.args = deepcopy(self.args)
+        full_scan_repoguard.args.overridelock = True
+        full_scan_repoguard.args.refresh = False
+        full_scan_repoguard.args.nopull = False
+        full_scan_repoguard.args.ignorestatus = True
+        full_scan_repoguard.args.since = "1970-01-01"
+        full_scan_repoguard.args.limit = [repo_name]
+        full_scan_repoguard.args.alerts = self.full_scan_triggering_rules
+        full_scan_repoguard.es_type = "repoguard_fullscan"
+        full_scan_repoguard.run()
+
     def run(self):
         self.logger.info('* run started')
         self.read_config(self.CONFIG_PATH)
         self.read_alert_config_from_file()
 
-        # locking
         self.set_up_lock_handler()
         self.try_to_lock()
 
@@ -351,21 +365,8 @@ class RepoGuard:
             git_repo_updater_obj = GitRepoUpdater(self.org_name, self.github_token,
                                                   self.repository_handler.repo_list_file, self.logger)
             if self.full_scan_triggering_rules:
-                full_scan_alert_config = ",".join(self.full_scan_triggering_rules)
                 for new_public_repo in git_repo_updater_obj.refresh_repos_and_detect_new_public_repos():
-                    self.logger.debug("spawning a new repoguard for %s with alerts: %s" % (new_public_repo["name"], full_scan_alert_config))
-                    full_scan_repoguard = RepoGuard("full_scan_%s" % new_public_repo["name"])
-                    full_scan_repoguard.args = deepcopy(self.args)
-                    full_scan_repoguard.args.overridelock = True
-                    full_scan_repoguard.args.refresh = False
-                    full_scan_repoguard.args.nopull = False
-                    full_scan_repoguard.args.ignorestatus = True
-                    full_scan_repoguard.args.since = "1970-01-01"
-                    full_scan_repoguard.args.limit = [new_public_repo["name"]]
-                    full_scan_repoguard.args.alerts = self.full_scan_triggering_rules
-                    print "spawned args: " + repr(full_scan_repoguard.args)
-                    full_scan_repoguard.run()
-                    del full_scan_repoguard
+                    self.launch_full_repoguard_scan_on_repo(new_public_repo["name"])
             else:
                 git_repo_updater_obj.refresh_repo_list()
             git_repo_updater_obj.write_repo_list_to_file()

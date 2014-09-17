@@ -35,5 +35,5 @@ subscribers:
     "*": ["root@localhost"]
     "secrets::*": ["security@localhost"]
 
-# list of full scan triggering rules (or false if there are none)
-full_scan_triggering_rules: false
+# list of rules which should run on full scans triggered by repository becoming public (or false if there are none)
+full_scan_triggered_rules: false
