@@ -158,19 +158,17 @@ class RepoGuard:
 
         repo_list = list(self.repository_handler.get_repo_list())
         for idx, repo in enumerate(repo_list):
+            self.logger.debug('Checking repo "%s/%s" (%d/%d) %2.2f%%' % (self.org_name, repo.name, idx, len(repo_list),
+                                                                         float(idx) * 100 / len(repo_list)))
             if self.should_skip_by_name(repo.name):
-                #if self.debug:
-                #    self.logger.debug('Skipping code check for %s' % repo.name)
+                if self.debug:
+                    self.logger.debug('Skipping code check for %s' % repo.name)
                 continue
             if repo.dir_name in existing_repo_dirs:
-                self.logger.debug('Checking repo "%s/%s" (%d/%d) %2.2f%%' % (self.org_name, repo.name, idx, len(repo_list),
-                                                                         float(idx) * 100 / len(repo_list)))
                 self.check_results += self.check_by_repo(repo, detect_rename=detect_rename)
             else:
                 self.logger.debug('skip repo %s because directory doesnt exist' % repo.dir_name)
 
-        # print self.checkResults
-        # email notification is disabled, print to stdout
         if not self.args.notify:
             for alert in self.check_results:
                 try:
@@ -204,7 +202,6 @@ class RepoGuard:
             except ElasticsearchException:
                 self.logger.exception('Got exception during storing results to ES.')
 
-    # TODO: test
     def send_results(self):
         alert_per_notify_person = {}
         if not self.check_results:
