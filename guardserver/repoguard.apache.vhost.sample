@@ -1,0 +1,21 @@
+NameVirtualHost *:443
+
+<VirtualHost *:443>
+    ServerName repoguard.example.com
+    ServerAlias repoguard.example.com
+    SSLEngine On
+    SSLCertificateFile    /etc/ssl/certs/cert.pem
+    SSLCertificateKeyFile /etc/ssl/private/private.key
+    ErrorLog ${APACHE_LOG_DIR}/repoguard.error.log
+    WSGIDaemonProcess repoguard user=www-data group=www-data threads=100
+    WSGIScriptAlias / /path/to/repoguard/repoguard.wsgi
+    WSGIPassAuthorization On
+
+<Directory /path/to/repoguard/guardserver>
+    WSGIProcessGroup repoguard
+    WSGIApplicationGroup %{GLOBAL}
+    Order deny,allow
+    Allow from all
+
+</Directory>
+</VirtualHost>

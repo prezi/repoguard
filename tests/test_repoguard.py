@@ -54,9 +54,9 @@ class AlertSubscriptionTestCase(BaseTestCase):
         rule1 = Rule("xxe::test", Mock(), {'description': 'descr1'})
         rule2 = Rule("xxe::simple", Mock(), {'description': 'descr2'})
         self.rg.check_results = [
-            Alert(rule1, "file", "repo", "1231commit", "line1"),
-            Alert(rule2, "file", "repo", "1231commit", "line1"),
-            Alert(rule1, "file", "repo", "1231commit", "line1")
+            Alert(rule1, "file", "repo", "1231commit", "line1", "author1"),
+            Alert(rule2, "file", "repo", "1231commit", "line1", "author2"),
+            Alert(rule1, "file", "repo", "1231commit", "line1", "author1")
         ]
         mock_notification = Mock()
         mocks[0].return_value = mock_notification
