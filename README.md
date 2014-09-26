@@ -56,7 +56,7 @@ python repoguard.py --nopull --limit "foobaar,starfleet" --alerts "xss::*,xxe::*
 
 ```
 
-## The configuration file
+## The Repoguard configuration file
 
 Repoguard needs a Github API token (can be generated on Github's settings page) in order to be able to fetch
 the repositories of your organization. It has to be defined in the config file:
@@ -70,6 +70,58 @@ It is possible to send specific alerts to specific email addresses, therefore it
 custom rules which is only interesting for a subset of people (e.g. our data team has their own rules
 for detecting changes in the log format).
 
+## The RepoGuard UI
+
+RepoGuard ships with a UI and a backend API. The UI is written using Bootstrap 3 and jQuery, making
+XHR calls to an API backend that is written in Flask.
+
+The RepoGuard UI lives in the `guardserver` directory, and ships with a default configuration `default_config.py` 
+that needs to be renamed to `config.py` and modified. In order for the application to function effectively, 
+the following options needs to be set at a minimum:
+
+```AUTHENTICATION_REQUIRED  = False | True```
+
+The UI needs your Github API token as well, you can set it under:
+
+```
+GITHUB_TOKEN = ""
+ORG_NAME = ""
+```
+
+In order to use the RepoGuard UI, you need to run `repoguard` with the `--store` option, and store
+the results in ElasticSearch. The ElasticSearch configurations need to be set in your `config.py` file:
+
+```
+ELASTIC_HOST = "localhost"
+ELASTIC_PORT = "9200"
+INDEX = "repoguard"
+DOC_TYPE = "repoguard"
+```
+
+If `AUTHENTICATION_REQUIRED` is set to `True`, then the following configurations also need to be set:
+
+```
+LDAP_DN = "cn=%s,ou=people,dc=example,dc=com"
+LDAP_SERVER = ""
+LDAP_OU = ""
+```
+
+Currently, you can ignore the `LDAP_USERNAME` and `LDAP_PASSWORD` options.
+
+Before you start the server, you need to download the dependencies - this should be a one-time task. A bash script,
+`setup_ui_dependencies.sh` is provided to download the dependencies into the correct folders.
+
+You can run the RepoGuard server directly via Python - which can be slow over the network, especially for multiple users,
+or on Apache and similar web servers (recommended). A sample Apache configuration file (`repoguard.apache.vhost.sample`) 
+is included for your convenience. To run the server directly via Python, do the following:
+ 
+ ```
+ export PYTHONPATH=/path/to/repoguard
+ cd /path/to/repoguard/guardserver
+ python guardserver.py
+ ```
+ 
+ This will start the web server on `0.0.0.0:5000`.
 ## Creating rules
 
 We've shared most of our rules within the "rules" folder of this repository, but of course you can create your own ones as well (if you do so, we are happy to receive pull requests ;)). The rule files are pretty self explaining yaml files, however let's see an example and clarify what kind of things are possible.
@@ -171,6 +223,7 @@ on the same change twice.
 \- tests         (unit tests)
 \- repoguard.py  (repoguard executable)
 \- repominer.py  (repominer executable)
+\- guardserver   (the repoguard UI and backend API)
 ```
 
 ## How do we use it at Prezi?

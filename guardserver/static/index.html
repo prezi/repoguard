@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="css/bootstrap.min.css" rel="stylesheet" />
+    <link href="css/datepicker.css" rel="stylesheet" />
+    <link href="css/datepicker3.css" rel="stylesheet" />
+    <link href="css/repoguard.css" rel="stylesheet" />
+    <script src="js/prettify.js" type="application/javascript"></script>
+    <script src="js/jquery.min.js" type="application/javascript"></script>
+    <script src="js/bootstrap.min.js" type="application/javascript"></script>
+    <script src="js/typeahead.bundle.min.js" type="application/javascript"></script>
+    <script src="js/daterange.js" type="application/javascript"></script>
+    <script src="js/user.js" type="application/javascript"></script>
+    <script src="js/issues.js" type="application/javascript"></script>
+    <script src="js/filters.js" type="application/javascript"></script>
+    <script src="js/paginate.js" type="application/javascript"></script>
+    <script src="js/bootstrap-datepicker.js" type="application/javascript"></script>
+    <title>Repoguard Issues</title>
+</head>
+<body>
+<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">Repo<span class="nav-emphasis">Guard</span></a>
+        </div>
+        <div>
+        <ul class="nav navbar-nav">
+            <li class="active"><a href="javascript:void(0)" id="true-positive">Valid Issues</a></li>
+            <li><a href="javascript:void(0)" id="false-positive">False Positives</a></li>
+            <li><a href="#">Top Rule Hits</a></li>
+            <li><a href="#">Top Offenders</a></li>
+        </ul>
+        <p class="navbar-text navbar-right" id="current-user"></p>
+        </div>
+    </div>
+</nav>
+
+<!-- This could be replaced with handlebars/done in a better way -->
+<div class="container-fluid col-md-12 content">
+    <div class="row col-md-12">
+      <div class="col-md-4">
+        <div class="input-group input-group-sm" id="filter-dropdown-menu">
+          <div class="dropdown input-group-btn">
+            <button class="btn btn-default dropdown-toggle" type="button" id="filter-dropdown" data-toggle="dropdown">
+            Filter By
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu" aria-labelledby="filter-dropdown">
+              <li role="presentation"><a role="menuitem" tabindex="-1" href="javascript:void(0)" id="commit">Commit ID</a></li>
+              <li role="presentation"><a role="menuitem" tabindex="-1" href="javascript:void(0)" id="rule">Rule</a> </li>
+              <li role="presentation"><a role="menuitem" tabindex="-1" href="javascript:void(0)" id="reviewer">Reviewer</a></li>
+              <li role="presentation"><a role="menuitem" tabindex="-1" href="javascript:void(0)" id="repo">Repository</a></li>
+            </ul>
+          </div>
+          <input class="form-control typeahead" id="filter" />
+          <span class="input input-group-btn input-group-sm">
+              <button class="btn btn-danger btn-refresh" type="button" id="reset-filter">
+                   <span class="glyphicon glyphicon-remove-circle"></span>
+              </button>
+          </span>
+        </div>
+      </div>
+      <div class="col-md-4 col-md-offset-4">
+        <div class="input-daterange date row" data-provide="datepicker" id="date-picker">
+          <input id="from-date" class="col-md-3 col-md-offset-4 input-date-field" />
+          <span class="col-md-1">to</span>
+          <input id="to-date" class="col-md-3 input-date-field" />
+          <span class="input col-md-1">
+              <button class="btn btn-primary btn-refresh" type="button" id="refresh-issues">
+                <span class="glyphicon glyphicon-refresh"></span>
+              </button>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-12">
+        <table class="table table-hover table-striped table-responsive active">
+            <thead>
+            <tr>
+                <th style="width:8%">Repository</th>
+                <th style="width:20%">Matching Line</th>
+                <th style="width:20%">File Name</th>
+                <th style="width:12%">Commit Description</th>
+                <th style="width: 15%">Triggered By</th>
+                <th style="width:15%">Reviewed</th>
+            </tr>
+            </thead>
+            <tbody id="issue-body">
+
+            </tbody>
+        </table>
+        <ul class="pager">
+            <li class="previous" id="previous"><a href="javascript:void(0)">&larr; Newer</a></li>
+            <li class="next" id="next"><a href="javascript:void(0)">Older &rarr;</a></li>
+        </ul>
+    </div>
+</div>
+
+<div class="modal fade" id="code-holder" tabindex="-1" role="dialog" aria-hidden="true" aria-labelledby="code-label">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+                </button>
+                <h4 class="modal-title" id="code-label">Affected Code</h4>
+            </div>
+            <div class="modal-body">
+                <pre class="prettyprint" id="code-space">
+
+                </pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,206 @@
+body{
+  color: rgba(0,0,0,.6);
+  font-weight: 300;
+}
+
+.navbar-inverse{
+  background-color: rgba(0,0,0,.9);
+  letter-spacing: 1.5px;
+}
+
+.navbar-inverse li a{
+  padding-left: 2em;
+  padding-right: 2em;
+}
+
+.nav-emphasis{
+  color: #d7d7d7;
+}
+
+.navbar-brand{
+  background-image: url(../img/addepar-logo-reverse.png);
+  background-position:  -1em .4em;
+  background-size: 5.5em;
+  background-repeat: no-repeat;
+  padding-left: 4em;
+}
+
+.navbar-brand:hover .nav-emphasis{
+  color: #fff;
+}
+
+.content {
+  margin-top: 80px;
+}
+
+a {
+  color: #27AAE1;
+}
+
+.input-daterange {
+  margin-top: 7px;
+}
+
+.input-date-field,
+.dropdown-toggle,
+.input-group-sm > .input-group-btn > .btn.dropdown-toggle,
+.typeahead {
+  border: none;
+  border-bottom: 1px dashed #27AAE1;
+  background: none;
+  box-shadow: none;
+  color: rgba(0,0,0,.7);
+  text-transform: uppercase;
+  font-weight: 200;
+}
+
+.typeahead{
+  text-transform: none;
+}
+
+.table {
+  table-layout: fixed;
+  margin-top: 30px;
+}
+
+.table-striped > tbody > tr:nth-child(odd) > td {
+  background-color: #f9f9f9;
+}
+
+.table-striped > tbody > tr:hover > td{
+  background-color: #f7fdff;
+}
+
+.table th, .table td { word-wrap: break-word }
+
+th,
+.navbar{
+  font-weight: 400;
+  text-transform: uppercase;
+  font-kerning: normal;
+  letter-spacing: 1px;
+}
+
+th{
+  font-size: .8em;
+}
+
+.btn-status {
+  float: right;
+  vertical-align: middle;
+  visibility: hidden;
+  border: 1px solid #ccc;
+  background-color: #f9f9f9;
+  text-transform: uppercase;
+  font-weight: 200;
+  font-size: .5em;
+  color: rgba(0,0,0,.4);
+  letter-spacing: .6px;
+  border-radius: 3px;
+}
+
+.btn-status .glyphicon{
+  font-size: 2em;
+  opacity: .6;
+}
+
+.btn-status:hover{
+  background-color: #e58481;
+  border: 1px solid #d9534f;
+  color: rgba(255,255,255,.6);
+}
+
+tr:hover .btn-status {
+  visibility: visible;
+}
+
+.btn-refresh {
+  background: none;
+  color: rgba(0,0,0,.3);
+  font-size: .8em;
+  padding: 0;
+  line-height: normal;
+  margin-left: .5em;
+  border: none;
+}
+
+.pager .disabled > a,
+.pager .disabled > a:hover,
+.pager .disabled > a:focus,
+.pager .previous > a,
+.pager .next > a,
+.pager .li > a {
+  border: none;
+  color: #27AAE1;
+}
+
+.btn-danger:hover{
+background: none;
+color: #e58481;
+}
+
+
+
+.modal-title{
+  text-transform: uppercase;
+  font-weight: 300;
+  letter-spacing: 1px;
+  font-size: .9em;
+  padding-top: .5em;
+}
+
+pre.prettyprint,
+pre.prettyprinted{
+  border: 1px solid #ccc;
+  border-radius: 0;
+}
+
+.tt-query,
+.tt-hint {
+    width: 396px;
+    height: 30px;
+    padding: 8px 12px;
+    font-size: 12px;
+    line-height: 30px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    outline: none;
+}
+
+.tt-query {
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+}
+
+.tt-hint {
+    color: #999
+}
+
+.tt-dropdown-menu {
+    width: 422px;
+    margin-top: 12px;
+    padding: 8px 0;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    box-shadow: 0 5px 10px rgba(0,0,0,.2);
+}
+
+.tt-suggestion {
+    padding: 3px 20px;
+    font-size: 12px;
+    line-height: 24px;
+}
+
+.tt-suggestion.tt-is-under-cursor { /* UPDATE: newer versions use .tt-suggestion.tt-cursor */
+    color: #fff;
+    background-color: #0097cf;
+
+}
+.tt-input {
+    font-size: 12px;
+}
+
+.tt-suggestion p {
+    margin: 0;
+}
