@@ -4,6 +4,7 @@ extends: whitelisted_files::whitelisted_files,comments::comments
 
 --- #!avoid_auto_restart
 diff: add
+extends: base
 line:
     - match: "^\\s*(notifies|subscribes).*:restart"
 file:

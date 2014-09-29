@@ -1,0 +1,19 @@
+--- #!~base
+description: ActionScript related rules
+extends: whitelisted_files::whitelisted_files,comments::comments
+file:
+    - match: ^.*\.as$
+
+--- #!load_bytes_usage
+diff: all
+extends: base
+line:
+    - match: loadBytes.*
+description: loadBytes loads .swf files which can be dangerous
+
+--- #!allow_code_import_usage
+diff: all
+extends: base
+line:
+    - match: allowCodeImport.*
+description: allowCodeImport allows arbitrary ActionScript to run in the given context which is dangerous, see: http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/system/LoaderContext.html#allowCodeImport
