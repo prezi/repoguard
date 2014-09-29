@@ -58,9 +58,9 @@ class AlertSubscriptionTestCase(BaseTestCase):
         repo.private = True
         repo.fork = False
         self.rg.check_results = [
-            Alert(rule1, "file", repo, "1231commit", "line1"),
-            Alert(rule2, "file", repo, "1231commit", "line1"),
-            Alert(rule1, "file", repo, "1231commit", "line1")
+            Alert(rule1, "file", "repo", "1231commit", "line1", "author1"),
+            Alert(rule2, "file", "repo", "1231commit", "line1", "author2"),
+            Alert(rule1, "file", "repo", "1231commit", "line1", "author1")
         ]
         mock_notification = Mock()
         mocks[0].return_value = mock_notification

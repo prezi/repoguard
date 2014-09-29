@@ -9,8 +9,8 @@ import hashlib
 import argparse
 import logging
 import sys
-from elasticsearch import Elasticsearch, ElasticsearchException
 
+from core.datastore import DataStore, DataStoreException
 from core.git_repo_updater import GitRepoUpdater
 from core.lock_handler import LockHandler, LockHandlerException
 from core.codechecker import CodeCheckerFactory, Alert
@@ -181,8 +181,7 @@ class RepoGuard:
 
     def store_results(self):
         (host, port) = self.args.store.split(":")
-        es = Elasticsearch([{"host": host, "port": port}])
-
+        data_store = DataStore(host=host, port=port, default_doctype="repoguard", default_index="repoguard")
         for alert in self.check_results:
             try:
                 body = {
@@ -196,10 +195,14 @@ class RepoGuard:
                     "repo_fork": alert.repo.fork,
                     "@timestamp": datetime.datetime.utcnow().isoformat(),
                     "type": self.es_type
+                    "false_positive": False,
+                    "last_reviewer": self.es_type,
+                    "author": alert.author,
+                    "commit_description": alert.commit_description
                 }
 
-                es.create(body=body, id=hashlib.sha1(str(body)).hexdigest(), index='repoguard', doc_type='repoguard')
-            except ElasticsearchException:
+                data_store.store(body=body)
+            except DataStoreException:
                 self.logger.exception('Got exception during storing results to ES.')
 
     def send_results(self):
@@ -291,14 +294,19 @@ class RepoGuard:
 
         try:
             diff_output = subprocess.check_output(cmd.split(), cwd=repo.full_dir_path)
+            author = diff_output.split("Author: ")[1].split("\n")[0]
             splitted = re.split(r'^diff --git a/\S* b/(\S+)$', diff_output, flags=re.MULTILINE)[1:]
+            commit_description_cmd = "git log --pretty=%s -n 1 " + rev_hash
+            commit_description = subprocess.check_output(commit_description_cmd.split(),
+                                                         cwd=repo.full_dir_path).rstrip()
 
             for i in xrange(len(splitted) / 2):
                 filename = splitted[i * 2]
                 diff = splitted[i * 2 + 1]
 
                 result = self.code_checker.check(diff.split('\n'), filename)
-                alerts = [Alert(rule, filename, repo, rev_hash, line) for rule, line in result]
+                alerts = [Alert(rule, filename, repo.name, rev_hash, line, author, commit_description)
+                          for rule, line in result]
 
                 matches_in_rev.extend(alerts)
         except subprocess.CalledProcessError as e:
