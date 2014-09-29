@@ -1,0 +1,10 @@
+--- #!~base
+description: JSONP responses can be dangerous, please see wiki page about it
+extends: whitelisted_files::whitelisted_files,comments::comments
+
+--- #!new_jsonp
+extends: base
+diff: add
+line:
+    - match: jsonp.*
+

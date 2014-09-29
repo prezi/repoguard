@@ -2,7 +2,6 @@ from evaluators import *
 
 
 class CodeChecker:
-
     def __init__(self, context_processors, rules):
         self.context_processors = context_processors
         self.rules = rules
@@ -20,6 +19,7 @@ class CodeChecker:
     def _check_filename(self, context):
         def filename_filter(rule):
             return all(e.matches(context, None) for e in rule.evaluators if e.key == "file")
+
         return filename_filter
 
     def _check_all(self, rules):
@@ -34,6 +34,7 @@ class CodeChecker:
                 if all(e.matches(line_ctx, line) for e in rule.evaluators):
                     alerts.append((rule, line))
             return (alerts, line_ctx)
+
         return check_line
 
 
@@ -48,12 +49,11 @@ class Alert:
         self.commit_description = commit_description
 
 
-
 class Rule:
     def __init__(self, name, evaluators, rule_config):
         self.name = name
         self.evaluators = evaluators
-        self.description = rule_config.get('description','no description')
+        self.description = rule_config.get('description', 'no description')
 
 
 class CodeCheckerFactory:

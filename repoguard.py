@@ -63,12 +63,13 @@ class RepoGuard:
         parser.add_argument('--ignorestatus', action='store_true', default=False,
                             help='If true repoguard will not skip commits which were already '
                                  'checked based on the status file')
-        parser.add_argument('--overridelock', default=False, help='Ignores the lock file so multiple repoguard can run in parallel')
+        parser.add_argument('--overridelock', default=False,
+                            help='Ignores the lock file so multiple repoguard can run in parallel')
 
         self.args = parser.parse_args()
 
         # if self.args.rule_dirs:
-        #     self.args.rule_dirs = self.args.rule_dirs.split(',')
+        # self.args.rule_dirs = self.args.rule_dirs.split(',')
         if self.args.limit:
             self.args.limit = self.args.limit.split(',')
         if self.args.alerts:
@@ -137,14 +138,15 @@ class RepoGuard:
         repo_list = list(self.repository_handler.get_repo_list())
         for idx, repo in enumerate(repo_list):
             if self.should_skip_by_name(repo.name):
-                #if self.debug:
+                # if self.debug:
                 #    self.logger.debug('Got --limit param and repo (%s) is not among them, skipping git pull/clone.'
                 #                      % repo.name)
                 continue
 
             if self.debug:
-                self.logger.debug('Pulling repo "%s/%s" (%d/%d) %2.2f%%' % (self.org_name, repo.name, idx, len(repo_list),
-                                                                        float(idx) * 100 / len(repo_list)))
+                self.logger.debug(
+                    'Pulling repo "%s/%s" (%d/%d) %2.2f%%' % (self.org_name, repo.name, idx, len(repo_list),
+                                                              float(idx) * 100 / len(repo_list)))
 
             if repo.dir_name in existing_repo_dirs:
                 repo.git_reset_to_oldest_hash()
@@ -233,8 +235,8 @@ class RepoGuard:
                      "repo is private: %s\n"
                      "repo is fork: %s\n"
                      "\n" % (check_id, filename, self.org_name, alert.repo.name,
-                                            commit_id, matching_line, description,
-                                            alert.repo.name, alert.repo.private, alert.repo.fork))
+                             commit_id, matching_line, description,
+                             alert.repo.name, alert.repo.private, alert.repo.fork))
 
             notify_users = self.find_subscribed_users(check_id)
             self.logger.debug('notify_users %s' % repr(notify_users))
@@ -259,14 +261,12 @@ class RepoGuard:
     def find_subscribed_users(self, alert):
         import fnmatch
         import itertools
+
         matching_subscriptions = [users for pattern, users in self.subscribers.iteritems()
                                   if fnmatch.fnmatch(alert, pattern)]
         return set(itertools.chain(*matching_subscriptions))
 
     def check_by_repo(self, repo, detect_rename=False):
-        repo_id = repo.repo_id
-        repo_name = repo.name
-        cwd = repo.full_dir_path
         matches_in_repo = []
 
         if self.args.since:
@@ -284,7 +284,7 @@ class RepoGuard:
             if rev_result:
                 matches_in_repo = matches_in_repo + rev_result
         if len(rev_list_to_check) > 0:
-            self.logger.info("checked commits %s %s" % (repo_name, len(rev_list_to_check)))
+            self.logger.info("checked commits %s %s" % (repo.name, len(rev_list_to_check)))
 
         return matches_in_repo
 
@@ -305,7 +305,7 @@ class RepoGuard:
                 diff = splitted[i * 2 + 1]
 
                 result = self.code_checker.check(diff.split('\n'), filename)
-                alerts = [Alert(rule, filename, repo.name, rev_hash, line, author, commit_description)
+                alerts = [Alert(rule, filename, repo, rev_hash, line, author, commit_description)
                           for rule, line in result]
 
                 matches_in_rev.extend(alerts)
