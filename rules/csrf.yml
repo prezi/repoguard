@@ -1,5 +1,5 @@
 --- #!~base
-description: Cross-site request forgery vulns
+description: Cross-site request forgery vulns, see wiki for more information
 extends: whitelisted_files::whitelisted_files,comments::comments
 
 --- #!csrf_exempt

@@ -2,8 +2,8 @@ from . import app
 from authentication import requires_auth
 from core.elastic_search_helpers import ElasticSearchHelpers
 from core.datastore import DataStore, DataStoreException
-from flask import request, make_response, escape
-import arrow
+from flask import request, make_response
+import datetime
 import json
 
 
