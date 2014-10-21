@@ -16,4 +16,4 @@ diff: all
 extends: base
 line:
     - match: allowCodeImport.*
-description: allowCodeImport allows arbitrary ActionScript to run in the given context which is dangerous, see: http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/system/LoaderContext.html#allowCodeImport
+description: "allowCodeImport allows arbitrary ActionScript to run in the given context which is dangerous, see: http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/system/LoaderContext.html#allowCodeImport"
