@@ -21,7 +21,7 @@ file:
 line:
     - match: JAXBContext.newInstance
     - match: XMLStreamReader
-    - match: XMLInputFactory.newInstance()
+    - match: XMLInputFactory.newInstance\(\)
     - match: SAXParser(Factory)+
 
 --- #!scala

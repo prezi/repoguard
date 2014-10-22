@@ -4,12 +4,12 @@ extends: whitelisted_files::whitelisted_files,comments::comments
 file:
     - match: ^.*\.as$
 
---- #!load_bytes_usage
+--- #!eval
 diff: all
 extends: base
 line:
-    - match: loadBytes.*
-description: loadBytes loads .swf files which can be dangerous
+    - match: loadBytes\s*\(
+description: Loader.loadBytes injects bytes into the security context of your application
 
 --- #!allow_code_import_usage
 diff: all
