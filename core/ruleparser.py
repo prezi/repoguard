@@ -4,11 +4,12 @@ import yaml
 import os
 
 class RuleLoaderException(Exception):
-    def __init__(self, error):
+    def __init__(self, error, ctx=''):
         self.error = error
+        self.ctx = ctx
 
     def __str__(self):
-        return repr(self.error)
+        return str(self.error) + ":\n" + str(self.ctx)
 
 class RuleLoader:
     file_name = None
@@ -29,7 +30,7 @@ class RuleLoader:
         try:
             return yaml.load(text)
         except yaml.YAMLError, exc:
-            raise RuleLoaderException("Error loading yaml:\n" + text)
+            raise RuleLoaderException("Error loading yaml", text)
 
     def _find_default_namespace(self):
         dpos = self.file_name.rfind("/")
@@ -61,9 +62,8 @@ def load_rules(rule_dir):
             if filename.endswith(".yml"):
                 try:
                     rules.update(RuleLoader(os.path.join(dirpath, filename)).load())
-                # TODO (KR): Figure out what gets thrown here, and handle more specifically.
                 except Exception as e:
-                    raise RuleLoaderException("Error parsing file %s: %s" % (filename, e.message)), \
+                    raise RuleLoaderException("Error parsing file %s" % filename, str(e)), \
                         None, sys.exc_info()[2]
     return rules
 

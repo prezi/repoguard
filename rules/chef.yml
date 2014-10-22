@@ -15,7 +15,7 @@ description: "Restarting services automatically with the notifies / subscribes c
 diff: add
 extends: base
 line:
-    - match: "Chef::DataBagItem|(=\s*data_bag_item\()"
+    - match: "Chef::DataBagItem|(=\\s*data_bag_item\\()"
 file:
     - match: ^.*\.rb$
 description: "Please check if the data read from the unencrypted data bag doesn't contain any secrets"

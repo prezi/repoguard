@@ -10,6 +10,8 @@ extends: base
 line:
     - match: loadBytes\s*\(
 description: Loader.loadBytes injects bytes into the security context of your application
+tests:
+    - pass: "			_loader.loadBytes(bytes);"
 
 --- #!allow_code_import_usage
 diff: all
