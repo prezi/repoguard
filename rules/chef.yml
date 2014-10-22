@@ -9,4 +9,13 @@ line:
     - match: "^\\s*(notifies|subscribes).*:restart"
 file:
     - match: ^.*\.rb$
-description: Restarting services automatically with the notifies / subscribes chef notification is risky, we try to avoid it, please check if this commit doesn't pose significant threat to our availability.
+description: "Restarting services automatically with the notifies / subscribes chef notification is risky, we try to avoid it, please check if this commit doesn't pose significant threat to our availability."
+
+--- #!unencrypted_data_bag
+diff: add
+extends: base
+line:
+    - match: "Chef::DataBagItem|(=\s*data_bag_item\()"
+file:
+    - match: ^.*\.rb$
+description: "Please check if the data read from the unencrypted data bag doesn't contain any secrets"
