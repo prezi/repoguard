@@ -17,12 +17,10 @@ body{
   color: #d7d7d7;
 }
 
-.navbar-brand{
-  background-image: url(../img/addepar-logo-reverse.png);
-  background-position:  -1em .4em;
-  background-size: 5.5em;
-  background-repeat: no-repeat;
-  padding-left: 4em;
+.navbar-brand img{
+    max-width: 80%;
+    max-height: 80%;
+    margin-bottom: 10em;
 }
 
 .navbar-brand:hover .nav-emphasis{

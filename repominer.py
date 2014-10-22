@@ -8,6 +8,8 @@ import sys
 from core.codechecker import CodeCheckerFactory, Alert
 from core.evaluators import LineEvalFactory
 from core.ruleparser import load_rules, build_resolved_ruleset
+from core.datastore import DataStore, DataStoreException
+import datetime
 
 
 def check_alerts_in_file(code_checker, file, filename):
@@ -20,6 +22,7 @@ parser = argparse.ArgumentParser(description='Check a sourcecode repo')
 parser.add_argument('--rule-dir', default="rules/", help='Directory of rules')
 parser.add_argument('--alerts', '-a', default=False,
                     help='Limit running only the given alert checks (comma separated list)')
+parser.add_argument('--store', '-S', default=False, help='ElasticSearch node (host:port)')
 parser.add_argument('files', metavar='file', nargs='*', default=None, help='Files to check')
 args = parser.parse_args()
 
@@ -61,8 +64,33 @@ for path in args.files:
         with open(path) as f:
             alerts.extend(check_alerts_in_file(code_checker, f, path))
 
+    data_store = None
+    if args.store:
+        (host, port) = args.store.split(":")
+        data_store = DataStore(host=host, port=port, default_doctype="repoguard", default_index="repoguard")
+
     for alert in alerts:
         print 'file:\t%s\nrule:\t%s\nline:\t%s\ndescr:\t%s\n' % (
             alert.filename, alert.rule.name,
             alert.line[0:200].strip().replace("\t", " ").decode('utf-8', 'replace'), alert.rule.description,
         )
+        if args.store:
+            try:
+                body = {
+                    "check_id": alert.rule.name,
+                    "description": alert.rule.description,
+                    "filename": alert.filename,
+                    "commit_id": alert.commit,
+                    "matching_line": alert.line[0:200].replace("\t", " ").decode('utf-8', 'replace'),
+                    "repo_name": alert.repo,
+                    "@timestamp": datetime.datetime.utcnow().isoformat(),
+                    "type": "repoguard",
+                    "false_positive": False,
+                    "last_reviewer": "repoguard",
+                    "author": alert.author,
+                    "commit_description": alert.commit_description
+                }
+
+                data_store.store(body=body)
+            except DataStoreException:
+                print 'Got exception during storing results to ES.'
