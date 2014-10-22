@@ -37,6 +37,8 @@ if errors:
     for error in errors:
         print error[0], error[1]
         print error[2], '\n\n'
+    print 'FAIL'
     exit(1)
 else:
+    print 'OK'
     exit(0)
