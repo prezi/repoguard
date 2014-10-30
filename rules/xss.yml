@@ -6,21 +6,35 @@ extends: whitelisted_files::whitelisted_files,comments::comments
 extends: base
 diff: add
 line:
-    - match: "\\|\\s*safe"
+    - match: '\|\s*safe'
     - match: "{% autoescape off %}"
+tests:
+    - pass: " {% autoescape off %} "
+    - pass: " {{ xss | safe }}"
+    - fail: "{{xss|urlencode}}"
 
 --- #!django_inscripttags
 extends: base
 diff: add
 line:
-    - match: "{{((?!urlencode).)+}}"
+    - match: "{{.+}}"
+    - except: '.+\|\s*urlencode'
 inscripttag: true
+tests:
+    - pass: "{{xss|safe}}"
+    - pass: " {{ xss | safe }}"
+    - fail: "{{ xss|urlencode }}"
 
 --- #!django_json_no_content_type
 extends: base
 diff: add
 line:
-    - match: '(HttpResponse|render\_to\_response|render)\s*\((simplejson|json)(?!.*application/json)'
+    - match: '(HttpResponse|render_to_response|render)\('
+    - except: '(simplejson|json).+application/json'
+tests:
+    - pass: "return HttpResponse({'access_token': access_token})"
+    - pass: "return render_to_response('js_tests/index.html', {'files_to_list': files_to_list})"
+    - fail: 'return HttpResponse(simplejson.dumps({"status": "FEATURED CACHE ERROR"}), content_type="application/json")'
 
 --- #!haskell
 description: "error messages and responses should be sanitized"
@@ -30,7 +44,9 @@ line:
     - match: "haltWithMessage"
     - match: "-> Snap"
 file:
-    - match: ^.+\.hs$
+    - match: '\.hs$'
+tests:
+    - pass: "return haltWithMessage()"
 
 --- #!javascript
 description: "prezi meta data can come from the user"
@@ -38,21 +54,27 @@ extends: base
 diff: add
 line:
     - match: "preziMeta"
+tests:
+    - pass: "a = preziMeta.title"
 
 --- #!jquery_html
 description: "Please HTML escape *everything* passed to the .html() function!"
 extends: base
 diff: add
 line:
-    - match: \.html\(.*
+    - match: '\.html\('
 file:
-    - match: .*\.(js|html|ts)
+    - match: '\.(js|html|ts)$'
+tests:
+    - pass: "var a = el.html()"
 
 --- #!html
 description: "Please HTML escape *everything* passed to the .innerHTML attribute!"
 extends: base
 diff: add
 line:
-    - match: \.innerHTML.*
+    - match: '\.innerHTML'
 file:
-    - match: .*\.(js|html|ts)
+    - match: '\.(js|html|ts)$'
+tests:
+    - pass: "var a.innerHTML = b"

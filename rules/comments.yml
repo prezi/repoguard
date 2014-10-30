@@ -1,4 +1,9 @@
 --- #!~comments
 diff: mod
 line:
-    - except: ^\s*(//|#|/\*|<!--|\*|--)+.*$
+    - except: '^\s*(//|#|/\*|<!--|\*|--)'
+tests:
+    - fail: ' #	keys = Chef::DataBagItem.load("stunnel", "keys")'
+    - fail: ' // foo"'
+    - fail: ' /* foo"'
+    - fail: ' * foo"'

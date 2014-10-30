@@ -7,33 +7,48 @@ extends: base
 diff: add
 description: "sax; etree; pulldom; minidom; xmlrpc: all vulnerable"
 file:
-    - match: ^.*\.py$
+    - match: '\.py$'
 line:
-    - match: "from xml.* import"
-    - match: ^\s*import xml.*
-    - match: sax\.parseString
+    - match: 'from xml\s*\.\s*\* import'
+    - match: 'import\s*xml\s*.'
+    - match: 'sax\.parseString'
+tests:
+    - pass: "from xml . * import"
+    - pass: 'import xml.etree.cElementTree as ET'
+    - fail: 'from defusedxml.cElementTree import fromstring'
 
 --- #!java
 extends: base
 diff: add
 file:
-    - match: ^.*\.(java|clj)$
+    - match: '\.(java|clj)$'
 line:
-    - match: JAXBContext.newInstance
+    - match: 'JAXBContext\.newInstance'
     - match: XMLStreamReader
-    - match: XMLInputFactory.newInstance\(\)
-    - match: SAXParser(Factory)+
+    - match: 'XMLInputFactory\.newInstance\(\)'
+    - match: 'SAXParser(Factory)?'
+tests:
+    - pass: " val saxParser = SAXParserFactory.newInstance()"
+    - pass: 'import scala.xml.SAXParser'
+    - pass: 'private final XMLInputFactory inputFactory = XMLInputFactory.newInstance();'
+    - fail: 'XMLInputFactory'
 
 --- #!scala
 extends: base,java
 file:
-    - match: ^.*\.scala$
+    - match: '\.scala$'
 line:
-    - match: XML\.load(File|String|XML)*
+    - match: 'XML\.load(File|String|XML)'
+tests:
+    - pass: " XML.loadFile"
+    - fail: "XML.loadBytes"
 
 --- #!dotnet
 extends: base
 line:
-    - match: Xml(Document|Reader|TextReader|Resolver)
+    - match: 'Xml(Document|Reader|TextReader|Resolver)*'
 file:
-    - match: ^.+\.cs$
+    - match: '\.cs$'
+tests:
+    - pass: "var doc = new XmlDocument();"
+    - fail: 'HttpDocument'

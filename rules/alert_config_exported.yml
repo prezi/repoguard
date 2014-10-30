@@ -45,14 +45,6 @@ line:
 file:
     - match: .*\.(cs)
 
---- #!chef_directory_listing
-extends: base
-diff: add
-line:
-    - match: Options Indexes.*
-file:
-    - match: .*\.(erb|conf)
-
 --- #!dangerous_redirect
 extends: base
 diff: add
@@ -61,12 +53,6 @@ line:
     - except: <bindingRedirect
 file:
     - except: .*(\.config|\.po|\.po\.json|\.md|\.rb)$
-
---- #!basic_auth_in_source
-extends: base
-diff: add
-line:
-    - match: ((Authorization|auth).*Basic|auth_header\s*=\s*").*
 
 --- #!new_url_endpoint
 extends: base

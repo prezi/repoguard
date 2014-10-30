@@ -6,5 +6,8 @@ extends: whitelisted_files::whitelisted_files,comments::comments
 extends: base
 diff: add
 line:
-    - match: jsonp.*
-
+    - match: jsonp
+tests:
+    - pass: ' format="jsonp"'
+    - pass: " JSONP()"
+    - fail: "json()"

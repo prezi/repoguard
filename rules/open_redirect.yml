@@ -8,14 +8,21 @@ diff: add
 line:
     - match: (window|document)\.location\s*=
     - match: (window|document)\.location\.replace\(
-    - except: (window|document)\.location\s*=\s*['"]+[^'"]*['"]+;\s*
-    - except: (window|document)\.location.replace\(\s*['"]+[^'"]*['"]+\s*\);
-
+    - except: (window|document)\.location\s*=\s*['"][^'"]*['"]
+    - except: (window|document)\.location.replace\(\s*['"][^'"]*['"]
+tests:
+    - pass: " window.location = foobar"
+    - pass: " window.location.replace(foobar"
+    - fail: "window.location = 'evil.com'"
+    - fail: " window.location.replace('evil.com')"
 
 --- #!generic_javascript_target
 extends: base
 diff: add
 line:
-    - match: "javascript:"
+    - match: 'javascript:'
 file:
-    - except: ^.*\.css$
+    - except: '\.css$'
+tests:
+    - pass: ' <a href="javascript:alert(1)">'
+    - fail: "javascript"

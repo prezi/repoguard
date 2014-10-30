@@ -5,17 +5,38 @@ extends: whitelisted_files::whitelisted_files,comments::comments
 --- #!avoid_auto_restart
 diff: add
 extends: base
+case_sensitive: true
 line:
-    - match: "^\\s*(notifies|subscribes).*:restart"
+    - match: '(notifies|subscribes)\s*:restart'
 file:
-    - match: ^.*\.rb$
+    - match: '\.rb$'
 description: "Restarting services automatically with the notifies / subscribes chef notification is risky, we try to avoid it, please check if this commit doesn't pose significant threat to our availability."
+tests:
+    - pass: " notifies :restart, 'service[ossec]', :delayed"
+    - fail: 'notifies :reload, "service[syslog-ng]", :delayed'
 
 --- #!unencrypted_data_bag
 diff: add
 extends: base
+case_sensitive: true
 line:
-    - match: "Chef::DataBagItem|(=\\s*data_bag_item\\()"
+    - match: '(Chef::DataBagItem\.load|=\s*data_bag_item\()'
 file:
-    - match: ^.*\.rb$
+    - match: '\.rb$'
 description: "Please check if the data read from the unencrypted data bag doesn't contain any secrets"
+tests:
+    - pass: 'store_db = Chef::DataBagItem.load("graphite", "stores")'
+    - pass: 'hostdb = data_bag_item("hosts","hosts")'
+    - fail: "dbag = Chef::DataBagItem.new"
+
+--- #!apache_directory_listing
+extends: base
+diff: add
+case_sensitive: true
+line:
+    - match: 'Options Indexes'
+file:
+    - match: '\.conf(\.erb)?$'
+tests:
+    - pass: ' Options Indexes FollowSymLinks MultiViews'
+    - fail: ' Options -Indexes FollowSymLinks MultiViews'

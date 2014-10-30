@@ -2,20 +2,26 @@
 description: ActionScript related rules
 extends: whitelisted_files::whitelisted_files,comments::comments
 file:
-    - match: ^.*\.as$
+    - match: '\.as$'
 
 --- #!eval
 diff: all
 extends: base
+case_sensitive: true
 line:
-    - match: loadBytes\s*\(
+    - match: 'loadBytes\s*\('
 description: Loader.loadBytes injects bytes into the security context of your application
 tests:
     - pass: "			_loader.loadBytes(bytes);"
+    - fail: ' LOADBYTES()'
 
 --- #!allow_code_import_usage
 diff: all
 extends: base
+case_sensitive: true
 line:
-    - match: allowCodeImport.*
+    - match: allowCodeImport
 description: "allowCodeImport allows arbitrary ActionScript to run in the given context which is dangerous, see: http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/system/LoaderContext.html#allowCodeImport"
+tests:
+    - pass: "allowCodeImport somewhere in the line"
+    - fail: "AllowCodeImport"

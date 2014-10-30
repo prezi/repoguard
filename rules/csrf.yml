@@ -6,10 +6,16 @@ extends: whitelisted_files::whitelisted_files,comments::comments
 extends: base
 diff: add
 line:
-    - match: csrf\_exempt.*
+    - match: csrf_exempt
+tests:
+    - pass: " @csrf_exempt"
+    - fail: "@csrf"
 
 --- #!csrf_remove
 extends: base
 diff: del
 line:
-    - match: csrf.*
+    - match: 'csrf'
+## FIXME: diff:del never passes
+#tests:
+#    - pass: "- somewhere something with csrf string in it"

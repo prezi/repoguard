@@ -12,7 +12,7 @@ line:
     - match: import subprocess
     - match: from subprocess
 file:
-    - match: ^.*\.py$
+    - match: '\.py$'
 
 --- #!java
 extends: base
@@ -23,7 +23,7 @@ line:
     - match: ProcessBuilder
     - match: getRuntime
 file:
-    - match: ^.*\.(java|scala|groovy)$
+    - match: '\.(java|scala|groovy)$'
 
 --- #!js
 extends: base
@@ -33,4 +33,4 @@ line:
     - match: child_process
     - match: var command\s*=
 file:
-    - match: ^.*\.(hx|js)$
+    - match: '\.(hx|js)$'

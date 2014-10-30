@@ -1,6 +1,6 @@
 --- #!~whitelisted_files
 file:
-    - except: .*(test/|tests/|/bdd/).*
-    - except: .*(angular|bootstrap|require|jquery|sinon)[\w\.\-]*\.js$
-    - except: .*lib/shumway/.*
-    - except: .*/test_.+\.py
+    - except: '(test/|tests/|/bdd/)'
+    - except: '(angular|bootstrap|require|jquery|sinon)[\w\.\-]*\.js$'
+    - except: 'lib/shumway/'
+    - except: '/test_.+\.py$'

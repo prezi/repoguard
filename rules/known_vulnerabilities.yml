@@ -6,7 +6,9 @@ extends: whitelisted_files::whitelisted_files,comments::comments
 extends: base
 diff: add
 line:
-    - match: raw_decode\(
+    - match: 'raw_decode\('
 file:
-    - match: ^.*\.py$
+    - match: '\.py$'
 description: JSONDecoder.raw_decode is vulnerable and can lead to arbitrary process memory read (https://hackerone.com/reports/12297)
+tests:
+    - pass: " raw_decode('')"
