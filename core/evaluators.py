@@ -25,8 +25,9 @@ class InScriptEvalFactory:
 
     class ContextProcessor:
         def __init__(self):
-            self.script_begin_re = re.compile(r'(?!.+type="text/(tpl|template|html)".+)<script[^>]*>')
-            self.script_end_re = re.compile(r'</script\s*>')
+            self.script_begin_re = re.compile(r'(?!.+type="text/(tpl|template|html)".+)<script[^>]*>',
+                                              flags=re.IGNORECASE)
+            self.script_end_re = re.compile(r'</script\s*>', flags=re.IGNORECASE)
 
         def preprocess(self, line_context, line):
             if "inside_script_tag" not in line_context:
@@ -49,8 +50,9 @@ class LineEvalFactory:
         if "line" not in rule:
             return None
         else:
-            positive_patterns = [re.compile(r["match"]) for r in rule["line"] if "match" in r]
-            negative_patterns = [re.compile(r["except"]) for r in rule["line"] if "except" in r]
+            flags = 0 if rule.get('case_sensitive', False) else re.IGNORECASE
+            positive_patterns = [re.compile(r["match"], flags=flags) for r in rule["line"] if "match" in r]
+            negative_patterns = [re.compile(r["except"], flags=flags) for r in rule["line"] if "except" in r]
             diff_mode = rule["diff"] if "diff" in rule else "all"
             diff_mode = diff_mode if diff_mode in ("add", "del", "mod") else "all"
             if self.mode == self.MODE_DIFF:
@@ -103,7 +105,6 @@ class LineEvalFactory:
 
 
 class FileEvalFactory:
-
     def create(self, rule):
         return self.FileEvaluator(rule["file"]) if "file" in rule else None
 
@@ -131,7 +132,7 @@ class FileEvalFactory:
 
             filename = line_context["filename"]
 
-            pos = not self.positive_patterns or reduce(lambda ctx, p: ctx or p.match(filename),
+            pos = not self.positive_patterns or reduce(lambda ctx, p: ctx or p.search(filename),
                                                        self.positive_patterns, False)
-            neg = reduce(lambda ctx, p: ctx and not p.match(filename), self.negative_patterns, True)
+            neg = reduce(lambda ctx, p: ctx and not p.search(filename), self.negative_patterns, True)
             return pos and neg

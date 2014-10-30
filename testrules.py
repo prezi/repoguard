@@ -7,7 +7,7 @@ import traceback
 from core.evaluators import LineEvalFactory
 from core.ruleparser import load_rules
 
-rules_dir = os.environ.get('REPOGUARD_RULES','rules')
+rules_dir = os.environ.get('REPOGUARD_RULES', 'rules')
 bare_rules = load_rules(rules_dir)
 
 testable_rules = {rn: rule for rn, rule in bare_rules.iteritems() if 'tests' in rule}
@@ -26,7 +26,8 @@ for name, rule in testable_rules.iteritems():
                 sys.stdout.write('.')
             else:
                 sys.stdout.write('F')
-                errors.append(('F', name, test_string))
+                errors.append(('F', 'Name: %s, Rules: %s' % (name, rule.get('line')),
+                               'Actual: %s, Expected: %s, Test string: %s' % (actual, expected, test_string)))
     except:
         errors.append(('E', name, traceback.format_exc()))
         sys.stdout.write('E')
