@@ -32,7 +32,7 @@ class Repository():
             self.last_checked_commit_hashes.append(rev_hash)
 
     def get_last_commit_hashes(self):
-        result = self.call_command("git rev-list --remotes --max-count=100")
+        result = self.call_command("git rev-list --remotes --no-merges --max-count=100")
         return result.split('\n')[:-1] if result is not None else []
 
     def detect_new_commit_hashes(self):
@@ -48,7 +48,7 @@ class Repository():
         return self.not_checked_commit_hashes
 
     def get_rev_list_since_date(self, since):
-        cmd = "git", "rev-list", "--remotes", "--since=\"%s\"" % since, "HEAD"
+        cmd = "git", "rev-list", "--remotes", "--no-merges", "--since=\"%s\"" % since, "HEAD"
         try:
             cmd_output = subprocess.check_output(cmd, cwd=self.full_dir_path).split("\n")[:-1]
         except subprocess.CalledProcessError, e:

@@ -53,7 +53,7 @@ description: "prezi meta data can come from the user"
 extends: base
 diff: add
 line:
-    - match: "preziMeta"
+    - match: "prezi(Meta|Data)"
 tests:
     - pass: "a = preziMeta.title"
 
