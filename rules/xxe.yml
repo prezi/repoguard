@@ -35,6 +35,7 @@ tests:
 
 --- #!scala
 extends: base,java
+diff: add
 file:
     - match: '\.scala$'
 line:
@@ -45,6 +46,7 @@ tests:
 
 --- #!dotnet
 extends: base
+diff: add
 line:
     - match: 'Xml(Document|Reader|TextReader|Resolver)*'
 file:
