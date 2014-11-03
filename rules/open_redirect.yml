@@ -10,11 +10,14 @@ line:
     - match: (window|document)\.location\.replace\(
     - except: (window|document)\.location\s*=\s*['"][^'"]*['"]
     - except: (window|document)\.location.replace\(\s*['"][^'"]*['"]
+    - except: 'document\.location\s*=\s*\$this\.attr\(\s*[''"]href[''"]\s*\)'
 tests:
     - pass: " window.location = foobar"
     - pass: " window.location.replace(foobar"
     - fail: "window.location = 'evil.com'"
-    - fail: " window.location.replace('evil.com')"
+    - fail: "window.location.replace('evil.com')"
+    - fail: "window.location = '/connected/redeem/';"
+    - fail: "document.location = $this.attr('href');"
 
 --- #!generic_javascript_target
 extends: base

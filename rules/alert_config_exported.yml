@@ -45,15 +45,6 @@ line:
 file:
     - match: .*\.(cs)
 
---- #!dangerous_redirect
-extends: base
-diff: add
-line:
-    - match: (HttpResponseRedirect|HttpResponsePermanentRedirect|redirect)(?!\(["'][^"']+["']\)).*
-    - except: <bindingRedirect
-file:
-    - except: .*(\.config|\.po|\.po\.json|\.md|\.rb)$
-
 --- #!new_url_endpoint
 extends: base
 diff: add
@@ -124,9 +115,9 @@ file:
 extends: base
 diff: add
 line:
-    - match: (Node\.url\.parse|\.query\.).*
+    - match: (Node\.url\.parse|\.query\.)
 file:
-    - match: .*\.(hx|js)$
+    - match: '\.(hx|js)$'
 
 --- #!cross-domain-policy-access
 extends: base
@@ -426,12 +417,3 @@ extends: base
 diff: add
 line:
     - match: \.raw\(.*
-
---- #!http_response
-extends: base
-diff: add
-line:
-    - match: " HttpResponse\\(.*"
-    - except: .*content_type=['"]application/json['"]
-file:
-    - match: .*\.py

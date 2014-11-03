@@ -80,3 +80,17 @@ file:
     - match: '\.(js|html|ts)$'
 tests:
     - pass: "var a.innerHTML = b"
+
+--- #!http_response
+extends: base
+diff: add
+line:
+    - match: ' HttpResponse\('
+    - except: content_type\s*=\s*['"]application/json['"]
+file:
+    - match: '\.py$'
+tests:
+    - pass: " HttpResponse($_GET['to'])"
+    - fail: "HttpResponse('OK')"
+    - fail: 'HttpResponse("OK")'
+    - fail: "HttpResponse('OK', content_type = \"application/json\")"

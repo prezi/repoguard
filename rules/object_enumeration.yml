@@ -1,0 +1,18 @@
+--- #!~base
+description: Object enumeration is bad, because it can leak out registered usernames, emails, etc.
+extends: whitelisted_files::whitelisted_files,comments::comments
+
+--- #!django_endpoint
+extends: base
+line:
+    - match: '\?P<(presentation_id|prezi_id)'
+    - match: '\(\?P<user_id>(\[0-9]|\\d)\+\)'
+file:
+    - match: '\.py$'
+tests:
+    - pass: " (?P<presentation_id>[0-9]+)"
+    - pass: " (?P<prezi_id>[0-9]+)"
+    - pass: " (?P<user_id>[0-9]+)"
+    - pass: ' (?P<user_id>\d+)'
+    - pass: ' (?P<presentation_id>\S+)'
+    - fail: '(?P<presentation_oid>\S+)'
