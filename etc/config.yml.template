@@ -7,8 +7,19 @@ git:
     # if disabled, file renames act like file additions
     detect_rename: false
 
-# repository names which should not be checked/fetched from github
-skip_repo_list: []
+repo_groups:
+    local_repos:
+        - gradle-clone
+    skipped_repos:
+        - internal-junk-repo
+
+rules_to_groups:
+    skipped_repos:
+        - except: .*
+    local_repos:
+        - match: .*
+        - except: os_code_exec::.*
+        - except: generic_best_practices::unsecure_protocol
 
 # emails will be sent with this from address by default
 default_notification_src_address: ""
