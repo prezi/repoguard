@@ -2,19 +2,39 @@ from evaluators import *
 
 
 class CodeChecker:
-    def __init__(self, context_processors, rules):
+    def __init__(self, context_processors, rules, repo_groups, rules_to_groups):
         self.context_processors = context_processors
         self.rules = rules
+        self.repo_groups = repo_groups
+        self.rules_to_groups = rules_to_groups
 
-    def check(self, lines, filename):
+    def check(self, lines, filename, repo):
         # initial context:
         context = {"filename": filename}
+        rules_applied_for_this_repo = filter(self._filter_rules(repo.name), self.rules)
         # pre-filter rules with filename:
-        applicable_rules = filter(self._check_filename(context), self.rules)
+        applicable_rules = filter(self._check_filename(context), rules_applied_for_this_repo)
         # check each line
         alerts, line_ctx = reduce(self._check_all(applicable_rules), lines, (list(), context))
         # we do not use line_ctx at alerting, so we drop it
         return alerts
+
+    def _filter_rules(self, repo_name):
+        def rule_filter(rule):
+            for group_name, values in self.repo_groups.iteritems():
+                for repo in values:
+                    if repo == repo_name:
+                        for g_name, rules_to_group in self.rules_to_groups.iteritems():
+                            if g_name == group_name:
+                                # repo_name is in a group which has rules assigned to it
+                                positive_patterns = [re.compile(r["match"]) for r in rules_to_group if "match" in r]
+                                negative_patterns = [re.compile(r["except"]) for r in rules_to_group if "except" in r]
+
+                                ctx = reduce(lambda acc, p: acc or p.search(rule.name) is not None, positive_patterns, False)
+                                return ctx and reduce(lambda ctx, p: ctx and p.search(rule.name) is None, negative_patterns, ctx)
+            return True
+
+        return rule_filter
 
     def _check_filename(self, context):
         def filename_filter(rule):
@@ -57,14 +77,16 @@ class Rule:
 
 
 class CodeCheckerFactory:
-    def __init__(self, ruleset):
+    def __init__(self, ruleset, repo_groups, rules_to_groups):
         self.ruleset = ruleset
+        self.repo_groups = repo_groups
+        self.rules_to_groups = rules_to_groups
 
     def create(self, mode=LineEvalFactory.MODE_DIFF):
         factories = [LineEvalFactory(mode), InScriptEvalFactory(), FileEvalFactory()]
         context_processors = [InScriptEvalFactory.ContextProcessor()]
         rules = [self.create_single(rn, factories) for rn in self.ruleset]
-        return CodeChecker(context_processors, rules)
+        return CodeChecker(context_processors, rules, self.repo_groups, self.rules_to_groups)
 
     def create_single(self, rule_name, factories):
         rule = self.ruleset[rule_name]
