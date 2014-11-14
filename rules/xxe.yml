@@ -48,7 +48,7 @@ tests:
 extends: base
 diff: add
 line:
-    - match: 'Xml(Document|Reader|TextReader|Resolver)*'
+    - match: 'Xml(Document|Reader|TextReader|Resolver)+'
 file:
     - match: '\.cs$'
 tests:
