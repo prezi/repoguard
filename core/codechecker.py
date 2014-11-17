@@ -2,16 +2,16 @@ from evaluators import *
 
 
 class CodeChecker:
-    def __init__(self, context_processors, rules, repo_groups, rules_to_groups):
+    def __init__(self, context_processors, rules, repo_groups={}, rules_to_groups={}):
         self.context_processors = context_processors
         self.rules = rules
         self.repo_groups = repo_groups
         self.rules_to_groups = rules_to_groups
 
-    def check(self, lines, filename, repo):
+    def check(self, lines, filename, repo=None):
         # initial context:
         context = {"filename": filename}
-        rules_applied_for_this_repo = filter(self._filter_rules(repo.name), self.rules)
+        rules_applied_for_this_repo = filter(self._filter_rules(repo.name), self.rules) if repo else self.rules
         # pre-filter rules with filename:
         applicable_rules = filter(self._check_filename(context), rules_applied_for_this_repo)
         # check each line
@@ -59,7 +59,7 @@ class CodeChecker:
 
 
 class Alert:
-    def __init__(self, rule, filename, repo, commit, line, author, commit_description):
+    def __init__(self, rule, filename, repo, commit, line, author=None, commit_description=None):
         self.rule = rule
         self.filename = filename
         self.repo = repo
@@ -77,7 +77,7 @@ class Rule:
 
 
 class CodeCheckerFactory:
-    def __init__(self, ruleset, repo_groups, rules_to_groups):
+    def __init__(self, ruleset, repo_groups={}, rules_to_groups={}):
         self.ruleset = ruleset
         self.repo_groups = repo_groups
         self.rules_to_groups = rules_to_groups
