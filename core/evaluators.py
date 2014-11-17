@@ -106,19 +106,22 @@ class LineEvalFactory:
 
 class FileEvalFactory:
     def create(self, rule):
-        return self.FileEvaluator(rule["file"]) if "file" in rule else None
+        flags = 0 if rule.get('case_sensitive', False) else re.IGNORECASE
+        return self.FileEvaluator(rule)
 
     class FileEvaluator:
         key = "file"
 
-        def __init__(self, rules):
+        def __init__(self, rule):
+            flags = 0 if rule.get('case_sensitive', False) else re.IGNORECASE
+            file_rules = rule.get('file', None)
             self.positive_patterns = []
             self.negative_patterns = []
-            for rule in rules:
+            for rule in file_rules:
                 if "match" in rule:
-                    self.positive_patterns.append(re.compile(rule["match"], flags=re.IGNORECASE))
+                    self.positive_patterns.append(re.compile(rule["match"], flags=flags))
                 elif "except" in rule:
-                    self.negative_patterns.append(re.compile(rule["except"], flags=re.IGNORECASE))
+                    self.negative_patterns.append(re.compile(rule["except"], flags=flags))
                 else:
                     raise EvaluatorException("Unknown key in %s" % str(rule))
 

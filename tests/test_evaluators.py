@@ -100,13 +100,14 @@ class LineEvaluatorTestCase(unittest.TestCase):
 
 class FileEvaluatorTestCase(unittest.TestCase):
 
-    def test_multisearch_criteria(self):
-        files = [
+    def setUp(self):
+        self.files = [
             "vuln.scala",
             "vuln.java",
-            "test_vuln.scala"
+            "test_vuln.scala",
+            "Test_vuln.scala"
         ]
-        rule = {
+        self.rule = {
             "file": [
                 {"match": ".+\\.scala"},
                 {"match": ".+\\.java"},
@@ -114,9 +115,18 @@ class FileEvaluatorTestCase(unittest.TestCase):
             ]
         }
 
+    def test_multisearch_criteria(self):
         fef = FileEvalFactory()
-        evaluator = fef.create(rule)
+        evaluator = fef.create(self.rule)
 
-        self.assertTrue(evaluator.matches({"filename": files[0]}, None))
-        self.assertTrue(evaluator.matches({"filename": files[1]}, None))
-        self.assertFalse(evaluator.matches({"filename": files[2]}, None))
+        self.assertTrue(evaluator.matches({"filename": self.files[0]}, None))
+        self.assertTrue(evaluator.matches({"filename": self.files[1]}, None))
+        self.assertFalse(evaluator.matches({"filename": self.files[2]}, None))
+
+    def test_case_sensitivity(self):
+        self.rule["case_sensitive"] = True
+        fef = FileEvalFactory()
+        evaluator = fef.create(self.rule)
+        self.assertFalse(evaluator.matches({"filename": self.files[2]}, None))
+        self.assertTrue(evaluator.matches({"filename": self.files[3]}, None))
+
