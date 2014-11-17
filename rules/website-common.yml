@@ -1,7 +1,0 @@
---- #!Bootstrap3
-description: "Monitor for any changes to the Bootstrap 3 source code."
-diff: all
-file:
-    - match: 'prezi/website/common/static/common/css/bootstrap3/.*'
-tests:
-    - pass: "prezi/website/common/static/common/css/bootstrap3/.*"
