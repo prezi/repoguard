@@ -107,14 +107,14 @@ class LineEvalFactory:
 class FileEvalFactory:
     def create(self, rule):
         flags = 0 if rule.get('case_sensitive', False) else re.IGNORECASE
-        return self.FileEvaluator(rule)
+        return self.FileEvaluator(rule) if "file" in rule else None
 
     class FileEvaluator:
         key = "file"
 
         def __init__(self, rule):
             flags = 0 if rule.get('case_sensitive', False) else re.IGNORECASE
-            file_rules = rule.get('file', None)
+            file_rules = rule.get('file', [])
             self.positive_patterns = []
             self.negative_patterns = []
             for rule in file_rules:
