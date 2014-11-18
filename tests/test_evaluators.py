@@ -130,3 +130,12 @@ class FileEvaluatorTestCase(unittest.TestCase):
         self.assertFalse(evaluator.matches({"filename": self.files[2]}, None))
         self.assertTrue(evaluator.matches({"filename": self.files[3]}, None))
 
+    def test_no_file_rule_provided(self):
+        self.rule = {
+            "line": [
+                {"match": ".*"}
+            ]
+        }
+        fef = FileEvalFactory()
+        evaluator = fef.create(self.rule)
+        self.assertEquals(evaluator, None)
