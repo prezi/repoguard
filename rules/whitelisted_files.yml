@@ -4,3 +4,4 @@ file:
     - except: '(angular|bootstrap|require|jquery|sinon)[\w\.\-]*\.js$'
     - except: 'lib/shumway/'
     - except: '/test_.+\.py$'
+    - except: '\.(po|pyc)$'
