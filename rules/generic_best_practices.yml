@@ -32,3 +32,15 @@ tests:
     - fail: "HttpResponseRedirect('OK')"
     - fail: 'HttpResponseRedirect("OK")'
     - fail: '<bindingRedirect foobar'
+
+--- #!http_variable_used
+extends: base
+diff: add
+line:
+    - match: (request\.(GET|POST|FILES|META)(\[|\.get)).*
+    - except: "['\"]REMOTE_ADDR['\"]"
+tests:
+    - pass: "request.META.get('next')"
+    - pass: "request.META[ 'next' ]"
+    - fail: "request.META.get('REMOTE_ADDR')"
+    - fail: "request.META[ 'REMOTE_ADDR' ]"

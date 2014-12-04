@@ -286,12 +286,6 @@ line:
 file:
     - match: .*\.(cs)
 
---- #!http_variable_used
-extends: base
-diff: add
-line:
-    - match: (request\.(GET|POST|FILES|META)(\[|\.get)).*
-
 --- #!cpp_system_popen_calls
 extends: base
 diff: add
