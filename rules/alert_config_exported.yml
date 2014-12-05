@@ -289,6 +289,7 @@ file:
 --- #!cpp_system_popen_calls
 extends: base
 diff: add
+case_sensitive: true
 line:
     - match: (system|popen|exec(ve)?|execvp?|execlp?)\(.*
 file:
