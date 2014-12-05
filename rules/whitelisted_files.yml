@@ -5,3 +5,4 @@ file:
     - except: 'lib/shumway/'
     - except: '/test_.+\.py$'
     - except: '\.(po|pyc)$'
+    - except: '^scripts/'
