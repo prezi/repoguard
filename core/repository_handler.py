@@ -2,6 +2,7 @@ import json
 import jsonpickle
 import logging
 import subprocess
+import shutil
 
 
 class RepositoryException(Exception):
@@ -59,10 +60,17 @@ class Repository():
 
     def git_reset_to_oldest_hash(self):
         if self.last_checked_commit_hashes:
+            self.call_command('git checkout master')
             self.call_command("git reset --hard %s" % self.last_checked_commit_hashes[0])
 
     def git_clone(self):
         self.call_command("git clone %s %s" % (self.ssh_url, self.dir_name), cwd=self.working_directory)
+
+    def remove(self):
+        try:
+            shutil.rmtree(self.full_dir_path)
+        except:
+            self.logger.exception('Failed to remove repo_dir: %s', self.full_dir_path)
 
     def call_command(self, cmd, cwd=None):
         cwd = self.full_dir_path if not cwd else cwd
