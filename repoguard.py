@@ -140,6 +140,17 @@ class RepoGuard:
         if not self.args.since:
             self.repository_handler.load_status_info_from_file()
 
+    def git_clone_or_pull(self, existing_repo_dirs, repo):
+        if repo.dir_name in existing_repo_dirs:
+            repo.git_reset_to_oldest_hash()
+            if not repo.call_command("git pull"):
+                # if there was any error on pulling, let's reclone the directory
+                repo.remove()
+                repo.git_clone()
+        else:
+            repo.git_clone()
+            repo.detect_new_commit_hashes()
+
     def update_local_repos(self):
         existing_repo_dirs = os.listdir(self.WORKING_DIR)
 
@@ -155,12 +166,8 @@ class RepoGuard:
                     'Pulling repo "%s/%s" (%d/%d) %2.2f%%' % (self.org_name, repo.name, idx, len(repo_list),
                                                               float(idx) * 100 / len(repo_list)))
 
-            if repo.dir_name in existing_repo_dirs:
-                repo.git_reset_to_oldest_hash()
-                repo.call_command("git pull")
-            else:
-                repo.git_clone()
-                repo.detect_new_commit_hashes()
+            # TODO: multithreading
+            self.git_clone_or_pull(existing_repo_dirs, repo)
 
     def check_new_code(self, detect_rename=False):
         existing_repo_dirs = os.listdir(self.WORKING_DIR)
