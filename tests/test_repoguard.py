@@ -28,6 +28,14 @@ class RepoguardTestCase(BaseTestCase):
         self.assertFalse(self.rg.should_skip_by_name('joe'))
         self.assertTrue(self.rg.should_skip_by_name('whatever_else'))
 
+    @patch('repoguard.GitRepoUpdater')
+    def test_check_and_alert_on_new_repos(self, mocked_repo_updater):
+        mocked_repo_updater.refresh_repos_and_detect_new_public_repos = Mock(return_value=[{'name': 'new_public_repo'}])
+        self.rg.launch_full_repoguard_scan_on_repo = Mock()
+
+        self.rg.check_and_alert_on_new_repos(mocked_repo_updater)
+        self.assertEquals(len(self.rg.check_results), 1)
+
 
 class AlertSubscriptionTestCase(BaseTestCase):
     def setUp(self):

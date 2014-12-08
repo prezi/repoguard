@@ -1,23 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import yaml
-import re
-import os
 import subprocess
 import datetime
-import hashlib
 import argparse
 import logging
 import sys
+from copy import deepcopy
 
+import yaml
+import re
+import os
+from mock import Mock
 from core.datastore import DataStore, DataStoreException
 from core.git_repo_updater import GitRepoUpdater
 from core.lock_handler import LockHandler, LockHandlerException
 from core.codechecker import CodeCheckerFactory, Alert
 from core.ruleparser import build_resolved_ruleset, load_rules
 from core.notifier import EmailNotifier, EmailNotifierException
-from core.repository_handler import RepositoryHandler, RepositoryException
-from copy import deepcopy
+from core.repository_handler import RepositoryHandler
 
 
 class RepoGuard:
@@ -87,6 +87,7 @@ class RepoGuard:
         self.ALERT_CONFIG_DIR = self.args.rule_dir
 
     def read_config(self, path):
+        print path
         try:
             with open(path) as f:
                 config = yaml.load(f.read())
@@ -138,9 +139,8 @@ class RepoGuard:
         repo_list = list(self.repository_handler.get_repo_list())
         for idx, repo in enumerate(repo_list):
             if self.should_skip_by_name(repo.name):
-                # if self.debug:
-                #    self.logger.debug('Got --limit param and repo (%s) is not among them, skipping git pull/clone.'
-                #                      % repo.name)
+                self.logger.debug('Got --limit param and repo (%s) is not among them, skipping git pull/clone.'
+                                  % repo.name)
                 continue
 
             if self.debug:
@@ -262,6 +262,7 @@ class RepoGuard:
         import fnmatch
         import itertools
 
+
         matching_subscriptions = [users for pattern, users in self.subscribers.iteritems()
                                   if fnmatch.fnmatch(alert, pattern)]
         return set(itertools.chain(*matching_subscriptions))
@@ -356,6 +357,16 @@ class RepoGuard:
         full_scan_repoguard.es_type = "repoguard_fullscan"
         full_scan_repoguard.run()
 
+    def check_and_alert_on_new_repos(self, git_repo_updater_obj):
+        new_public_repo_list = git_repo_updater_obj.refresh_repos_and_detect_new_public_repos()
+        self.logger.debug('New public repos: %s', new_public_repo_list)
+        git_repo_updater_obj.write_repo_list_to_file()
+        for new_public_repo in new_public_repo_list:
+            self.launch_full_repoguard_scan_on_repo(new_public_repo["name"])
+            self.check_results += [
+                Alert(rule=Mock(), filename='', repo=new_public_repo["name"], commit=Mock(), line=Mock(), author=Mock(),
+                      commit_description='This repository has been made public, please check for sensitive info!')]
+
     def run(self):
         self.logger.info('* run started')
         self.read_config(self.CONFIG_PATH)
@@ -370,10 +381,7 @@ class RepoGuard:
             git_repo_updater_obj = GitRepoUpdater(self.org_name, self.github_token,
                                                   self.repository_handler.repo_list_file, self.logger)
             if self.full_scan_triggered_rules:
-                new_public_repo_list = git_repo_updater_obj.refresh_repos_and_detect_new_public_repos()
-                git_repo_updater_obj.write_repo_list_to_file()
-                for new_public_repo in new_public_repo_list:
-                    self.launch_full_repoguard_scan_on_repo(new_public_repo["name"])
+                self.check_and_alert_on_new_repos(git_repo_updater_obj)
             else:
                 git_repo_updater_obj.refresh_repo_list()
                 git_repo_updater_obj.write_repo_list_to_file()
