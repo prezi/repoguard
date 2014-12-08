@@ -78,7 +78,7 @@ class RepoGuard:
         if self.args.verbose:
             self.logger.setLevel(logging.DEBUG)
         else:
-            self.logger.setLevel(logging.WARNING)
+            self.logger.setLevel(logging.INFO)
 
     def detect_paths(self):
         self.APP_DIR = '%s/' % os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
@@ -100,7 +100,6 @@ class RepoGuard:
         return repo_groups
 
     def read_config(self, path):
-        print path
         try:
             with open(path) as f:
                 config = yaml.load(f.read())

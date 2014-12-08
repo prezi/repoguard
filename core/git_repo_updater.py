@@ -45,18 +45,18 @@ class GitRepoUpdater:
             if r.status_code == 200:
                 if 'X-RateLimit-Remaining' in r.headers:
                     if int(r.headers['X-RateLimit-Remaining']) == 0:
-                        print 'OUT OF RATELIMIT'
+                        self.logger.warning('OUT OF RATELIMIT')
                         self.stop = True
                         return
                 try:
                     lasturl_re = re.compile('.*<([\w\:\/\.]+)\?page=([0-9]+)>; rel="last"')
                     lasturl = lasturl_re.match(r.headers['link']).groups()
                     self.lastpage = int(lasturl[1])
-                    print "PAGE %s/%s" % (self.actpage, self.lastpage)
+                    self.logger.debug("PAGE %s/%s" % (self.actpage, self.lastpage))
                 # TODO (KR): this is too broad. figure out what needs to be caught.
                 except:
-                    print "... finished (PAGE: %s)" % self.actpage
-                    print "(rate limit: %s / %s)" % (r.headers['X-RateLimit-Remaining'], r.headers['X-RateLimit-Limit'])
+                    self.logger.debug("... finished (PAGE: %s)" % self.actpage)
+                    self.logger.debug("(rate limit: %s / %s)" % (r.headers['X-RateLimit-Remaining'], r.headers['X-RateLimit-Limit']))
                 self.store_repo_attributes_from_response_json(json.loads(r.text or r.content))
             else:
                 self.logger.error('github.com returned non-200 status code: %s' % r.text)
