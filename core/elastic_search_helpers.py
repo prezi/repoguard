@@ -65,7 +65,7 @@ class ElasticSearchHelpers:
             filtered_query_params["query"] = filtered_query
         filtered_query_dict = dict(filtered=filtered_query_params)
         query = dict(query=filtered_query_dict, sort=sort_order)
-        print query
+
         return query
 
     @staticmethod
