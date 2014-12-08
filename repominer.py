@@ -15,7 +15,7 @@ import datetime
 def check_alerts_in_file(code_checker, file, filename):
     content = file.readlines()
     result = code_checker.check(content, filename)
-    actual_alerts = [Alert(rule, filename, '', '', line, None) for rule, line in result]
+    actual_alerts = [Alert(rule, filename, repo='', commit='', line=line) for rule, line in result]
     return actual_alerts
 
 parser = argparse.ArgumentParser(description='Check a sourcecode repo')

@@ -86,12 +86,26 @@ class RepoGuard:
         self.WORKING_DIR = self.args.working_dir
         self.ALERT_CONFIG_DIR = self.args.rule_dir
 
+    def build_repo_groups(self, raw_repo_groups):
+        repo_groups = {}
+        for k, v in raw_repo_groups.iteritems():
+            if isinstance(v, dict):  # node
+                # TODO: traverse dict obj and expand @node references
+                # repo_groups[k]  = add_node(k, v)
+                pass
+            elif isinstance(v, list):  # leaf
+                repo_groups[k] = v
+            else:
+                raise ValueError('First level entries in repo_groups must be lists.')
+        return repo_groups
+
     def read_config(self, path):
         print path
         try:
             with open(path) as f:
                 config = yaml.load(f.read())
-                self.skip_repo_list = config['skip_repo_list']
+                self.repo_groups = self.build_repo_groups(config['repo_groups'])
+                self.rules_to_groups = config['rules_to_groups']
                 self.default_notification_src_address = config['default_notification_src_address']
                 self.default_notification_to_address = config['default_notification_to_address']
                 self.subscribers = config['subscribers']
@@ -108,25 +122,18 @@ class RepoGuard:
                 self.notifications = config['notifications']
                 self.full_scan_triggered_rules = config.get('full_scan_triggered_rules', False)
         except KeyError as e:
-            print '%s not found in config file' % e
+            self.logger.exception('Key %s not found in config file' % e)
             sys.exit()
-        except yaml.YAMLError, e:
-            print "Error loading config file: %s\n" % path
-            self.logger.exception("YAML Error while loading configuration file: " + e.message)
+        except yaml.YAMLError:
+            self.logger.exception("YAML Error while loading configuration file: %s" % path)
             sys.exit()
-        except IOError, e:
-            print "Error loading config file: %s\n" % path
-            self.logger.exception("IO Error loading configuration file:" + e.strerror)
+        except IOError:
+            self.logger.exception("IO Error loading configuration file: %s" % path)
             sys.exit()
 
     def should_skip_by_name(self, repo_name):
         if self.args.limit:
-            if repo_name not in self.args.limit:
-                return True
-            else:
-                return False
-        else:
-            return repo_name in self.skip_repo_list
+            return repo_name not in self.args.limit
 
     def set_up_repository_handler(self):
         self.repository_handler = RepositoryHandler(self.WORKING_DIR)
@@ -305,7 +312,7 @@ class RepoGuard:
                 filename = splitted[i * 2]
                 diff = splitted[i * 2 + 1]
 
-                result = self.code_checker.check(diff.split('\n'), filename)
+                result = self.code_checker.check(diff.split('\n'), filename, repo)
                 alerts = [Alert(rule, filename, repo, rev_hash, line, author, commit_description)
                           for rule, line in result]
 
@@ -324,7 +331,7 @@ class RepoGuard:
                           if not self.args.alerts or aid in self.args.alerts}
 
         self.logger.debug('applied_alerts: %s' % repr(applied_alerts))
-        self.code_checker = CodeCheckerFactory(applied_alerts).create()
+        self.code_checker = CodeCheckerFactory(applied_alerts, self.repo_groups, self.rules_to_groups).create()
 
     def set_up_lock_handler(self):
         self.lock_handler = LockHandler(self.WORKING_DIR, self.logger, self.args.overridelock, self.debug)
