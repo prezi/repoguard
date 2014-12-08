@@ -17,7 +17,6 @@ rules_to_groups:
     skipped_repos:
         - except: .*
     local_repos:
-        - match: .*
         - except: os_code_exec::.*
         - except: generic_best_practices::unsecure_protocol
 

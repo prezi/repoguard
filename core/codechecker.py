@@ -30,8 +30,10 @@ class CodeChecker:
                                 positive_patterns = [re.compile(r["match"]) for r in rules_to_group if "match" in r]
                                 negative_patterns = [re.compile(r["except"]) for r in rules_to_group if "except" in r]
 
-                                ctx = reduce(lambda acc, p: acc or p.search(rule.name) is not None, positive_patterns, False)
-                                return ctx and reduce(lambda ctx, p: ctx and p.search(rule.name) is None, negative_patterns, ctx)
+                                ctx = reduce(lambda acc, p: acc or p.search(rule.name) is not None, positive_patterns,
+                                             False)
+                                return ctx and reduce(lambda ctx, p: ctx and p.search(rule.name) is None,
+                                                      negative_patterns, ctx)
             return True
 
         return rule_filter

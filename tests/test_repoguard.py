@@ -14,6 +14,16 @@ class RepoguardTestCase(BaseTestCase):
         self.assertFalse(self.rg.should_skip_by_name('bob'))
         self.assertTrue(self.rg.should_skip_by_name('whatever_else'))
 
+    def test_build_repo_groups(self):
+        raw_repo_groups = {
+            'skipped_repos': ['junk'],
+            'not_a_list': {},
+            'not_a_leaf': ['foo', '@skipped_repos']
+        }
+        expected_result = {'not_a_leaf': ['foo', '@skipped_repos'], 'skipped_repos': ['junk']}
+
+        self.assertEquals(self.rg.build_repo_groups(raw_repo_groups), expected_result)
+
 
 class AlertSubscriptionTestCase(BaseTestCase):
     def setUp(self):
