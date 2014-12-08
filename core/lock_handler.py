@@ -1,6 +1,7 @@
 import os
 import sys
 
+
 class LockHandlerException(Exception):
     def __init__(self, error):
         self.error = error
@@ -8,13 +9,13 @@ class LockHandlerException(Exception):
     def __str__(self):
         return repr(self.error)
 
+
 class LockHandler():
-    def __init__(self, working_dir, logger, override_lock_handler, debug):
+    def __init__(self, working_dir, logger, override_lock_handler):
         self.lock_file = "%srepoguard.pid" % working_dir
         self.aborted_state_file = "%saborted_state.lock" % working_dir
         self.logger = logger
         self.override_lock_handler = override_lock_handler
-        self.debug = debug
 
     def put_lock(self):
         with open(self.lock_file, "w") as lockfile:
@@ -49,7 +50,7 @@ class LockHandler():
 
     def start(self):
         if not self.override_lock_handler:
-            if self.is_aborted() and self.debug:
+            if self.is_aborted():
                 self.logger.info('Aborted state, quiting!')
                 sys.exit()
             if self.is_locked():

@@ -1,13 +1,13 @@
 import unittest
-from mock import patch
 
-from core.repository_handler import Repository, RepositoryHandler, RepositoryException
+from mock import patch, Mock
+from core.repository_handler import Repository, RepositoryHandler
 
 
 class RepositoryTestCase(unittest.TestCase):
     def setUp(self):
         self.repo_data = {"ssh_url": "git@github.com:prezi/repo1.git", "name": "test_repo", "language": "Python", "private": True, "fork": False}
-        self.repo = Repository("repo_id", self.repo_data, "working_directory")
+        self.repo = Repository("repo_id", self.repo_data, "working_directory", logger=Mock())
 
     def test_add_status_info_from_json(self):
         status_info = {}
@@ -49,8 +49,9 @@ class RepositoryHandlerTestCase(unittest.TestCase):
            return_value={"11111": {"last_checked_hashes": ["aaaa"], "name": "test_repo"}})
     @patch('core.repository_handler.Repository')
     def test_create_repo_list_and_status_from_files(self, *mocks):
-        self.repository_handler = RepositoryHandler("test_work_dir")
+        logger = Mock()
+        self.repository_handler = RepositoryHandler("test_work_dir", logger=logger)
         self.repository_handler.create_repo_list_and_status_from_files()
         mocks[0].assert_called_with('11111', {'name': 'test_repo', 'language': 'Python',
-                                              'ssh_url': 'git@github.com:prezi/repo1.git'}, 'test_work_dir')
+                                              'ssh_url': 'git@github.com:prezi/repo1.git'}, 'test_work_dir', logger)
         pass

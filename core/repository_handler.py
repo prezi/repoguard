@@ -1,8 +1,9 @@
 import json
-import jsonpickle
-import logging
+from collections import OrderedDict
 import subprocess
 import shutil
+
+import jsonpickle
 
 
 class RepositoryException(Exception):
@@ -10,7 +11,7 @@ class RepositoryException(Exception):
 
 
 class Repository():
-    def __init__(self, repo_id, repo_data_json, working_directory):
+    def __init__(self, repo_id, repo_data_json, working_directory, logger):
         self._status_json_attributes = ("name", "last_checked_commit_hashes")
         self.repo_id = repo_id
         self.name = repo_data_json["name"]
@@ -23,7 +24,7 @@ class Repository():
         self.full_dir_path = '%s%s' % (working_directory, self.dir_name)
         self.last_checked_commit_hashes = []
         self.not_checked_commit_hashes = []
-        self.logger = logging.getLogger()
+        self.logger = logger
 
     def add_status_info_from_json(self, repo_status_info_json):
         self.last_checked_commit_hashes = repo_status_info_json["last_checked_commit_hashes"]
@@ -74,7 +75,8 @@ class Repository():
 
     def call_command(self, cmd, cwd=None):
         cwd = self.full_dir_path if not cwd else cwd
-        self.logger.debug("calling %s (cwd: %s)" % (cmd, cwd))
+        self.logger.debug("Calling %s (cwd: %s)" % (cmd, cwd))
+        # print ['timeout', '1m', '--kill-after=2m'] + cmd.split()
         try:
             cmd_output = subprocess.check_output(cmd.split(), cwd=cwd)
             return cmd_output
@@ -91,19 +93,19 @@ class Repository():
 
 
 class RepositoryHandler():
-    def __init__(self, working_directory):
-        self.logger = logging.getLogger()
+    def __init__(self, working_directory, logger):
+        self.logger = logger
         self.working_directory = working_directory
         self.repo_list_file = working_directory + 'repo_list.json'
         self.repo_status_file = working_directory + 'repo_status.json'
-        self.repo_list = {}
+        self.repo_list = OrderedDict()
         self.create_repo_list_and_status_from_files()
         self.logger.debug("repository handler started")
 
     def create_repo_list_and_status_from_files(self):
         repo_list = self.load_repo_list_from_file()
-        for repo_id, repo_data in repo_list.iteritems():
-            self.repo_list[repo_id] = Repository(repo_id, repo_data, self.working_directory)
+        for repo_id, repo_data in sorted(repo_list.iteritems(), key=lambda r: r[1]['name']):
+            self.repo_list[repo_id] = Repository(repo_id, repo_list[repo_id], self.working_directory, self.logger)
 
     def load_status_info_from_file(self):
         repo_status_info = self.load_repo_status_from_file()
@@ -112,7 +114,7 @@ class RepositoryHandler():
                 self.get_repo_by_id(repo_id).add_status_info_from_json(repo_status_info[repo_id])
 
     def get_repo_list(self):
-        return (v for k, v in self.repo_list.iteritems())
+        return self.repo_list.values()
 
     def get_repo_by_id(self, repo_id):
         return self.repo_list[repo_id]
