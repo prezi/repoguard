@@ -58,7 +58,7 @@ class RepoGuard:
         parser.add_argument('--nopull', action='store_true', default=False, help='No repo pull if set')
         parser.add_argument('--notify', '-N', action='store_true', default=False,
                             help='Notify pre-defined contacts via e-mail')
-        parser.add_argument('--silent', action="count", help='Supress log messages lower than warning')
+        parser.add_argument('--verbose', '-v', action="count", default=False, help='Verbose mode')
         parser.add_argument('--store', '-S', default=False, help='ElasticSearch node (host:port)')
         parser.add_argument('--ignorestatus', action='store_true', default=False,
                             help='If true repoguard will not skip commits which were already '
@@ -75,10 +75,10 @@ class RepoGuard:
         if self.args.alerts:
             self.args.alerts = self.args.alerts.split(',')
 
-        if self.args.silent:
-            self.logger.setLevel(logging.WARNING)
-        else:
+        if self.args.verbose:
             self.logger.setLevel(logging.DEBUG)
+        else:
+            self.logger.setLevel(logging.WARNING)
 
     def detect_paths(self):
         self.APP_DIR = '%s/' % os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
@@ -118,7 +118,6 @@ class RepoGuard:
                 self.smtp_password = config['smtp']['password']
                 self.use_tls = config['smtp']['use_tls']
                 self.detect_rename = config['git']['detect_rename']
-                self.debug = config['debug']
                 self.notifications = config['notifications']
                 self.full_scan_triggered_rules = config.get('full_scan_triggered_rules', False)
         except KeyError as e:
@@ -136,7 +135,7 @@ class RepoGuard:
             return repo_name not in self.args.limit
 
     def set_up_repository_handler(self):
-        self.repository_handler = RepositoryHandler(self.WORKING_DIR)
+        self.repository_handler = RepositoryHandler(self.WORKING_DIR, self.logger)
         if not self.args.since:
             self.repository_handler.load_status_info_from_file()
 
@@ -154,36 +153,32 @@ class RepoGuard:
     def update_local_repos(self):
         existing_repo_dirs = os.listdir(self.WORKING_DIR)
 
-        repo_list = list(self.repository_handler.get_repo_list())
+        repo_list = self.repository_handler.get_repo_list()
         for idx, repo in enumerate(repo_list):
             if self.should_skip_by_name(repo.name):
                 self.logger.debug('Got --limit param and repo (%s) is not among them, skipping git pull/clone.'
                                   % repo.name)
-                continue
-
-            if self.debug:
-                self.logger.debug(
-                    'Pulling repo "%s/%s" (%d/%d) %2.2f%%' % (self.org_name, repo.name, idx, len(repo_list),
-                                                              float(idx) * 100 / len(repo_list)))
-
-            # TODO: multithreading
-            self.git_clone_or_pull(existing_repo_dirs, repo)
+            else:
+                self.logger.info('Pulling repo "%s/%s" (%d/%d) %2.2f%%' % (self.org_name, repo.name, idx,
+                                                                            len(repo_list),
+                                                                            float(idx) * 100 / len(repo_list)))
+                # TODO: multithreading?
+                self.git_clone_or_pull(existing_repo_dirs, repo)
 
     def check_new_code(self, detect_rename=False):
         existing_repo_dirs = os.listdir(self.WORKING_DIR)
 
         repo_list = list(self.repository_handler.get_repo_list())
         for idx, repo in enumerate(repo_list):
-            self.logger.debug('Checking repo "%s/%s" (%d/%d) %2.2f%%' % (self.org_name, repo.name, idx, len(repo_list),
+            self.logger.info('Checking repo "%s/%s" (%d/%d) %2.2f%%' % (self.org_name, repo.name, idx, len(repo_list),
                                                                          float(idx) * 100 / len(repo_list)))
             if self.should_skip_by_name(repo.name):
-                if self.debug:
-                    self.logger.debug('Skipping code check for %s' % repo.name)
+                self.logger.debug('Skipping code check for %s' % repo.name)
                 continue
             if repo.dir_name in existing_repo_dirs:
                 self.check_results += self.check_by_repo(repo, detect_rename=detect_rename)
             else:
-                self.logger.debug('skip repo %s because directory doesnt exist' % repo.dir_name)
+                self.logger.debug('Skip repo %s because directory doesnt exist' % repo.dir_name)
 
         if not self.args.notify:
             for alert in self.check_results:
@@ -341,7 +336,7 @@ class RepoGuard:
         self.code_checker = CodeCheckerFactory(applied_alerts, self.repo_groups, self.rules_to_groups).create()
 
     def set_up_lock_handler(self):
-        self.lock_handler = LockHandler(self.WORKING_DIR, self.logger, self.args.overridelock, self.debug)
+        self.lock_handler = LockHandler(self.WORKING_DIR, self.logger, self.args.overridelock)
 
     def try_to_lock(self):
         try:
@@ -358,7 +353,7 @@ class RepoGuard:
             sys.exit()
 
     def launch_full_repoguard_scan_on_repo(self, repo_name):
-        self.logger.debug("spawning a new repoguard for %s " % (repo_name))
+        self.logger.info("Spawning a new repoguard for %s " % (repo_name))
         full_scan_repoguard = RepoGuard("full_scan_%s" % repo_name)
         full_scan_repoguard.args = deepcopy(self.args)
         full_scan_repoguard.args.overridelock = True
@@ -373,7 +368,7 @@ class RepoGuard:
 
     def check_and_alert_on_new_repos(self, git_repo_updater_obj):
         new_public_repo_list = git_repo_updater_obj.refresh_repos_and_detect_new_public_repos()
-        self.logger.debug('New public repos: %s', new_public_repo_list)
+        self.logger.info('New public repos: %s', new_public_repo_list)
         git_repo_updater_obj.write_repo_list_to_file()
         for new_public_repo in new_public_repo_list:
             self.launch_full_repoguard_scan_on_repo(new_public_repo["name"])

@@ -39,7 +39,7 @@ class GitRepoUpdater:
 
     def fetch_repo_list(self, url):
         try:
-            self.logger.debug('Fetching %s...' % url)
+            self.logger.info('Fetching repo list from %s...' % url)
             r = requests.get(url, verify=True, headers=self.request_headers)
 
             if r.status_code == 200:
