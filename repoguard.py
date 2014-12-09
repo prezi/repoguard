@@ -192,6 +192,7 @@ class RepoGuard:
     def store_results(self):
         (host, port) = self.args.store.split(":")
         data_store = DataStore(host=host, port=port, default_doctype="repoguard", default_index="repoguard")
+        self.logger.info('Storing %d results to ES (%s).' % (len(self.check_results), data_store))
         for alert in self.check_results:
             try:
                 body = {
