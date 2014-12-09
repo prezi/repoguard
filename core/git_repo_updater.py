@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import requests
-import requests.exceptions
 import json
 import re
+
+import requests
+import requests.exceptions
 
 
 class GitRepoUpdater:
@@ -41,7 +42,7 @@ class GitRepoUpdater:
 
     def fetch_repo_list(self, url):
         try:
-            self.logger.info('Fetching repo list from %s...' % url)
+            self.logger.info('Fetching repo list from: %s' % url)
             r = requests.get(url, verify=True, headers=self.request_headers)
 
             if r.status_code == 200:
@@ -68,7 +69,7 @@ class GitRepoUpdater:
 
     def write_repo_list_to_file(self):
         with open(self.REPO_LIST_PATH, 'w') as repo_file:
-            json.dump(self.repo_list_cache, repo_file)
+            json.dump(self.repo_list_cache, repo_file, indent=4, sort_keys=True)
 
     def read_repo_list_from_file(self):
         with open(self.REPO_LIST_PATH, 'r') as repo_file:
