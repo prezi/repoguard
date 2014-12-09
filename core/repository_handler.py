@@ -61,7 +61,6 @@ class Repository():
 
     def git_reset_to_oldest_hash(self):
         if self.last_checked_commit_hashes:
-            self.call_command('git checkout master')
             self.call_command("git reset --hard %s" % self.last_checked_commit_hashes[0])
 
     def git_clone(self):
