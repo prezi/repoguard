@@ -142,15 +142,19 @@ class RepoGuard:
     def git_clone_or_pull(self, existing_repo_dirs, repo):
         if repo.dir_name in existing_repo_dirs:
             repo.git_reset_to_oldest_hash()
-            if not repo.call_command("git pull"):
+            if not repo.git_pull(self.github_token):
                 # if there was any error on pulling, let's reclone the directory
+                self.logger.debug('Git pull failed, reclone repository.')
                 repo.remove()
                 repo.git_clone(self.github_token)
         else:
+            self.logger.debug('Repository not in existing repo dirs, cloning it.')
             repo.git_clone(self.github_token)
-            repo.detect_new_commit_hashes()
+
+        repo.detect_new_commit_hashes()
 
     def update_local_repos(self):
+        self.logger.debug('Updating local repositories.')
         existing_repo_dirs = os.listdir(self.WORKING_DIR)
 
         repo_list = self.repository_handler.get_repo_list()
@@ -159,7 +163,7 @@ class RepoGuard:
                 self.logger.debug('Got --limit param and repo (%s) is not among them, skipping git pull/clone.'
                                   % repo.name)
             else:
-                self.logger.info('Pulling repo "%s/%s" (%d/%d) %2.2f%%' % (self.org_name, repo.name, idx,
+                self.logger.info('Updating repo "%s/%s" (%d/%d) %2.2f%%' % (self.org_name, repo.name, idx,
                                                                            len(repo_list),
                                                                            float(idx) * 100 / len(repo_list)))
                 # TODO: multithreading?
@@ -170,6 +174,7 @@ class RepoGuard:
         existing_repo_dirs = os.listdir(self.WORKING_DIR)
 
         repo_list = list(self.repository_handler.get_repo_list())
+        self.logger.debug('Checking new commits for %d repositories.' % len(repo_list))
         for idx, repo in enumerate(repo_list):
             self.logger.info('Checking repo "%s/%s" (%d/%d) %2.2f%%' % (self.org_name, repo.name, idx, len(repo_list),
                                                                         float(idx) * 100 / len(repo_list)))
@@ -392,10 +397,13 @@ class RepoGuard:
             git_repo_updater_obj = GitRepoUpdater(self.org_name, self.github_token,
                                                   self.repository_handler.repo_list_file, self.logger)
             if self.full_scan_triggered_rules:
+                # this is a run triggered by another repoguard
                 self.check_and_alert_on_new_repos(git_repo_updater_obj)
             else:
                 git_repo_updater_obj.refresh_repo_list()
                 git_repo_updater_obj.write_repo_list_to_file()
+                # TODO: it should not be necessary...
+                self.repository_handler.create_repo_list_and_status_from_files()
 
         if not self.args.nopull:
             self.update_local_repos()

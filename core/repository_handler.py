@@ -4,8 +4,6 @@ from collections import OrderedDict
 import subprocess
 import shutil
 
-import jsonpickle
-
 
 class RepositoryException(Exception):
     pass
@@ -65,13 +63,14 @@ class Repository():
             self.call_command("git reset --hard %s" % self.last_checked_commit_hashes[0])
 
     def git_clone(self, token):
-        self.call_command("git clone %s %s" % (self.ssh_url, self.dir_name), cwd=self.working_directory)
-        # TODO: nice to have
-        # using git pull to avoid storing the token in .git/config (but then all command needs this format)
+        # using git pull to avoid storing the token in .git/config
         # see: https://github.com/blog/1270-easier-builds-and-deployments-using-git-over-https-and-oauth
-        # os.mkdir(self.full_dir_path)
-        # self.call_command('git init')
-        # self.call_command("git pull %s" % (self.url_with_token % token), cwd=self.full_dir_path)
+        os.mkdir(self.full_dir_path)
+        self.call_command('git init')
+        self.call_command("git pull %s" % (self.url_with_token % token), cwd=self.full_dir_path)
+
+    def git_pull(self, token):
+        return self.call_command("git pull %s" % (self.url_with_token % token), cwd=self.full_dir_path)
 
     def remove(self):
         try:
@@ -146,4 +145,4 @@ class RepositoryHandler():
 
     def save_repo_status_to_file(self):
         with open(self.repo_status_file, 'w') as repo_status:
-            repo_status.write(jsonpickle.encode(self.repo_list, unpicklable=False))
+            json.dump(self.repo_list, repo_status, indent=4, sort_keys=True)
