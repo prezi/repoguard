@@ -10,15 +10,15 @@ class RepositoryException(Exception):
 
 
 class Repository():
-    def __init__(self, repo_id, repo_data_json, working_directory, logger):
+    def __init__(self, repo_id, github_repo_json_response, working_directory, logger):
         self._status_json_attributes = ("name", "last_checked_commit_hashes")
         self.repo_id = repo_id
-        self.name = repo_data_json["name"]
+        self.name = github_repo_json_response["name"]
         self.working_directory = working_directory
-        self.url_with_token = repo_data_json["url_with_token"]
-        self.language = repo_data_json["language"]
-        self.fork = repo_data_json["fork"]
-        self.private = repo_data_json["private"]
+        self.url_with_token = github_repo_json_response["url_with_token"]
+        self.language = github_repo_json_response["language"]
+        self.fork = github_repo_json_response["fork"]
+        self.private = github_repo_json_response["private"]
         self.dir_name = '%s_%s' % (self.name, self.repo_id)
         self.full_dir_path = '%s%s' % (working_directory, self.dir_name)
         self.last_checked_commit_hashes = []
@@ -33,7 +33,7 @@ class Repository():
             self.last_checked_commit_hashes.append(rev_hash)
 
     def get_last_commit_hashes(self):
-        result = self.call_command("git rev-list --remotes --no-merges --max-count=100")
+        result = self.call_command("git rev-list --remotes --no-merges --max-count=100 HEAD")
         return result.split('\n')[:-1] if result is not None else []
 
     def detect_new_commit_hashes(self):
@@ -89,7 +89,7 @@ class Repository():
             self.logger.exception("Error when calling %s (cwd: %s)" % (cmd, cwd))
         return None
 
-    def __getstate__(self):
+    def to_dict(self):
         state = self.__dict__.copy()
         for attr in self.__dict__:
             if attr not in self._status_json_attributes:
@@ -144,5 +144,6 @@ class RepositoryHandler():
             return {}
 
     def save_repo_status_to_file(self):
+        # print 'save_repo_status_to_file', {k:v.__dict__ for k,v in self.repo_list.iteritems()}
         with open(self.repo_status_file, 'w') as repo_status:
-            json.dump(self.repo_list, repo_status, indent=4, sort_keys=True)
+            json.dump({k: v.to_dict() for k, v in self.repo_list.iteritems()}, repo_status, indent=4, sort_keys=True)
