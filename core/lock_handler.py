@@ -36,9 +36,9 @@ class LockHandler():
                 self.logger.error('Lock there but script not running, removing lock entering aborted state...')
                 self.release_lock()
                 self.set_aborted()
-                raise LockHandlerException("Found lock with PID %s, but process not found... ")
+                raise LockHandlerException("Found lock with PID %s, but process not found... " % pid)
         else:
-            self.logger.debug("pid file not found, not locked...")
+            self.logger.debug("Pid file not found, not locked...")
             return False
 
     def set_aborted(self):
@@ -54,6 +54,6 @@ class LockHandler():
                 self.logger.info('Aborted state, quiting!')
                 sys.exit()
             if self.is_locked():
-                self.logger.info('Locked, script running... waiting.')
+                self.logger.info('Locked, script running... exiting.')
                 sys.exit()
             self.put_lock()
