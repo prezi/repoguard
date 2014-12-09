@@ -68,8 +68,6 @@ class RepoGuard:
 
         self.args = parser.parse_args()
 
-        # if self.args.rule_dirs:
-        # self.args.rule_dirs = self.args.rule_dirs.split(',')
         if self.args.limit:
             self.args.limit = self.args.limit.split(',')
         if self.args.alerts:
@@ -79,6 +77,8 @@ class RepoGuard:
             self.logger.setLevel(logging.DEBUG)
         else:
             self.logger.setLevel(logging.INFO)
+
+        self.logger.debug('Called with arguments: %s' % self.args)
 
     def detect_paths(self):
         self.APP_DIR = '%s/' % os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
@@ -159,8 +159,8 @@ class RepoGuard:
                                   % repo.name)
             else:
                 self.logger.info('Pulling repo "%s/%s" (%d/%d) %2.2f%%' % (self.org_name, repo.name, idx,
-                                                                            len(repo_list),
-                                                                            float(idx) * 100 / len(repo_list)))
+                                                                           len(repo_list),
+                                                                           float(idx) * 100 / len(repo_list)))
                 # TODO: multithreading?
                 self.git_clone_or_pull(existing_repo_dirs, repo)
 
@@ -170,7 +170,7 @@ class RepoGuard:
         repo_list = list(self.repository_handler.get_repo_list())
         for idx, repo in enumerate(repo_list):
             self.logger.info('Checking repo "%s/%s" (%d/%d) %2.2f%%' % (self.org_name, repo.name, idx, len(repo_list),
-                                                                         float(idx) * 100 / len(repo_list)))
+                                                                        float(idx) * 100 / len(repo_list)))
             if self.should_skip_by_name(repo.name):
                 self.logger.debug('Skipping code check for %s' % repo.name)
                 continue
@@ -331,7 +331,7 @@ class RepoGuard:
         applied_alerts = {aid: adata for aid, adata in resolved_rules.iteritems()
                           if not self.args.alerts or aid in self.args.alerts}
 
-        self.logger.debug('applied_alerts: %s' % repr(applied_alerts))
+        # self.logger.debug('applied_alerts: %s' % repr(applied_alerts))
         self.code_checker = CodeCheckerFactory(applied_alerts, self.repo_groups, self.rules_to_groups).create()
 
     def set_up_lock_handler(self):
