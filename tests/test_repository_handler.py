@@ -6,12 +6,11 @@ from core.repository_handler import Repository, RepositoryHandler
 
 class RepositoryTestCase(unittest.TestCase):
     def setUp(self):
-        self.repo_data = {"ssh_url": "git@github.com:prezi/repo1.git", "name": "test_repo", "language": "Python", "private": True, "fork": False}
+        self.repo_data = {"url_with_token": "https://%s@github.com/prezi/repo1.git", "name": "test_repo", "language": "Python", "private": True, "fork": False}
         self.repo = Repository("repo_id", self.repo_data, "working_directory", logger=Mock())
 
     def test_add_status_info_from_json(self):
-        status_info = {}
-        status_info["last_checked_commit_hashes"] = ["aaaaa", "bbbbb"]
+        status_info = {"last_checked_commit_hashes": ["aaaaa", "bbbbb"]}
         self.repo.add_status_info_from_json(status_info)
         self.assertEquals(self.repo.last_checked_commit_hashes, status_info["last_checked_commit_hashes"])
 

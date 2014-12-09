@@ -1,4 +1,5 @@
 import json
+import os
 from collections import OrderedDict
 import subprocess
 import shutil
@@ -16,7 +17,7 @@ class Repository():
         self.repo_id = repo_id
         self.name = repo_data_json["name"]
         self.working_directory = working_directory
-        self.ssh_url = repo_data_json["ssh_url"]
+        self.url_with_token = repo_data_json["url_with_token"]
         self.language = repo_data_json["language"]
         self.fork = repo_data_json["fork"]
         self.private = repo_data_json["private"]
@@ -63,8 +64,14 @@ class Repository():
         if self.last_checked_commit_hashes:
             self.call_command("git reset --hard %s" % self.last_checked_commit_hashes[0])
 
-    def git_clone(self):
+    def git_clone(self, token):
         self.call_command("git clone %s %s" % (self.ssh_url, self.dir_name), cwd=self.working_directory)
+        # TODO: nice to have
+        # using git pull to avoid storing the token in .git/config (but then all command needs this format)
+        # see: https://github.com/blog/1270-easier-builds-and-deployments-using-git-over-https-and-oauth
+        # os.mkdir(self.full_dir_path)
+        # self.call_command('git init')
+        # self.call_command("git pull %s" % (self.url_with_token % token), cwd=self.full_dir_path)
 
     def remove(self):
         try:
@@ -104,7 +111,10 @@ class RepositoryHandler():
     def create_repo_list_and_status_from_files(self):
         repo_list = self.load_repo_list_from_file()
         for repo_id, repo_data in sorted(repo_list.iteritems(), key=lambda r: r[1]['name']):
-            self.repo_list[repo_id] = Repository(repo_id, repo_list[repo_id], self.working_directory, self.logger)
+            try:
+                self.repo_list[repo_id] = Repository(repo_id, repo_list[repo_id], self.working_directory, self.logger)
+            except KeyError:
+                self.logger.exception('Got KeyError during Repository instantiation.')
 
     def load_status_info_from_file(self):
         repo_status_info = self.load_repo_status_from_file()

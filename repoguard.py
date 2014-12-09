@@ -6,6 +6,7 @@ import argparse
 import logging
 import sys
 from copy import deepcopy
+from multiprocessing import Pool
 
 import yaml
 import re
@@ -22,13 +23,13 @@ from core.repository_handler import RepositoryHandler
 
 class RepoGuard:
     def __init__(self, instance_id="root"):
-        self.CONFIG = {}
         self.repo_list = {}
         self.repo_status = {}
         self.repo_status_new = {}
         self.check_results = []
         self.instance_id = instance_id
         self.es_type = "repoguard"
+        self.worker_pool = Pool()
 
         self.logger = logging.getLogger(instance_id)
         # create formatter and add it to the handlers
@@ -144,9 +145,9 @@ class RepoGuard:
             if not repo.call_command("git pull"):
                 # if there was any error on pulling, let's reclone the directory
                 repo.remove()
-                repo.git_clone()
+                repo.git_clone(self.github_token)
         else:
-            repo.git_clone()
+            repo.git_clone(self.github_token)
             repo.detect_new_commit_hashes()
 
     def update_local_repos(self):
@@ -162,6 +163,7 @@ class RepoGuard:
                                                                            len(repo_list),
                                                                            float(idx) * 100 / len(repo_list)))
                 # TODO: multithreading?
+                # self.worker_pool.apply(self.git_clone_or_pull, (existing_repo_dirs, repo))
                 self.git_clone_or_pull(existing_repo_dirs, repo)
 
     def check_new_code(self, detect_rename=False):

@@ -11,7 +11,8 @@ class GitRepoUpdater:
         self.REPO_LIST_PATH = repo_list_path
         self.api_url = 'https://api.github.com/orgs/%s/repos' % (org_name)
         self.request_headers = {'Authorization': 'token %s' % github_token}
-        self.repo_attributes_to_store = ('name', 'ssh_url', 'language', 'private', 'fork')
+        self.token = github_token
+        self.repo_attributes_to_store = ('name', 'language', 'full_name', 'private', 'fork')
         self.logger = logger
 
         self.actpage = 0
@@ -29,6 +30,7 @@ class GitRepoUpdater:
         repo_info_to_store = {}
         for repo_attribute in self.repo_attributes_to_store:
             repo_info_to_store[repo_attribute] = repo_json_obj[repo_attribute]
+        repo_info_to_store['url_with_token'] = 'https://%%s@github.com/%s.git' % (repo_json_obj['full_name'])
         return repo_info_to_store
 
     def store_repo_attributes_from_response_json(self, response_json):
