@@ -31,7 +31,7 @@ class RepoGuard:
         self.check_results = []
         self.instance_id = instance_id
         self.es_type = "repoguard"
-        self.worker_pool = Pool()
+        self.worker_pool = Pool(processes=16)
         self.logger = logging.getLogger('repoguard')
 
         self.parse_args()
@@ -98,22 +98,23 @@ class RepoGuard:
         try:
             with open(path) as f:
                 config = yaml.load(f.read())
-                self.repo_groups = self.build_repo_groups(config['repo_groups'])
-                self.rules_to_groups = config['rules_to_groups']
                 self.default_notification_src_address = config['default_notification_src_address']
                 self.default_notification_to_address = config['default_notification_to_address']
-                self.subscribers = config['subscribers']
-                self.org_name = config['github']['organization_name']
-                self.github_token = config['github']['token']
-                self.smtp_host = config['smtp']['host']
-                self.smtp_port = config['smtp']['port']
-                self.smtp_conn_string = self.smtp_host + ":" + str(self.smtp_port)
-                self.smtp_username = config['smtp']['username']
-                self.smtp_password = config['smtp']['password']
-                self.use_tls = config['smtp']['use_tls']
                 self.detect_rename = config['git']['detect_rename']
-                self.notifications = config['notifications']
                 self.full_scan_triggered_rules = config.get('full_scan_triggered_rules', False)
+                self.github_token = config['github']['token']
+                self.notifications = config['notifications']
+                self.org_name = config['github']['organization_name']
+                self.repo_groups = self.build_repo_groups(config['repo_groups'])
+                self.rules_to_groups = config['rules_to_groups']
+                self.skipped_repos = config['skip_repo_list']
+                self.smtp_conn_string = self.smtp_host + ":" + str(self.smtp_port)
+                self.smtp_host = config['smtp']['host']
+                self.smtp_password = config['smtp']['password']
+                self.smtp_port = config['smtp']['port']
+                self.smtp_username = config['smtp']['username']
+                self.subscribers = config['subscribers']
+                self.use_tls = config['smtp']['use_tls']
         except KeyError as e:
             self.logger.exception('Key %s not found in config file' % e)
             sys.exit()
@@ -125,8 +126,7 @@ class RepoGuard:
             sys.exit()
 
     def should_skip_by_name(self, repo_name):
-        if self.args.limit:
-            return repo_name not in self.args.limit
+        return (self.args.limit and repo_name not in self.args.limit) or repo_name in self.skipped_repos
 
     def set_up_repository_handler(self):
         self.repository_handler = RepositoryHandler(self.WORKING_DIR, self.logger)
