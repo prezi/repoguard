@@ -13,7 +13,7 @@ class RepositoryException(Exception):
     pass
 
 
-def git_clone_or_pull(existing_repo_dirs, repo, github_token):
+def git_clone_or_pull(existing_repo_dirs, github_token, repo):
     if repo.dir_name in existing_repo_dirs:
         repo.git_reset_to_oldest_hash()
         if not repo.git_pull(github_token):
