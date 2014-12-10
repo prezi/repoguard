@@ -1,12 +1,31 @@
 import json
+import logging
 import os
 from collections import OrderedDict
 import subprocess
 import shutil
 
 
+module_logger = logging.getLogger("repoguard.repository_handler")
+
+
 class RepositoryException(Exception):
     pass
+
+
+def git_clone_or_pull(existing_repo_dirs, repo, github_token):
+    if repo.dir_name in existing_repo_dirs:
+        repo.git_reset_to_oldest_hash()
+        if not repo.git_pull(github_token):
+            # if there was any error on pulling, let's reclone the directory
+            module_logger.debug('Git pull failed, reclone repository.')
+            repo.remove()
+            repo.git_clone(github_token)
+    else:
+        module_logger.debug('Repository not in existing repo dirs, cloning it.')
+        repo.git_clone(github_token)
+
+    repo.detect_new_commit_hashes()
 
 
 class Repository():
@@ -23,7 +42,7 @@ class Repository():
         self.full_dir_path = '%s%s' % (working_directory, self.dir_name)
         self.last_checked_commit_hashes = []
         self.not_checked_commit_hashes = []
-        self.logger = logger
+        self.logger = logging.getLogger('repository_handler.Repository')
 
     def add_status_info_from_json(self, repo_status_info_json):
         self.last_checked_commit_hashes = repo_status_info_json["last_checked_commit_hashes"]
@@ -51,12 +70,10 @@ class Repository():
     def get_rev_list_since_date(self, since):
         cmd = "git", "rev-list", "--remotes", "--no-merges", "--since=\"%s\"" % since, "HEAD"
         try:
-            cmd_output = subprocess.check_output(cmd, cwd=self.full_dir_path).split("\n")[:-1]
+            return subprocess.check_output(cmd, cwd=self.full_dir_path).split("\n")[:-1]
         except subprocess.CalledProcessError, e:
             error_msg = "Error when calling %s (cwd: %s): %s" % (repr(cmd), self.full_dir_path, e)
             self.logger.error(error_msg)
-            cmd_output = []
-        return cmd_output
 
     def git_reset_to_oldest_hash(self):
         if self.last_checked_commit_hashes:
@@ -81,7 +98,6 @@ class Repository():
     def call_command(self, cmd, cwd=None):
         cwd = self.full_dir_path if not cwd else cwd
         self.logger.debug("Calling %s (cwd: %s)" % (cmd, cwd))
-        # print ['timeout', '1m', '--kill-after=2m'] + cmd.split()
         try:
             cmd_output = subprocess.check_output(cmd.split(), cwd=cwd)
             return cmd_output
@@ -95,6 +111,20 @@ class Repository():
             if attr not in self._status_json_attributes:
                 del state[attr]
         return state
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        for attr in self.__dict__:
+            if attr in ['logger']:
+                del state[attr]
+        return state
+
+    def __setstate__(self, state):
+        # Restore instance attributes (i.e., filename and lineno).
+        self.__dict__.update(state)
+        # Restore the previously opened file's state. To do so, we need to
+        # reopen it and read from it until the line count is restored.
+        self.logger = logging.getLogger('repository_handler.Repository')
 
 
 class RepositoryHandler():
@@ -144,6 +174,5 @@ class RepositoryHandler():
             return {}
 
     def save_repo_status_to_file(self):
-        # print 'save_repo_status_to_file', {k:v.__dict__ for k,v in self.repo_list.iteritems()}
         with open(self.repo_status_file, 'w') as repo_status:
             json.dump({k: v.to_dict() for k, v in self.repo_list.iteritems()}, repo_status, indent=4, sort_keys=True)

@@ -7,22 +7,23 @@ import logging
 import sys
 from copy import deepcopy
 from multiprocessing import Pool
-
-import yaml
 import re
 import os
+
+import yaml
 from mock import Mock
+
 from core.datastore import DataStore, DataStoreException
 from core.git_repo_updater import GitRepoUpdater
 from core.lock_handler import LockHandler, LockHandlerException
 from core.codechecker import CodeCheckerFactory, Alert
 from core.ruleparser import build_resolved_ruleset, load_rules
 from core.notifier import EmailNotifier, EmailNotifierException
-from core.repository_handler import RepositoryHandler
+from core.repository_handler import RepositoryHandler, git_clone_or_pull
 
 
 class RepoGuard:
-    def __init__(self, instance_id="root"):
+    def __init__(self, instance_id="repoguard-app"):
         self.repo_list = {}
         self.repo_status = {}
         self.repo_status_new = {}
@@ -30,15 +31,7 @@ class RepoGuard:
         self.instance_id = instance_id
         self.es_type = "repoguard"
         self.worker_pool = Pool()
-
-        self.logger = logging.getLogger(instance_id)
-        # create formatter and add it to the handlers
-        formatter = logging.Formatter('%(asctime)s %(processName)-10s %(name)s %(levelname)-8s %(message)s')
-        # create console handler with a higher log level
-        ch = logging.StreamHandler()
-        ch.setFormatter(formatter)
-        # Setup logger output
-        self.logger.addHandler(ch)
+        self.logger = logging.getLogger('repoguard')
 
         self.parse_args()
         self.detect_paths()
@@ -139,20 +132,6 @@ class RepoGuard:
         if not self.args.since:
             self.repository_handler.load_status_info_from_file()
 
-    def git_clone_or_pull(self, existing_repo_dirs, repo):
-        if repo.dir_name in existing_repo_dirs:
-            repo.git_reset_to_oldest_hash()
-            if not repo.git_pull(self.github_token):
-                # if there was any error on pulling, let's reclone the directory
-                self.logger.debug('Git pull failed, reclone repository.')
-                repo.remove()
-                repo.git_clone(self.github_token)
-        else:
-            self.logger.debug('Repository not in existing repo dirs, cloning it.')
-            repo.git_clone(self.github_token)
-
-        repo.detect_new_commit_hashes()
-
     def update_local_repos(self):
         self.logger.debug('Updating local repositories.')
         existing_repo_dirs = os.listdir(self.WORKING_DIR)
@@ -164,11 +143,10 @@ class RepoGuard:
                                   % repo.name)
             else:
                 self.logger.info('Updating repo "%s/%s" (%d/%d) %2.2f%%' % (self.org_name, repo.name, idx,
-                                                                           len(repo_list),
-                                                                           float(idx) * 100 / len(repo_list)))
-                # TODO: multithreading?
-                # self.worker_pool.apply(self.git_clone_or_pull, (existing_repo_dirs, repo))
-                self.git_clone_or_pull(existing_repo_dirs, repo)
+                                                                            len(repo_list),
+                                                                            float(idx) * 100 / len(repo_list)))
+                self.worker_pool.apply(git_clone_or_pull, (existing_repo_dirs, repo, self.github_token))
+                # self.git_clone_or_pull(existing_repo_dirs, repo)
 
     def check_new_code(self, detect_rename=False):
         existing_repo_dirs = os.listdir(self.WORKING_DIR)
@@ -326,7 +304,7 @@ class RepoGuard:
                           for rule, line in result]
 
                 matches_in_rev.extend(alerts)
-        except subprocess.CalledProcessError as e:
+        except (subprocess.CalledProcessError, OSError) as e:
             self.logger.exception('Failed running: %s' % cmd)
 
         return matches_in_rev
@@ -425,4 +403,6 @@ class RepoGuard:
 
 
 if __name__ == '__main__':
-    RepoGuard("root").run()
+    logging.basicConfig(format='%(asctime)s %(processName)-10s %(name)s %(levelname)-8s %(message)s',
+                        level=logging.DEBUG)
+    RepoGuard().run()
