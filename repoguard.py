@@ -73,8 +73,6 @@ class RepoGuard:
         else:
             self.logger.setLevel(logging.INFO)
 
-        self.logger.debug('Called with arguments: %s' % self.args)
-
     def detect_paths(self):
         self.APP_DIR = '%s/' % os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
         self.CONFIG_PATH = self.args.config
@@ -352,14 +350,19 @@ class RepoGuard:
         new_public_repo_list = git_repo_updater_obj.refresh_repos_and_detect_new_public_repos()
         self.logger.info('New public repos: %s', new_public_repo_list)
         git_repo_updater_obj.write_repo_list_to_file()
+        new_public_rule = Mock()
+        new_public_rule.name = 'internal::new_public_repo'
+        new_public_rule.description = 'This repository has been made public, please check for sensitive info!'
         for new_public_repo in new_public_repo_list:
             self.launch_full_repoguard_scan_on_repo(new_public_repo["name"])
             self.check_results += [
-                Alert(rule=Mock(), filename='', repo=new_public_repo["name"], commit=Mock(), line=Mock(), author=Mock(),
-                      commit_description='This repository has been made public, please check for sensitive info!')]
+                Alert(rule=new_public_rule, filename='', repo=new_public_repo["name"], commit='', line='', author='',
+                      commit_description='')]
 
     def run(self):
         self.logger.info('* run started')
+        self.logger.debug('Called with arguments: %s' % self.args)
+
         self.read_config(self.CONFIG_PATH)
         self.read_alert_config_from_file()
 
