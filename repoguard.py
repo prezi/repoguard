@@ -108,7 +108,6 @@ class RepoGuard:
                 self.repo_groups = self.build_repo_groups(config['repo_groups'])
                 self.rules_to_groups = config['rules_to_groups']
                 self.skipped_repos = config['skip_repo_list']
-                self.smtp_conn_string = self.smtp_host + ":" + str(self.smtp_port)
                 self.smtp_host = config['smtp']['host']
                 self.smtp_password = config['smtp']['password']
                 self.smtp_port = config['smtp']['port']
@@ -239,9 +238,10 @@ class RepoGuard:
                 add_alert(self.default_notification_to_address)
 
         from_addr = self.default_notification_src_address
+        smtp_conn_string = self.smtp_host + ":" + str(self.smtp_port)
         self.logger.debug('Notifiying them: %s', repr(alert_per_notify_person))
         for to_addr, text in alert_per_notify_person.iteritems():
-            email_notification = EmailNotifier.create_notification(from_addr, to_addr, text, self.smtp_conn_string,
+            email_notification = EmailNotifier.create_notification(from_addr, to_addr, text, smtp_conn_string,
                                                                    self.smtp_username,
                                                                    self.smtp_password, self.use_tls)
             try:
