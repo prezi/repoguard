@@ -9,6 +9,7 @@ from copy import deepcopy
 from multiprocessing import Pool
 import re
 import os
+from functools import partial
 
 import yaml
 from mock import Mock
@@ -136,17 +137,9 @@ class RepoGuard:
         self.logger.debug('Updating local repositories.')
         existing_repo_dirs = os.listdir(self.WORKING_DIR)
 
-        repo_list = self.repository_handler.get_repo_list()
-        for idx, repo in enumerate(repo_list):
-            if self.should_skip_by_name(repo.name):
-                self.logger.debug('Got --limit param and repo (%s) is not among them, skipping git pull/clone.'
-                                  % repo.name)
-            else:
-                self.logger.info('Updating repo "%s/%s" (%d/%d) %2.2f%%' % (self.org_name, repo.name, idx,
-                                                                            len(repo_list),
-                                                                            float(idx) * 100 / len(repo_list)))
-                self.worker_pool.apply(git_clone_or_pull, (existing_repo_dirs, repo, self.github_token))
-                # self.git_clone_or_pull(existing_repo_dirs, repo)
+        repos_to_update = [r for r in self.repository_handler.get_repo_list() if not self.should_skip_by_name(r.name)]
+
+        self.worker_pool.map(partial(git_clone_or_pull, existing_repo_dirs, self.github_token), repos_to_update)
 
     def check_new_code(self, detect_rename=False):
         existing_repo_dirs = os.listdir(self.WORKING_DIR)
