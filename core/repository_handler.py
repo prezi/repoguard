@@ -74,6 +74,7 @@ class Repository():
         except subprocess.CalledProcessError, e:
             error_msg = "Error when calling %s (cwd: %s): %s" % (repr(cmd), self.full_dir_path, e)
             self.logger.error(error_msg)
+        return []
 
     def git_reset_to_oldest_hash(self):
         if self.last_checked_commit_hashes:
