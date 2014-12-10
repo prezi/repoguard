@@ -144,6 +144,10 @@ class RepoGuard:
     def check_new_code(self, detect_rename=False):
         existing_repo_dirs = os.listdir(self.WORKING_DIR)
 
+        repos_to_update = [r for r in self.repository_handler.get_repo_list() if not self.should_skip_by_name(r.name)]
+
+        self.worker_pool.map(partial(git_clone_or_pull, existing_repo_dirs, self.github_token), repos_to_update)
+
         repo_list = list(self.repository_handler.get_repo_list())
         self.logger.debug('Checking new commits for %d repositories.' % len(repo_list))
         for idx, repo in enumerate(repo_list):
@@ -151,11 +155,11 @@ class RepoGuard:
                                                                         float(idx) * 100 / len(repo_list)))
             if self.should_skip_by_name(repo.name):
                 self.logger.debug('Skipping code check for %s' % repo.name)
-                continue
-            if repo.dir_name in existing_repo_dirs:
-                self.check_results += self.check_by_repo(repo, detect_rename=detect_rename)
             else:
-                self.logger.debug('Skip repo %s because directory doesnt exist' % repo.dir_name)
+                if repo.dir_name in existing_repo_dirs:
+                    self.check_results += self.check_by_repo(repo, detect_rename=detect_rename)
+                else:
+                    self.logger.debug('Skip repo %s because directory doesnt exist' % repo.dir_name)
 
         if not self.args.notify:
             for alert in self.check_results:
