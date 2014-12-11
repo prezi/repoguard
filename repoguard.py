@@ -355,8 +355,11 @@ class RepoGuard:
         new_public_rule.name = 'internal::new_public_repo'
         new_public_rule.description = 'This repository has been made public, please check for sensitive info!'
 
-        for new_public_repo_id in new_public_repo_list:
-            repo_obj = self.repository_handler.get_repo_by_id(new_public_repo_id)
+        for new_public_repo_json in new_public_repo_list:
+            repo_obj = Mock()
+            repo_obj.name = new_public_repo_json['name']
+            repo_obj.private = new_public_repo_json['private']
+            repo_obj.fork = new_public_repo_json['fork']
             self.launch_full_repoguard_scan_on_repo(repo_obj.name)
             self.check_results += [Alert(rule=new_public_rule, filename='', repo=repo_obj, commit='', line='')]
 

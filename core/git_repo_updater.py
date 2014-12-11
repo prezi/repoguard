@@ -83,8 +83,8 @@ class GitRepoUpdater:
             if self.repo_list_cache[repo_id]["private"] == False:
                 if repo_id not in original_repo_status:
                     self.logger.debug("Totally new public repo %s" % self.repo_list_cache[repo_id]["name"])
-                    new_public_repos.append(repo_id)
+                    new_public_repos.append(self.repo_list_cache[repo_id])
                 elif original_repo_status[repo_id]["private"] == True:
                     self.logger.debug("Previously private repo set to public %s" % self.repo_list_cache[repo_id]["name"])
-                    new_public_repos.append(repo_id)
+                    new_public_repos.append(self.repo_list_cache[repo_id])
         return new_public_repos
