@@ -355,11 +355,10 @@ class RepoGuard:
         new_public_rule.name = 'internal::new_public_repo'
         new_public_rule.description = 'This repository has been made public, please check for sensitive info!'
 
-        for new_public_repo in new_public_repo_list:
-            self.launch_full_repoguard_scan_on_repo(new_public_repo["name"])
-            self.check_results += [
-                Alert(rule=new_public_rule, filename='', repo=new_public_repo, commit='', line='', author='',
-                      commit_description='')]
+        for new_public_repo_id in new_public_repo_list:
+            repo_obj = self.repository_handler.get_repo_by_id(new_public_repo_id)
+            self.launch_full_repoguard_scan_on_repo(repo_obj.name)
+            self.check_results += [Alert(rule=new_public_rule, filename='', repo=repo_obj, commit='', line='')]
 
     def run(self):
         self.logger.info('* run started')
