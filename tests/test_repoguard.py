@@ -26,7 +26,8 @@ class RepoguardTestCase(BaseTestCase):
 
     @patch('repoguard.GitRepoUpdater')
     def test_check_and_alert_on_new_repos(self, mocked_repo_updater):
-        mocked_repo_updater.refresh_repos_and_detect_new_public_repos = Mock(return_value=[{'name': 'new_public_repo'}])
+        new_repos = [{'name': 'new_public_repo', 'private': True, 'fork': False}]
+        mocked_repo_updater.refresh_repos_and_detect_new_public_repos = Mock(return_value=new_repos)
         self.rg.launch_full_repoguard_scan_on_repo = Mock()
 
         self.rg.check_and_alert_on_new_repos(mocked_repo_updater)
