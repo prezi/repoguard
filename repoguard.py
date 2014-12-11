@@ -350,13 +350,15 @@ class RepoGuard:
         new_public_repo_list = git_repo_updater_obj.refresh_repos_and_detect_new_public_repos()
         self.logger.info('New public repos: %s', new_public_repo_list)
         git_repo_updater_obj.write_repo_list_to_file()
+
         new_public_rule = Mock()
         new_public_rule.name = 'internal::new_public_repo'
         new_public_rule.description = 'This repository has been made public, please check for sensitive info!'
+
         for new_public_repo in new_public_repo_list:
             self.launch_full_repoguard_scan_on_repo(new_public_repo["name"])
             self.check_results += [
-                Alert(rule=new_public_rule, filename='', repo=new_public_repo["name"], commit='', line='', author='',
+                Alert(rule=new_public_rule, filename='', repo=new_public_repo, commit='', line='', author='',
                       commit_description='')]
 
     def run(self):
