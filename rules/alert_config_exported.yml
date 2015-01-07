@@ -27,6 +27,8 @@ extends: base
 diff: add
 line:
     - match: "[^N]oauth.*"
+file:
+    - except: 'reqirements.*\.txt'
 
 --- #!unsafe_as_htmlText
 extends: base
