@@ -4,19 +4,25 @@ import argparse
 import os
 import os.path
 import sys
+import datetime
 
 from core.codechecker import CodeCheckerFactory, Alert
 from core.evaluators import LineEvalFactory
 from core.ruleparser import load_rules, build_resolved_ruleset
 from core.datastore import DataStore, DataStoreException
-import datetime
 
 
 def check_alerts_in_file(code_checker, file, filename):
     content = file.readlines()
     result = code_checker.check(content, filename)
-    actual_alerts = [Alert(rule, filename, repo='', commit='', line=line) for rule, line in result]
+
+    def create_alert(rule, vuln_line):
+        vuln_line_number = content.index(vuln_line) + 1
+        return Alert(rule, filename, repo='', commit='', line=line, line_number=vuln_line_number)
+
+    actual_alerts = [create_alert(rule, line) for rule, line in result]
     return actual_alerts
+
 
 parser = argparse.ArgumentParser(description='Check a sourcecode repo')
 parser.add_argument('--rule-dir', default="rules/", help='Directory of rules')
@@ -70,8 +76,8 @@ for path in args.files:
         data_store = DataStore(host=host, port=port, default_doctype="repoguard", default_index="repoguard")
 
     for alert in alerts:
-        print 'file:\t%s\nrule:\t%s\nline:\t%s\ndescr:\t%s\n' % (
-            alert.filename, alert.rule.name,
+        print 'file:\t%s:%s\nrule:\t%s\nline:\t%s\ndescr:\t%s\n' % (
+            alert.filename, alert.line_number, alert.rule.name,
             alert.line[0:200].strip().replace("\t", " ").decode('utf-8', 'replace'), alert.rule.description,
         )
         if args.store:
@@ -82,8 +88,9 @@ for path in args.files:
                     "filename": alert.filename,
                     "commit_id": alert.commit,
                     "matching_line": alert.line[0:200].replace("\t", " ").decode('utf-8', 'replace'),
+                    "line_number": alert.line_number,
                     "repo_name": alert.repo,
-                    "@timestamp": datetime.datetime.utcnow().isoformat(),
+                    "timestamp": datetime.datetime.utcnow().isoformat() + 'Z',
                     "type": "repoguard",
                     "false_positive": False,
                     "last_reviewer": "repoguard",
