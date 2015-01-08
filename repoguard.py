@@ -142,10 +142,6 @@ class RepoGuard:
     def check_new_code(self, detect_rename=False):
         existing_repo_dirs = os.listdir(self.WORKING_DIR)
 
-        repos_to_update = [r for r in self.repository_handler.get_repo_list() if not self.should_skip_by_name(r.name)]
-
-        self.worker_pool.map(partial(git_clone_or_pull, existing_repo_dirs, self.github_token), repos_to_update)
-
         repo_list = list(self.repository_handler.get_repo_list())
         self.logger.debug('Checking new commits for %d repositories.' % len(repo_list))
         for idx, repo in enumerate(repo_list):
