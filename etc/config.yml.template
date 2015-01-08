@@ -18,6 +18,8 @@ repo_groups:
         - gradle-plugin
 
 rules_to_groups:
+    '*':
+        - except: something::not_applicable
     local_repos:
         - except: os_code_exec::.*
         - except: generic_best_practices::unsecure_protocol
