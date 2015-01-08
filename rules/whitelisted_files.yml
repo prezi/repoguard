@@ -6,3 +6,4 @@ file:
     - except: '/test_.+\.py$'
     - except: '\.(po|pyc)$'
     - except: '^scripts/'
+    - except: 'PKG-INFO$'
