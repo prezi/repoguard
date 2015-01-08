@@ -141,14 +141,6 @@ line:
 file:
     - match: .*\.(py)
 
---- #!scala_spray_http
-extends: base
-diff: add
-line:
-    - match: (pathPrefix\(|HttpResponse\().*
-file:
-    - match: .*\.(scala)
-
 --- #!js_network_listen
 extends: base
 diff: add
@@ -219,14 +211,6 @@ line:
     - match: (Node\.fs\.).*
 file:
     - match: .*\.(hx|js)
-
---- #!scala_interesting_calls
-extends: base
-diff: add
-line:
-    - match: (scala\.io\.|scala\.sys\.process|new File|\.(!|lines\(|run\()|Http\.Bind).*
-file:
-    - match: .*\.(scala)
 
 --- #!interesting_object_get
 extends: base
