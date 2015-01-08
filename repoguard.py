@@ -10,6 +10,7 @@ from multiprocessing import Pool
 import re
 import os
 from functools import partial
+from hashlib import md5
 
 import yaml
 from mock import Mock
@@ -162,8 +163,8 @@ class RepoGuard:
             for alert in self.check_results:
                 try:
                     print '\t'.join([
-                        alert.rule.name, alert.repo.name, alert.commit, alert.filename, alert.rule.description,
-                        alert.line[0:200].replace("\t", " ").decode('utf-8', 'replace')
+                        alert.rule.name, alert.repo.name, alert.commit, '%s:%d' % (alert.filename, alert.line_number),
+                        alert.rule.description, alert.line[0:200].replace("\t", " ").decode('utf-8', 'replace')
                     ])
                 except UnicodeEncodeError:
                     self.logger.exception('failed to get the details due to some unicode error madness')
@@ -180,10 +181,11 @@ class RepoGuard:
                     "filename": alert.filename,
                     "commit_id": alert.commit,
                     "matching_line": alert.line[0:200].replace("\t", " ").decode('utf-8', 'replace'),
+                    "line_number": alert.line_number,
                     "repo_name": alert.repo.name,
                     "repo_private": alert.repo.private,
                     "repo_fork": alert.repo.fork,
-                    "@timestamp": datetime.datetime.utcnow().isoformat(),
+                    "timestamp": datetime.datetime.utcnow().isoformat() + 'Z',
                     "type": self.es_type,
                     "false_positive": False,
                     "last_reviewer": self.es_type,
@@ -216,14 +218,14 @@ class RepoGuard:
 
             alert = (u"check_id: %s \n"
                      "path: %s \n"
-                     "commit: https://github.com/%s/%s/commit/%s\n"
+                     "commit: https://github.com/%s/%s/commit/%s?diff=split#diff-%sR%d\n"
                      "matching line: %s\n"
                      "description: %s\n"
                      "repo name: %s\n"
                      "repo is private: %s\n"
                      "repo is fork: %s\n"
                      "\n" % (check_id, filename, self.org_name, alert.repo.name,
-                             commit_id, matching_line, description,
+                             commit_id, md5(filename).hexdigest(), alert.line_number, matching_line, description,
                              alert.repo.name, alert.repo.private, alert.repo.fork))
 
             notify_users = self.find_subscribed_users(check_id)
@@ -290,13 +292,26 @@ class RepoGuard:
             commit_description = subprocess.check_output(commit_description_cmd.split(),
                                                          cwd=repo.full_dir_path).rstrip()
 
+            def create_alert(rule, vuln_line, diff, diff_first_line):
+                def get_vuln_line_number():
+                    curr_line = diff_first_line
+                    for line in diff.splitlines():
+                        if line == vuln_line:
+                            return curr_line
+                        if line[0] != '-':
+                            curr_line += 1
+
+                return Alert(rule, filename, repo, rev_hash, line, get_vuln_line_number(), author, commit_description)
+
             for i in xrange(len(splitted) / 2):
                 filename = splitted[i * 2]
-                diff = splitted[i * 2 + 1]
+                raw_diff = splitted[i * 2 + 1]
+                match = re.split(r'^@@ -\d+(?:|,\d+) \+(?P<line_no>\d+)(?:|,\d+) @@.*\n', raw_diff, flags=re.MULTILINE)
+                diff_first_line = int(match[1])
+                diff = match[2]
 
                 result = self.code_checker.check(diff.split('\n'), filename, repo)
-                alerts = [Alert(rule, filename, repo, rev_hash, line, author, commit_description)
-                          for rule, line in result]
+                alerts = [create_alert(rule, line, diff, diff_first_line) for rule, line in result]
 
                 matches_in_rev.extend(alerts)
         except (subprocess.CalledProcessError, OSError) as e:
@@ -361,7 +376,8 @@ class RepoGuard:
             repo_obj.private = new_public_repo_json['private']
             repo_obj.fork = new_public_repo_json['fork']
             self.launch_full_repoguard_scan_on_repo(repo_obj.name)
-            self.check_results += [Alert(rule=new_public_rule, filename='', repo=repo_obj, commit='', line='')]
+            self.check_results += [
+                Alert(rule=new_public_rule, filename='', repo=repo_obj, commit='', line='', line_number=0)]
 
     def run(self):
         self.logger.info('* run started')
