@@ -218,7 +218,7 @@ class RepoGuard:
 
             alert = (u"check_id: %s \n"
                      "path: %s \n"
-                     "commit: https://github.com/%s/%s/commit/%s?diff=split#diff-%sR%d\n"
+                     "commit: https://github.com/%s/%s/commit/%s?diff=split#diff-%sR%s\n"
                      "matching line: %s\n"
                      "description: %s\n"
                      "repo name: %s\n"
@@ -300,6 +300,7 @@ class RepoGuard:
                             return curr_line
                         if len(line) > 0 and line[0] != '-':
                             curr_line += 1
+                    return 0
 
                 return Alert(rule, filename, repo, rev_hash, line, get_vuln_line_number(), author, commit_description)
 
