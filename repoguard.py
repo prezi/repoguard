@@ -298,7 +298,7 @@ class RepoGuard:
                     for line in diff.splitlines():
                         if line == vuln_line:
                             return curr_line
-                        if line[0] != '-':
+                        if len(line) > 0 and line[0] != '-':
                             curr_line += 1
 
                 return Alert(rule, filename, repo, rev_hash, line, get_vuln_line_number(), author, commit_description)
@@ -306,12 +306,14 @@ class RepoGuard:
             for i in xrange(len(splitted) / 2):
                 filename = splitted[i * 2]
                 raw_diff = splitted[i * 2 + 1]
-                match = re.split(r'^@@ -\d+(?:|,\d+) \+(?P<line_no>\d+)(?:|,\d+) @@.*\n', raw_diff, flags=re.MULTILINE)
+                match = re.split(r'^@@ -\d+(?:|,\d+) \+(?P<line_no>\d+)(?:|,\d+) @@.*\n', raw_diff, maxsplit=1,
+                                 flags=re.MULTILINE)
                 if match and len(match) == 3:
                     diff_first_line = int(match[1])
                     diff = match[2]
                 else:
-                    self.logger.warning('Was not able to parse unified diff header for diff (excerpt): %s', raw_diff[:500])
+                    self.logger.warning('Was not able to parse unified diff header for diff: %s, match: %s',
+                                        repr(raw_diff), match)
                     diff = raw_diff
                     diff_first_line = 0
 
