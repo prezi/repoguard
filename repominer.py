@@ -90,7 +90,7 @@ for path in args.files:
                     "matching_line": alert.line[0:200].replace("\t", " ").decode('utf-8', 'replace'),
                     "line_number": alert.line_number,
                     "repo_name": alert.repo,
-                    "timestamp": datetime.datetime.utcnow().isoformat() + 'Z',
+                    "@timestamp": datetime.datetime.utcnow().isoformat() + 'Z',
                     "type": "repoguard",
                     "false_positive": False,
                     "last_reviewer": "repoguard",
