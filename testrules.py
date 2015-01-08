@@ -3,14 +3,20 @@
 import os
 import sys
 import traceback
+import argparse
 
 from core.evaluators import LineEvalFactory
-from core.ruleparser import load_rules
+from core.ruleparser import load_rules, build_resolved_ruleset
 
-rules_dir = os.environ.get('REPOGUARD_RULES', 'rules')
-bare_rules = load_rules(rules_dir)
 
-testable_rules = {rn: rule for rn, rule in bare_rules.iteritems() if 'tests' in rule}
+parser = argparse.ArgumentParser(description='Watch git repos for changes...')
+parser.add_argument('--rule-dir', default='rules/', help='Path to the rule directory')
+args = parser.parse_args()
+
+bare_rules = load_rules(args.rule_dir)
+resolved_rules = build_resolved_ruleset(bare_rules)
+
+testable_rules = {rn: rule for rn, rule in resolved_rules.iteritems() if 'tests' in rule}
 
 errors = []
 line_eval_factory = LineEvalFactory(LineEvalFactory.MODE_SINGLE)

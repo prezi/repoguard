@@ -22,7 +22,7 @@ class CodeChecker:
     def _filter_rules(self, repo_name):
         def rule_filter(rule):
             for group_name, repo_group in self.repo_groups.iteritems():
-                rules_to_group = self.rules_to_groups.get(group_name)
+                rules_to_group = self.rules_to_groups.get(group_name) + self.rules_to_groups.get('*', [])
                 if repo_name in repo_group and rules_to_group:
                     # repo_name is in a group which has rules assigned to it
                     positive_patterns = [re.compile(r["match"]) for r in rules_to_group if "match" in r]
