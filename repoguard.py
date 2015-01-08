@@ -313,8 +313,9 @@ class RepoGuard:
                     diff_first_line = int(match[1])
                     diff = match[2]
                 else:
-                    self.logger.warning('Was not able to parse unified diff header for diff: %s, match: %s',
-                                        repr(raw_diff), match)
+                    if 'Binary files ' not in raw_diff:
+                        self.logger.warning('Was not able to parse unified diff header for diff: %s, match: %s',
+                                            repr(raw_diff), match)
                     diff = raw_diff
                     diff_first_line = 0
 
