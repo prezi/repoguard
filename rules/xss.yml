@@ -62,19 +62,22 @@ line:
     - match: "prezi(Meta|Data).*="
     - match: "=.*prezi(Meta|Data)"
 tests:
-    - pass: "a = preziMeta.title"
+    - pass: " a = preziMeta.title"
     - fail: '+++ b/Resources/Nibs/ipad/EditPreziMetaView.xib'
 
 --- #!jquery_html
-description: "Please HTML escape *everything* passed to the .html() function!"
+description: "Please HTML escape *everything* passed to the .html() and .append() function!"
 extends: base
 diff: add
 line:
     - match: '=.+?\.html\('
+    - match: '\$\(.+?\.append\('
 file:
     - match: '\.(js|html|ts)$'
 tests:
-    - pass: "var a = el.html()"
+    - pass: " var a = el.html()"
+    - pass: ' $("#player-js-iframe").append("<iframe src=f.html?oid="'
+    - fail: 'list.append({})'
 
 --- #!html
 description: "Please HTML escape *everything* passed to the .innerHTML attribute!"

@@ -1,0 +1,47 @@
+--- #!~base
+description: Alerts for Java
+extends: whitelisted_files::whitelisted_files,comments::comments
+
+--- #!java_ssl_validation
+extends: base
+diff: add
+line:
+    - match: (AllTrustSSLSocketFactory|NonValidatingSSLSocketFactory)
+file:
+    - match: .*\.(scala|java|groovy)
+tests:
+    - pass: ' AllTrustSSLSocketFactory()'
+
+--- #!java_interesting_io_calls
+extends: base
+diff: add
+line:
+    - match: java\.io\.(File|\*)
+    - match: new File\(
+    - match: FileUtils.(writeStringToFile|\*)
+file:
+    - match: .*\.(scala|java)
+tests:
+    - pass: 'import FileUtils.writeStringToFile'
+    - pass: 'import FileUtils.*'
+    - pass: 'import java.io.*'
+
+--- #!java_interesting_sql_calls
+extends: base
+diff: add
+line:
+    - match: java\.sql\.
+file:
+    - match: .*\.(scala|java)
+tests:
+    - pass: ' java.sql.query()'
+
+--- #!java_interesting_net_calls
+extends: base
+diff: add
+line:
+    - match: java\.net\.URL
+file:
+    - match: .*\.(scala|java)
+tests:
+    - pass: 'import java.net.URL'

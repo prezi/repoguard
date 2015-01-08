@@ -69,22 +69,6 @@ line:
 file:
     - match: .*\.py
 
---- #!java_interesting_sql_calls
-extends: base
-diff: add
-line:
-    - match: java\.sql\..*
-file:
-    - match: .*\.(scala|java)
-
---- #!android_storage
-extends: base
-diff: add
-line:
-    - match: (getFilesDir|getExternalFilesDir|getExternalStorageDirectory|getSharedPreferences|addPreferencesFromResource).*
-file:
-    - match: .*\.java
-
 --- #!hashing_function
 extends: base
 diff: add
@@ -126,14 +110,6 @@ extends: base
 diff: add
 line:
     - match: (allow-access-from domain="*").*
-
---- #!android_webview
-extends: base
-diff: add
-line:
-    - match: (addJavascriptInterface|setJavaScriptEnabled|webView\.loadData).*
-file:
-    - match: .*\.java
 
 --- #!s3_set_object_acl
 extends: base
@@ -197,22 +173,6 @@ line:
     - match: (apache|nginx)\_vhost.*
 file:
     - match: .*\.(rb)
-
---- #!java_ssl_validation
-extends: base
-diff: add
-line:
-    - match: (AllTrustSSLSocketFactory|NonValidatingSSLSocketFactory).*
-file:
-    - match: .*\.(scala|java|groovy)
-
---- #!java_interesting_io_calls
-extends: base
-diff: add
-line:
-    - match: (java\.io\.(File|\*)|new File\().*
-file:
-    - match: .*\.(scala|java)
 
 --- #!urlopen
 extends: base
@@ -296,14 +256,6 @@ line:
     - match: (system|popen|exec(ve)?|execvp?|execlp?)\(.*
 file:
     - match: .*\.(cpp|cxx|h|hpp|c)$
-
---- #!android_app_permission
-extends: base
-diff: add
-line:
-    - match: (uses-permission android:name).*
-file:
-    - match: .*\.xml
 
 --- #!python_object_enumeration
 extends: base
@@ -392,14 +344,6 @@ line:
     - match: <%=.*
 file:
     - match: .*\.(js|html|tpl)$
-
---- #!java_interesting_net_calls
-extends: base
-diff: add
-line:
-    - match: java\.net\.URL.*
-file:
-    - match: .*\.(scala|java)
 
 --- #!sql_query
 extends: base
