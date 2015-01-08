@@ -307,7 +307,7 @@ class RepoGuard:
                 filename = splitted[i * 2]
                 raw_diff = splitted[i * 2 + 1]
                 match = re.split(r'^@@ -\d+(?:|,\d+) \+(?P<line_no>\d+)(?:|,\d+) @@.*\n', raw_diff, flags=re.MULTILINE)
-                if match:
+                if match and len(match) == 3:
                     diff_first_line = int(match[1])
                     diff = match[2]
                 else:
