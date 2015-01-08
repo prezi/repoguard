@@ -24,6 +24,7 @@ line:
     - match: getRuntime
 file:
     - match: '\.(java|scala|groovy)$'
+    - except: '/gradle/'
 
 --- #!js
 extends: base
