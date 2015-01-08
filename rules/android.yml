@@ -1,0 +1,27 @@
+--- #!~base
+description: Alerts for Android
+extends: whitelisted_files::whitelisted_files,comments::comments
+
+--- #!android_app_permission
+extends: base
+diff: add
+line:
+    - match: (uses-permission android:name).*
+file:
+    - match: .*\.xml
+
+--- #!android_storage
+extends: base
+diff: add
+line:
+    - match: (getFilesDir|getExternalFilesDir|getExternalStorageDirectory|getSharedPreferences|addPreferencesFromResource).*
+file:
+    - match: .*\.java
+
+--- #!android_webview
+extends: base
+diff: add
+line:
+    - match: (addJavascriptInterface|setJavaScriptEnabled|webView\.loadData).*
+file:
+    - match: .*\.java
