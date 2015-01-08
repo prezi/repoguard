@@ -7,7 +7,7 @@ extends: base
 diff: add
 line:
     - match: '(http|ftp)://.+'
-    - except: 'http://(\w+\.)*(localhost|apache.org)'
+    - except: 'http://(\w+\.)*(localhost|127(\.\d+){3}|apache.org)'
     - except: '(xmlns|doctype|DOCTYPE|<prezi><documentStyle>|template|createElementNS)'
 file:
     - except: '\.(po|json|html|xml|xaml|ism|markdown|md|txt|csv|doc|rdoc|css|gradle|properties|log|wiki)$'
@@ -17,6 +17,7 @@ file:
 tests:
     - pass: " http://example.com"
     - fail: "http://localhost"
+    - fail: "http://127.0.1.1"
     - fail: 'http://'
     - fail: '<databases xmlns:db="http://agavi.org/agavi/config/parts/databases/1.0" xmlns:ae="http://agavi.org/agavi/config/global/envelope/1.0">'
     - fail: 'http://www.apache.org/licenses/LICENSE-2.0'

@@ -1,0 +1,23 @@
+--- #!~base
+description: Alerts for Scala
+extends: whitelisted_files::whitelisted_files,comments::comments
+
+--- #!scala_spray_http
+extends: base
+diff: add
+line:
+    - match: (pathPrefix\(|HttpResponse\()
+file:
+    - match: .*\.(scala)
+tests:
+    - pass: ' pathPrefix()'
+
+--- #!scala_interesting_calls
+extends: base
+diff: add
+line:
+    - match: (scala\.io\.|scala\.sys\.process|new File|\.(!|lines\(|run\()|Http\.Bind)
+file:
+    - match: .*\.(scala)
+tests:
+    - pass: ' import scala.sys.process.ProcessIO'
