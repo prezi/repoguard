@@ -307,8 +307,13 @@ class RepoGuard:
                 filename = splitted[i * 2]
                 raw_diff = splitted[i * 2 + 1]
                 match = re.split(r'^@@ -\d+(?:|,\d+) \+(?P<line_no>\d+)(?:|,\d+) @@.*\n', raw_diff, flags=re.MULTILINE)
-                diff_first_line = int(match[1])
-                diff = match[2]
+                if match:
+                    diff_first_line = int(match[1])
+                    diff = match[2]
+                else:
+                    self.logger.warning('Was not able to parse unified diff header for diff (excerpt): %s', raw_diff[:500])
+                    diff = raw_diff
+                    diff_first_line = 0
 
                 result = self.code_checker.check(diff.split('\n'), filename, repo)
                 alerts = [create_alert(rule, line, diff, diff_first_line) for rule, line in result]
