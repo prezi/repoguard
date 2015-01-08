@@ -185,7 +185,7 @@ class RepoGuard:
                     "repo_name": alert.repo.name,
                     "repo_private": alert.repo.private,
                     "repo_fork": alert.repo.fork,
-                    "timestamp": datetime.datetime.utcnow().isoformat() + 'Z',
+                    "@timestamp": datetime.datetime.utcnow().isoformat() + 'Z',
                     "type": self.es_type,
                     "false_positive": False,
                     "last_reviewer": self.es_type,
