@@ -32,7 +32,7 @@ class RepoGuard:
         self.check_results = []
         self.instance_id = instance_id
         self.es_type = "repoguard"
-        self.worker_pool = Pool(processes=8)
+        self.worker_pool = Pool()
         self.logger = logging.getLogger('repoguard')
 
         self.parse_args()
