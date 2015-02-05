@@ -7,7 +7,9 @@ extends: base
 diff: add
 line:
     - match: jsonp
+    - except: '\[JsonProperty'
 tests:
     - pass: ' format="jsonp"'
     - pass: " JSONP()"
     - fail: "json()"
+    - fail: '   [JsonProperty(PropertyName = "created")]'
