@@ -7,9 +7,11 @@ extends: base
 diff: add
 line:
     - match: jsonp
-    - except: '\[JsonProperty'
+    - except: 'JsonProperty'
 tests:
     - pass: ' format="jsonp"'
     - pass: " JSONP()"
     - fail: "json()"
     - fail: '   [JsonProperty(PropertyName = "created")]'
+    - fail: 'import com.fasterxml.jackson.annotation.JsonProperty;'
+    - fail: 'public ServiceToken(@JsonProperty("url") String url, @JsonProperty("header") String header)'
