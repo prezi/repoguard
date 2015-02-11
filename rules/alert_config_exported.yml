@@ -188,13 +188,15 @@ diff: add
 line:
     - match: ("|')root("|')root.*
 
---- #!unsafe_as_calls
+--- #!unsafe_actionscript_calls
 extends: base
 diff: add
 line:
-    - match: (externalinterface|loadVariables|navigateToURL|loadMovie|getURL|FScrollPane\.loadScrollContent|LoadVars\.load|LoadVars\.send|XML\.load|Sound\.loadSound|NetStream\.play|asFunction|clickTAG).*
+    - match: (ExternalInterface|loadVariables|navigateToURL|loadMovie|getURL|FScrollPane\.loadScrollContent|LoadVars\.load|LoadVars\.send|XML\.load|Sound\.loadSound|NetStream\.play|asFunction|clickTAG).*
 file:
-    - match: .*\.(as)
+    - match: '\.(as)$'
+test:
+    - pass: ' ExternalInterface.call();'
 
 --- #!django_xfo_remove
 extends: base
