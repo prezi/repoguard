@@ -5,7 +5,7 @@ file:
     - match: '\.as$'
 
 --- #!eval
-diff: all
+diff: add
 extends: base
 case_sensitive: true
 line:
@@ -16,7 +16,7 @@ tests:
     - fail: ' LOADBYTES()'
 
 --- #!allow_code_import_usage
-diff: all
+diff: add
 extends: base
 case_sensitive: true
 line:
