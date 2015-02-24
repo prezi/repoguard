@@ -22,9 +22,13 @@ line:
     - match: \.(exec|execute)
     - match: ProcessBuilder
     - match: getRuntime
+    - except: java\.util\.concurrent
 file:
     - match: '\.(java|scala|groovy)$'
     - except: '/gradle/'
+tests:
+    - pass: 'Runtime.getRuntime().exec("hostname")'
+    - fail: 'import java.util.concurrent.Executors;'
 
 --- #!js
 extends: base
