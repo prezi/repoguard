@@ -54,17 +54,6 @@ file:
 tests:
     - pass: "return haltWithMessage()"
 
---- #!javascript
-description: "prezi meta data can come from the user"
-extends: base
-diff: add
-line:
-    - match: "prezi(Meta|Data).*="
-    - match: "=.*prezi(Meta|Data)"
-tests:
-    - pass: " a = preziMeta.title"
-    - fail: '+++ b/Resources/Nibs/ipad/EditPreziMetaView.xib'
-
 --- #!jquery_html
 description: "Please HTML escape *everything* passed to the .html() and .append() function!"
 extends: base
