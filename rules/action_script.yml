@@ -16,8 +16,8 @@ tests:
     - fail: ' LOADBYTES()'
 
 --- #!allow_code_import_usage
-diff: add
 extends: base
+diff: add
 case_sensitive: true
 line:
     - match: allowCodeImport
@@ -25,3 +25,23 @@ description: "allowCodeImport allows arbitrary ActionScript to run in the given 
 tests:
     - pass: "allowCodeImport somewhere in the line"
     - fail: "AllowCodeImport"
+
+--- #!dangerous_calls
+extends: base
+diff: add
+case_sensitive: true
+description: "Dangerous function calls"
+line:
+    - match: (loadVariables|navigateToURL|loadMovie|getURL|FScrollPane\.loadScrollContent|LoadVars\.load|LoadVars\.send|XML\.load|Sound\.loadSound|NetStream\.play|asFunction|clickTAG).*
+test:
+    - pass: ' navigateToURL(new URLRequest(user_input), windowName);'
+
+--- #!external_interface_call
+extends: base
+diff: add
+case_sensitive: true
+description: "ExternalInterface parameters need to be HTML escaped (all of them), otherwise they can cause XSS: https://soroush.secproject.com/blog/2011/03/flash-externalinterface-call-javascript-injection-%E2%80%93-can-make-the-websites-vulnerable-to-xss/"
+line:
+    - match: 'ExternalInterface\('
+test:
+    - pass: ' ExternalInterface.call();'
