@@ -8,6 +8,8 @@ diff: add
 line:
     - match: jsonp
     - except: 'JsonProperty'
+file:
+    - except: ^.*\.(md|txt|conf|xml|yaml|json)$
 tests:
     - pass: ' format="jsonp"'
     - pass: " JSONP()"
