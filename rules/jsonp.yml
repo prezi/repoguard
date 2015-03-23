@@ -7,7 +7,8 @@ extends: base
 diff: add
 line:
     - match: jsonp
-    - except: 'JsonProperty'
+    - except: JsonProperty
+    - except: JSONParser
 file:
     - except: ^.*\.(md|txt|conf|xml|yaml|json)$
 tests:
@@ -17,3 +18,4 @@ tests:
     - fail: '   [JsonProperty(PropertyName = "created")]'
     - fail: 'import com.fasterxml.jackson.annotation.JsonProperty;'
     - fail: 'public ServiceToken(@JsonProperty("url") String url, @JsonProperty("header") String header)'
+    - fail: 'data = JSONParser().parse()'
