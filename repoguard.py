@@ -42,7 +42,7 @@ class RepoGuard:
         parser = argparse.ArgumentParser(description='Watch git repos for changes...')
         parser.add_argument('--config', '-c', default='etc/config.yml', help='Path to the config.yml file')
         parser.add_argument('--rule-dir', default='rules/', help='Path to the rule directory')
-        parser.add_argument('--working-dir', default='../repos/', help='Path to the rule directory')
+        parser.add_argument('--working-dir', default='../repos/', help='Path to the git repositories directory')
         parser.add_argument('--since', '-s', default=False,
                             help='Search for alerts in older git commits (git rev-list since, e.g. 2013-05-05 01:00)')
         parser.add_argument('--refresh', '-r', action='store_true', default=False,

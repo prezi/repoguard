@@ -97,6 +97,15 @@ class LineEvaluatorTestCase(unittest.TestCase):
         self.assertTrue(evaluator.matches({}, lines[1]))
         self.assertFalse(evaluator.matches({}, lines[2]))
 
+    def test_dont_create_evaluator_if_no_matcher(self):
+        self.rule["file"] = [{"match": "test"}]
+        del self.rule["line"]
+
+        lef = LineEvalFactory(mode=LineEvalFactory.MODE_DIFF)
+        evaluator = lef.create(self.rule)
+
+        self.assertIsNone(evaluator)
+
 
 class FileEvaluatorTestCase(unittest.TestCase):
 

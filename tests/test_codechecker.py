@@ -20,7 +20,7 @@ class CodeCheckerTestCase(unittest.TestCase):
         context_processor.preprocess = Mock(return_value={})
         code_checker = CodeChecker([context_processor], [])
 
-        alerts = code_checker.check(self.code, "macbeth.txt")
+        alerts = code_checker.check(self.code, {"filename": "macbeth.txt"})
 
         self.assertEquals(len(self.code), context_processor.preprocess.call_count)
 
@@ -33,7 +33,7 @@ class CodeCheckerTestCase(unittest.TestCase):
         rule.evaluators = [evaluator]
         code_checker = CodeChecker([], [rule])
 
-        alert = code_checker.check(self.code, "macbeth.txt")
+        alert = code_checker.check(self.code, {"filename": "macbeth.txt"})
 
         self.assertEquals(len(self.code), evaluator.matches.call_count)
 
@@ -49,7 +49,7 @@ class CodeCheckerTestCase(unittest.TestCase):
         rule.evaluators = [file_evaluator, line_evaluator]
         code_checker = CodeChecker([], [rule])
 
-        alert = code_checker.check(self.code, "macbeth.txt")
+        alert = code_checker.check(self.code, {"filename": "macbeth.txt"})
 
         self.assertEquals(1, file_evaluator.matches.call_count)
         self.assertEquals(0, line_evaluator.matches.call_count)
@@ -63,7 +63,7 @@ class CodeCheckerTestCase(unittest.TestCase):
         rule.evaluators = [line_evaluator]
         code_checker = CodeChecker([], [rule])
 
-        result = code_checker.check(self.code, "macbeth.txt")
+        result = code_checker.check(self.code, {"filename": "macbeth.txt"})
 
         self.assertEquals(len(self.code), len(result))
         self.assertIn(self.code[0], result[0])
@@ -84,7 +84,7 @@ class CodeCheckerTestCase(unittest.TestCase):
         code_checker = CodeChecker([], [rule])
         code = ["l0", "X" * 513, "l2"]
 
-        alerts = code_checker.check(code, "macbeth.txt")
+        alerts = code_checker.check(code, {"filename": "macbeth.txt"})
 
         self.assertEquals(len(code) - 1, len(alerts))
 
@@ -120,3 +120,14 @@ class CodeCheckerTestCase(unittest.TestCase):
         
         self.assertEquals(code_checker.check(lines=self.code, context=check_context, repo=junk_repo), [])
         self.assertEquals(code_checker.check(lines=self.code, context=check_context, repo=local_repo), [])
+
+    def test_nonmatching_evaluator(self):
+        rule = Mock()
+        rule.name = "test::empty"
+        rule.evaluators = []
+
+        code_checker = CodeChecker([], [rule])
+
+        alerts = code_checker.check(self.code, {"filename": "macbeth.txt"})
+
+        self.assertEquals(0, len(alerts))
