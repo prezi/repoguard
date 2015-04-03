@@ -8,9 +8,7 @@ class CodeChecker:
         self.repo_groups = repo_groups
         self.rules_to_groups = rules_to_groups
 
-    def check(self, lines, filename, repo=None):
-        # initial context:
-        context = {"filename": filename}
+    def check(self, lines, context, repo=None):
         rules_applied_for_this_repo = filter(self._filter_rules(repo.name), self.rules) if repo else self.rules
         # pre-filter rules with filename:
         applicable_rules = filter(self._check_filename(context), rules_applied_for_this_repo)
