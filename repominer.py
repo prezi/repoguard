@@ -14,7 +14,8 @@ from core.datastore import DataStore, DataStoreException
 
 def check_alerts_in_file(code_checker, file, filename):
     content = file.readlines()
-    result = code_checker.check(content, filename)
+    check_context = {"filename": filename}
+    result = code_checker.check(content, check_context)
 
     def create_alert(rule, vuln_line):
         vuln_line_number = content.index(vuln_line) + 1

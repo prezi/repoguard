@@ -315,7 +315,12 @@ class RepoGuard:
                     diff = raw_diff
                     diff_first_line = 0
 
-                result = self.code_checker.check(diff.split('\n'), filename, repo)
+                check_context = {
+                    "filename": filename,
+                    "author": author,
+                    "commit_message": commit_description
+                }
+                result = self.code_checker.check(diff.split('\n'), check_context, repo)
                 alerts = [create_alert(rule, line, diff, diff_first_line) for rule, line in result]
 
                 matches_in_rev.extend(alerts)

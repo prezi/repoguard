@@ -116,6 +116,7 @@ class CodeCheckerTestCase(unittest.TestCase):
 
         code_checker = CodeChecker(context_processors=[], rules=[rule],
                                    repo_groups=repo_groups, rules_to_groups=rules_to_groups)
-
-        self.assertEquals(code_checker.check(lines=self.code, filename="macbeth.txt", repo=junk_repo), [])
-        self.assertEquals(code_checker.check(lines=self.code, filename="macbeth.txt", repo=local_repo), [])
+        check_context = {"filename": "macbeth.txt"}
+        
+        self.assertEquals(code_checker.check(lines=self.code, context=check_context, repo=junk_repo), [])
+        self.assertEquals(code_checker.check(lines=self.code, context=check_context, repo=local_repo), [])
