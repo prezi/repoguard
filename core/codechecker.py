@@ -10,8 +10,8 @@ class CodeChecker:
 
     def check(self, lines, context, repo=None):
         rules_applied_for_this_repo = filter(self._filter_rules(repo.name), self.rules) if repo else self.rules
-        # pre-filter rules with filename:
-        applicable_rules = filter(self._check_filename(context), rules_applied_for_this_repo)
+        # pre-filter rules with line-invariant rules:
+        applicable_rules = filter(self._check_line_invariants(context), rules_applied_for_this_repo)
         # check each line
         alerts, line_ctx = reduce(self._check_all(applicable_rules), lines, (list(), context))
         # we do not use line_ctx at alerting, so we drop it
@@ -32,9 +32,9 @@ class CodeChecker:
 
         return rule_filter
 
-    def _check_filename(self, context):
+    def _check_line_invariants(self, context):
         def filename_filter(rule):
-            return all(e.matches(context, None) for e in rule.evaluators if e.key == "file")
+            return all(e.matches(context, None) for e in rule.evaluators if e.key in ["file", "message", "author"])
 
         return filename_filter
 
@@ -47,7 +47,8 @@ class CodeChecker:
             alerts, line_ctx = check_ctx
             line_ctx = reduce(lambda ctx, cp: cp.preprocess(ctx, line), self.context_processors, line_ctx)
             for rule in rules:
-                if all(e.matches(line_ctx, line) for e in rule.evaluators):
+                matches = [e.matches(line_ctx, line) for e in rule.evaluators]
+                if len(matches) > 0 and all(matches):
                     alerts.append((rule, line))
             return (alerts, line_ctx)
 
@@ -72,6 +73,9 @@ class Rule:
         self.evaluators = evaluators
         self.description = rule_config.get('description', 'no description')
 
+    def __str__(self):
+        return self.name
+
 
 class CodeCheckerFactory:
     def __init__(self, ruleset, repo_groups={}, rules_to_groups={}):
@@ -80,7 +84,8 @@ class CodeCheckerFactory:
         self.rules_to_groups = rules_to_groups
 
     def create(self, mode=LineEvalFactory.MODE_DIFF):
-        factories = [LineEvalFactory(mode), InScriptEvalFactory(), FileEvalFactory()]
+        factories = [LineEvalFactory(mode), InScriptEvalFactory(), FileEvalFactory(),
+                     CommitMessageEvalFactory(), AuthorEvalFactory()]
         context_processors = [InScriptEvalFactory.ContextProcessor()]
         rules = [self.create_single(rn, factories) for rn in self.ruleset]
         return CodeChecker(context_processors, rules, self.repo_groups, self.rules_to_groups)

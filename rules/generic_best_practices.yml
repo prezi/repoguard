@@ -49,3 +49,7 @@ tests:
     - fail: "request.META.get('REMOTE_ADDR')"
     - fail: "request.META[ 'REMOTE_ADDR' ]"
 
+--- #!security_fix
+description: Someone committed - or reverted? - a security fix, worth to check
+message:
+    - match: "security"

@@ -104,38 +104,66 @@ class LineEvalFactory:
             return False
 
 
+class ContextBasedPatternEvaluator(object):
+    def __init__(self, rule, rule_key, context_key):
+        self.key = rule_key
+        self.context_key = context_key
+        self.positive_patterns = []
+        self.negative_patterns = []
+        specific_rules = rule.get(rule_key, [])
+        flags = 0 if rule.get('case_sensitive', False) else re.IGNORECASE
+
+        for rule in specific_rules:
+            if "match" in rule:
+                self.positive_patterns.append(re.compile(rule["match"], flags=flags))
+            elif "except" in rule:
+                self.negative_patterns.append(re.compile(rule["except"], flags=flags))
+            else:
+                raise EvaluatorException("Unknown key in %s" % str(rule))
+
+    def matches(self, line_context, line):
+        if line is not None:
+            # bit ugly, but this is a speed improvement: we check first if a "file"-keyed
+            # evaluator matches to the key ("file"), and at that point the line is None. When
+            # it's not None, we don't need to run the costly checks, since once it was
+            # matching already
+            return True
+
+        ctx_value = line_context.get(self.context_key)
+        if ctx_value is None:
+            return False
+
+        pos = not self.positive_patterns or reduce(lambda ctx, p: ctx or p.search(ctx_value),
+                                                   self.positive_patterns, False)
+        neg = reduce(lambda ctx, p: ctx and not p.search(ctx_value), self.negative_patterns, True)
+        return pos and neg
+
+
 class FileEvalFactory:
     def create(self, rule):
-        flags = 0 if rule.get('case_sensitive', False) else re.IGNORECASE
-        return self.FileEvaluator(rule) if "file" in rule else None
+        return FileEvaluator(rule) if "file" in rule else None
 
-    class FileEvaluator:
-        key = "file"
 
-        def __init__(self, rule):
-            flags = 0 if rule.get('case_sensitive', False) else re.IGNORECASE
-            file_rules = rule.get('file', [])
-            self.positive_patterns = []
-            self.negative_patterns = []
-            for rule in file_rules:
-                if "match" in rule:
-                    self.positive_patterns.append(re.compile(rule["match"], flags=flags))
-                elif "except" in rule:
-                    self.negative_patterns.append(re.compile(rule["except"], flags=flags))
-                else:
-                    raise EvaluatorException("Unknown key in %s" % str(rule))
+class FileEvaluator(ContextBasedPatternEvaluator):
+    def __init__(self, rule):
+        super(FileEvaluator, self).__init__(rule, "file", "filename")
 
-        def matches(self, line_context, line):
-            if line is not None:
-                # bit ugly, but this is a speed improvement: we check first if a file-keyed
-                # evaluator matches to a filename, and at that point the line is None. When
-                # it's not None, we don't need to run the costly checks, since once it was
-                # matching already
-                return True
 
-            filename = line_context["filename"]
+class CommitMessageEvalFactory:
+    def create(self, rule):
+        return CommitMessageEvaluator(rule) if "message" in rule else None
 
-            pos = not self.positive_patterns or reduce(lambda ctx, p: ctx or p.search(filename),
-                                                       self.positive_patterns, False)
-            neg = reduce(lambda ctx, p: ctx and not p.search(filename), self.negative_patterns, True)
-            return pos and neg
+
+class CommitMessageEvaluator(ContextBasedPatternEvaluator):
+    def __init__(self, rule):
+        super(CommitMessageEvaluator, self).__init__(rule, "message", "commit_message")
+
+
+class AuthorEvalFactory:
+    def create(self, rule):
+        return AuthorEvalFactory(rule) if "author" in rule else None
+
+
+class AuthorEvaluator(ContextBasedPatternEvaluator):
+    def __init__(self, rule):
+        ContextBasedPatternEvaluator.__init__(rule, "author", "author")
