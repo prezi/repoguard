@@ -79,6 +79,21 @@ file:
 tests:
     - pass: "var a.innerHTML = b"
 
+--- #!js_location
+extends: base
+description: "Location object's members are sensitive to xss, eg. location.hash is almost never url-encoded."
+diff: add
+line:
+    - match: (window|document)\.location\.(href|protocol|host|hostname|port|pathname|search|hash|username|password)
+    - except: (window|document)\.location\..*=
+file:
+    - match: '\.(js|html|ts)$'
+tests:
+    - pass: "p.innerHTML = window.location.hash"
+    - fail: "window.location = foobar"
+    - fail: "window.location.replace(foobar"
+    - fail: "window.location.hash = foobar"
+
 --- #!http_response
 extends: base
 diff: add
