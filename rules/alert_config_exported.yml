@@ -320,6 +320,7 @@ line:
     - match: <%=.*
 file:
     - match: .*\.(js|html|tpl)$
+    - except: 'Gruntfile.js$'
 
 --- #!sql_query
 extends: base
