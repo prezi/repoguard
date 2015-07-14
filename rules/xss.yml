@@ -109,3 +109,13 @@ tests:
     - fail: "HttpResponse('OK')"
     - fail: 'HttpResponse("OK")'
     - fail: "HttpResponse('OK', content_type = \"application/json\")"
+
+--- #!react_js
+extends: base
+diff: add
+case_sensitive: true
+line:
+    - match: 'dangerouslySetInnerHTML'
+tests:
+    - pass: " d.span({dangerouslySetInnerHTML:{__html: item.description}}));"
+    - fail: "DangerouslySetInnerHTML"
