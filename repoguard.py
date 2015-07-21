@@ -395,10 +395,9 @@ class RepoGuard:
         self.logger.debug('Called with arguments: %s' % self.args)
 
         self.read_config(self.CONFIG_PATH)
-        self.read_alert_config_from_file()
 
         self.try_to_lock()
-
+        self.read_alert_config_from_file()
         self.set_up_repository_handler()
 
         if self.args.refresh or not self.repository_handler.get_repo_list():
@@ -427,9 +426,8 @@ class RepoGuard:
         if not self.args.since:
             self.repository_handler.save_repo_status_to_file()
 
-        self.lock_handler.release()
-
         self.logger.info("* run finished")
+        self.lock_handler.release()
 
 
 if __name__ == '__main__':
