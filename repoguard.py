@@ -86,9 +86,8 @@ class RepoGuard:
 
             client = Client(self.args.sentry)
             handler = SentryHandler(client)
-            handler.setLevel(logging.WARNING)
+            handler.setLevel(logging.ERROR)
             self.logger.addHandler(handler)
-            client.captureMessage("Repoguard has been started.")
 
     def detect_paths(self):
         self.APP_DIR = '%s/' % os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
@@ -395,7 +394,7 @@ class RepoGuard:
                     self.default_notification_src_address,
                     self.default_notification_to_address,
                     "[repoguard] lock file found (another process is runnning?)",
-                    e)
+                    str(e))
 
                 email_notification.send_if_fine()
             sys.exit()
