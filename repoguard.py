@@ -15,7 +15,6 @@ from functools import partial
 from hashlib import md5
 
 import yaml
-
 from mock import Mock
 
 from lockfile import LockFile, LockTimeout
@@ -62,6 +61,7 @@ class RepoGuard:
                             help='Notify pre-defined contacts via e-mail')
         parser.add_argument('--verbose', '-v', action="count", default=False, help='Verbose mode')
         parser.add_argument('--store', '-S', default=False, help='ElasticSearch node (host:port)')
+        parser.add_argument('--sentry', default=None, help='Sentry url with user:pass (optional)')
         parser.add_argument('--ignorestatus', action='store_true', default=False,
                             help='If true repoguard will not skip commits which were already '
                                  'checked based on the status file')
@@ -79,6 +79,16 @@ class RepoGuard:
             self.logger.setLevel(logging.DEBUG)
         else:
             self.logger.setLevel(logging.INFO)
+
+        if self.args.sentry:
+            from raven import Client
+            from raven.handlers.logging import SentryHandler
+
+            client = Client(self.args.sentry)
+            handler = SentryHandler(client)
+            handler.setLevel(logging.WARNING)
+            self.logger.addHandler(handler)
+            client.captureMessage("Repoguard has been started.")
 
     def detect_paths(self):
         self.APP_DIR = '%s/' % os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
