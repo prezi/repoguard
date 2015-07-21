@@ -136,7 +136,7 @@ class RepositoryHandler():
         self.repo_status_file = working_directory + 'repo_status.json'
         self.repo_list = OrderedDict()
         self.create_repo_list_and_status_from_files()
-        self.logger.debug("repository handler started")
+        self.logger.debug("Repository handler started")
 
     def create_repo_list_and_status_from_files(self):
         repo_list = self.load_repo_list_from_file()
@@ -175,5 +175,9 @@ class RepositoryHandler():
             return {}
 
     def save_repo_status_to_file(self):
+        if not self.repo_list:
+            self.logger.warning('Got empty repository list, not updating status file!')
+            return
+
         with open(self.repo_status_file, 'w') as repo_status:
             json.dump({k: v.to_dict() for k, v in self.repo_list.iteritems()}, repo_status, indent=4, sort_keys=True)
