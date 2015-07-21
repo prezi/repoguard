@@ -8,3 +8,4 @@ arrow==0.4.4
 pygithub==1.25.1
 python-ldap==2.4.16
 lockfile==0.10.2
+raven==5.4.4
