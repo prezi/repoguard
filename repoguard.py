@@ -88,6 +88,7 @@ class RepoGuard:
             handler = SentryHandler(client)
             handler.setLevel(logging.ERROR)
             self.logger.addHandler(handler)
+            client.captureMessage("Repoguard has been started.")
 
     def detect_paths(self):
         self.APP_DIR = '%s/' % os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
@@ -388,7 +389,7 @@ class RepoGuard:
             self.lock_handler.acquire(timeout=3)
             self.logger.debug("Pid file not found, creating %s..." % self.lock_handler.path)
         except LockTimeout as e:
-            self.logger.info('Locked, script running... exiting.')
+            self.logger.critical('Locked, script running... exiting.')
             if self.notifications:
                 email_notification = EmailNotifier(
                     self.default_notification_src_address,
