@@ -9,15 +9,19 @@ from copy import deepcopy
 from multiprocessing import Pool
 import re
 import os
+import fnmatch
+import itertools
 from functools import partial
 from hashlib import md5
 
 import yaml
+
 from mock import Mock
+
+from lockfile import LockFile, LockTimeout
 
 from core.datastore import DataStore, DataStoreException
 from core.git_repo_updater import GitRepoUpdater
-from core.lock_handler import LockHandler, LockHandlerException
 from core.codechecker import CodeCheckerFactory, Alert
 from core.ruleparser import build_resolved_ruleset, load_rules
 from core.notifier import EmailNotifier, EmailNotifierException
@@ -37,6 +41,8 @@ class RepoGuard:
 
         self.parse_args()
         self.detect_paths()
+
+        self.lock_handler = LockFile(self.WORKING_DIR + 'repoguard.pid')
 
     def parse_args(self):
         parser = argparse.ArgumentParser(description='Watch git repos for changes...')
@@ -76,9 +82,9 @@ class RepoGuard:
 
     def detect_paths(self):
         self.APP_DIR = '%s/' % os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
-        self.CONFIG_PATH = self.args.config
-        self.WORKING_DIR = self.args.working_dir
-        self.ALERT_CONFIG_DIR = self.args.rule_dir
+        self.CONFIG_PATH = os.path.abspath(self.args.config)
+        self.WORKING_DIR = os.path.abspath(self.args.working_dir) + '/'
+        self.ALERT_CONFIG_DIR = os.path.abspath(self.args.rule_dir)
 
     def build_repo_groups(self, raw_repo_groups):
         repo_groups = {}
@@ -246,10 +252,6 @@ class RepoGuard:
                 self.logger.exception("Error while sending email: " + str(e))
 
     def find_subscribed_users(self, alert):
-        import fnmatch
-        import itertools
-
-
         matching_subscriptions = [users for pattern, users in self.subscribers.iteritems()
                                   if fnmatch.fnmatch(alert, pattern)]
         return set(itertools.chain(*matching_subscriptions))
@@ -340,23 +342,6 @@ class RepoGuard:
         # self.logger.debug('applied_alerts: %s' % repr(applied_alerts))
         self.code_checker = CodeCheckerFactory(applied_alerts, self.repo_groups, self.rules_to_groups).create()
 
-    def set_up_lock_handler(self):
-        self.lock_handler = LockHandler(self.WORKING_DIR, self.logger, self.args.overridelock)
-
-    def try_to_lock(self):
-        try:
-            self.lock_handler.start()
-        except LockHandlerException as e:
-            if self.notifications:
-                email_notification = EmailNotifier(
-                    self.default_notification_src_address,
-                    self.default_notification_to_address,
-                    "[repoguard] invalid lock, entering aborted state",
-                    e.error)
-
-                email_notification.send_if_fine()
-            sys.exit()
-
     def launch_full_repoguard_scan_on_repo(self, repo_name):
         self.logger.info("Spawning a new repoguard for %s " % (repo_name))
         full_scan_repoguard = RepoGuard("full_scan_%s" % repo_name)
@@ -389,6 +374,22 @@ class RepoGuard:
             self.check_results += [
                 Alert(rule=new_public_rule, filename='', repo=repo_obj, commit='', line='', line_number=0)]
 
+    def try_to_lock(self):
+        try:
+            self.lock_handler.acquire(timeout=3)
+            self.logger.debug("Pid file not found, creating %s..." % self.lock_handler.path)
+        except LockTimeout as e:
+            self.logger.info('Locked, script running... exiting.')
+            if self.notifications:
+                email_notification = EmailNotifier(
+                    self.default_notification_src_address,
+                    self.default_notification_to_address,
+                    "[repoguard] lock file found (another process is runnning?)",
+                    e)
+
+                email_notification.send_if_fine()
+            sys.exit()
+
     def run(self):
         self.logger.info('* run started')
         self.logger.debug('Called with arguments: %s' % self.args)
@@ -396,7 +397,6 @@ class RepoGuard:
         self.read_config(self.CONFIG_PATH)
         self.read_alert_config_from_file()
 
-        self.set_up_lock_handler()
         self.try_to_lock()
 
         self.set_up_repository_handler()
@@ -427,7 +427,7 @@ class RepoGuard:
         if not self.args.since:
             self.repository_handler.save_repo_status_to_file()
 
-        self.lock_handler.release_lock()
+        self.lock_handler.release()
 
         self.logger.info("* run finished")
 
