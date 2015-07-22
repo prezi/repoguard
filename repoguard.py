@@ -41,7 +41,7 @@ class RepoGuard:
         self.parse_args()
         self.detect_paths()
 
-        self.lock_handler = LockFile(self.WORKING_DIR + 'repoguard.pid')
+        self.lock_handler = LockFile(self.WORKING_DIR)
 
     def parse_args(self):
         parser = argparse.ArgumentParser(description='Watch git repos for changes...')
@@ -88,7 +88,6 @@ class RepoGuard:
             handler = SentryHandler(client)
             handler.setLevel(logging.ERROR)
             self.logger.addHandler(handler)
-            client.captureMessage("Repoguard has been started.")
 
     def detect_paths(self):
         self.APP_DIR = '%s/' % os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
