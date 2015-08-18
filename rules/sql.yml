@@ -1,0 +1,31 @@
+--- #!sql_query_cursor_execute
+description: potential sqli
+extends: whitelisted_files::whitelisted_files,comments::comments
+diff: add
+line:
+    - match: "[\\s]*cursor\\.execute\\(.*"
+
+--- #!csharp_sql_command
+description: Gets or sets the Transact-SQL statement
+extends: whitelisted_files::whitelisted_files,comments::comments
+diff: add
+line:
+    - match: \.CommandText.*
+file:
+    - match: .*\.(cs)
+
+--- #!sql_query
+description: sql statement made with string concatenation
+extends: whitelisted_files::whitelisted_files,comments::comments
+diff: add
+line:
+    - match: \+[\s]*query[\s]*=.*
+file:
+    - except: ^/hadoop/.*\.script$
+
+--- #!django_raw_query
+description: "to perform parameterized queries, you can use the params argument to raw()"
+extends: whitelisted_files::whitelisted_files,comments::comments
+diff: add
+line:
+    - match: \.raw\(.*
