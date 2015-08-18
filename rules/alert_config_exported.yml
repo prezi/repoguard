@@ -16,12 +16,6 @@ diff: add
 line:
     - match: request.*\.get\(('next'|redirect_field).*
 
---- #!sql_query_cursor_execute
-extends: base
-diff: add
-line:
-    - match: "[\\s]*cursor\\.execute\\(.*"
-
 --- #!oauth_string
 extends: base
 diff: add
@@ -116,14 +110,6 @@ extends: base
 diff: add
 line:
     - match: (setObjectAcl|set_acl|set_canned_acl).*
-
---- #!csharp_sql_command
-extends: base
-diff: add
-line:
-    - match: \.CommandText.*
-file:
-    - match: .*\.(cs)
 
 --- #!http_response_js
 extends: base
@@ -321,17 +307,3 @@ line:
 file:
     - match: .*\.(js|html|tpl)$
     - except: 'Gruntfile.js$'
-
---- #!sql_query
-extends: base
-diff: add
-line:
-    - match: \+[\s]*query[\s]*=.*
-file:
-    - except: ^/hadoop/.*\.script$
-
---- #!raw_query
-extends: base
-diff: add
-line:
-    - match: \.raw\(.*
