@@ -7,10 +7,12 @@ extends: base
 diff: add
 line:
     - match: '\|\s*safe'
+    - match: 'mark_safe\s*\('
     - match: "{% autoescape off %}"
 tests:
     - pass: " {% autoescape off %} "
     - pass: " {{ xss | safe }}"
+    - pass: " 'context' : mark_safe(json.dumps(context)),"
     - fail: "{{xss|urlencode}}"
 
 --- #!django_inscripttags
