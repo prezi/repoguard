@@ -22,12 +22,14 @@ line:
     - match: "{{.+}}"
     - except: '.+\|\s*urlencode'
     - except: '{{\s*STATIC_URL\s*}}'
+    - except: '{{.+\|\s*yesno.*}}'
 inscripttag: true
 tests:
     - pass: "{{xss|safe}}"
     - pass: " {{ xss | safe }}"
     - fail: "{{ xss|urlencode }}"
     - fail: "var CITY_JS = '{{ STATIC_URL }}campaigns/';"
+    - fail: "deviceIsMobile: {{ mobile|yesno:'true,false' }}"
 
 --- #!django_json_no_content_type
 extends: base
