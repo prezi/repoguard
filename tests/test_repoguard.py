@@ -73,3 +73,18 @@ class AlertSubscriptionTestCase(BaseTestCase):
         self.rg.send_results()
 
         self.assertEqual(4, mocks[0].call_count)
+        call_args = mocks[0].call_args_list
+
+        self.assertRecipientNotified(call_args, 'A', 3)
+        self.assertRecipientNotified(call_args, 'B', 1)
+        self.assertRecipientNotified(call_args, 'C', 1)
+        self.assertRecipientNotified(call_args, 'D', 3)
+
+    def assertRecipientNotified(self, call_args_list, expected_recipient, expected_rule_count):
+        relevant_calls = [args for (args, kwargs) in call_args_list if args[1] == expected_recipient]
+
+        self.assertEqual(1, len(relevant_calls)) # each recipient should be notified exactly once
+        args = relevant_calls[0]
+        self.assertEqual(expected_recipient, args[1])
+        email_body = args[2]
+        self.assertEqual(expected_rule_count, email_body.count("check_id:"))
