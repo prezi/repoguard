@@ -54,6 +54,28 @@ class AlertSubscriptionTestCase(BaseTestCase):
         self.assertNotIn("C", users)
         self.assertIn("D", users)
 
+
+    @patch('core.notifier.EmailNotifier.create_notification')
+    def test_send_results_email_text(self, *mocks):
+        rule1 = Rule("xxe::test", Mock(), {'description': 'descr1'})
+        repo = Mock()
+        repo.name = "repo"
+        repo.private = True
+        repo.fork = False
+        self.rg.check_results = [
+            Alert(rule1, "file", repo, "1231commit", "line1", 0, "author1", 'commit_descr1')
+        ]
+
+        mock_notification = Mock()
+        mocks[0].return_value = mock_notification
+
+        self.rg.send_results()
+
+        self.assertTrue(mocks[0].call_count > 0)
+        args, kwargs = mocks[0].call_args
+        self.assertTrue(args[2].startswith("The following change(s) might introduce new security risks:\n\n"))
+
+
     @patch('core.notifier.EmailNotifier.create_notification')
     def test_send_alerts(self, *mocks):
         rule1 = Rule("xxe::test", Mock(), {'description': 'descr1'})
