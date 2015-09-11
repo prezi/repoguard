@@ -248,11 +248,14 @@ class RepoGuard:
         smtp_conn_string = self.smtp_host + ":" + str(self.smtp_port)
         self.logger.debug('Notifiying them: %s', repr(alert_per_notify_person))
         for to_addr, details in alert_per_notify_person.iteritems():
-            intro = "The following change(s) might introduce new security risks:\n\n"
-            text = intro + ''.join(details)
-            email_notification = EmailNotifier.create_notification(from_addr, to_addr, text, smtp_conn_string,
+            subject = "[repoguard] possibly vulnerable changes - %s" % datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+            body_intro = "The following change(s) might introduce new security risks:\n\n"
+            body_text = body_intro + ''.join(details)
+            email_notification = EmailNotifier.create_notification(from_addr, to_addr, subject, body_text,
+                                                                   smtp_conn_string,
                                                                    self.smtp_username,
-                                                                   self.smtp_password, self.use_tls)
+                                                                   self.smtp_password,
+                                                                   self.use_tls)
             try:
                 email_notification.send_if_fine()
             except EmailNotifierException, e:
