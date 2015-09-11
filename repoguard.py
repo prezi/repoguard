@@ -214,9 +214,6 @@ class RepoGuard:
         if not self.check_results:
             return False
 
-        def add_alert(email):
-            alert_per_notify_person[email].append(alert)
-
         self.logger.info('### SENDING NOTIFICATION EMAIL ###')
 
         for alert in self.check_results:
@@ -241,11 +238,11 @@ class RepoGuard:
             notify_users = self.find_subscribed_users(check_id)
             self.logger.debug('notify_users %s' % repr(notify_users))
             for u in notify_users:
-                add_alert(u)
+                alert_per_notify_person[u].append(alert)
 
             # no subscribed email, send it to default address
             if not notify_users:
-                add_alert(self.default_notification_to_address)
+                alert_per_notify_person[self.default_notification_to_address].append(alert)
 
         from_addr = self.default_notification_src_address
         smtp_conn_string = self.smtp_host + ":" + str(self.smtp_port)
