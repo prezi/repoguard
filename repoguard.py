@@ -35,7 +35,7 @@ EMAIL_TEMPLATES = {
         "The following change(s) might introduce new security risks:\n\n"
     ),
     'guidelines': (
-        "[repoguard] possible guideline violation - %(date)s",
+        "[repoguard] guidelines might have been violated - %(date)s",
         "The following change(s) might not follow the repo's guidelines:"
     )
 }
