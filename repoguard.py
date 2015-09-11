@@ -28,6 +28,15 @@ from core.notifier import EmailNotifier, EmailNotifierException
 from core.repository_handler import RepositoryHandler, git_clone_or_pull
 
 
+DEFAULT_EMAIL_TEMPLATE = None
+EMAIL_TEMPLATES = {
+    DEFAULT_EMAIL_TEMPLATE:
+        (
+            "[repoguard] possibly vulnerable changes - %(date)s",
+            "The following change(s) might introduce new security risks:\n\n"
+        )
+}
+
 class RepoGuard:
     def __init__(self, instance_id="repoguard-app"):
         self.repo_list = {}
@@ -253,8 +262,15 @@ class RepoGuard:
         smtp_conn_string = self.smtp_host + ":" + str(self.smtp_port)
         self.logger.debug('Notifiying them: %s', repr(alert_per_notify_person.keys()))
         for to_addr, alerts in alert_per_notify_person.iteritems():
-            subject = "[repoguard] possibly vulnerable changes - %s" % datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-            body_intro = "The following change(s) might introduce new security risks:\n\n"
+            email_template = alerts[0].rule.email_template
+            if not all(x.rule.email_template == email_template for x in alerts):
+                # if each rule requests a different email template, we fall back to the default
+                email_template = DEFAULT_EMAIL_TEMPLATE
+            elif email_template not in EMAIL_TEMPLATES:
+                email_template = DEFAULT_EMAIL_TEMPLATE
+
+            subject, body_intro = EMAIL_TEMPLATES[email_template]
+            subject = subject % {'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}
 
             body_details = ''.join(self.alert_details_text(x) for x in alerts)
             body_text = body_intro + body_details

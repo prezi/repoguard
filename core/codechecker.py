@@ -72,6 +72,7 @@ class Rule:
         self.name = name
         self.evaluators = evaluators
         self.description = rule_config.get('description', 'no description')
+        self.email_template = rule_config.get('preferred_email_template', None)
 
     def __str__(self):
         return self.name
