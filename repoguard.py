@@ -11,6 +11,7 @@ import re
 import os
 import fnmatch
 import itertools
+from collections import defaultdict
 from functools import partial
 from hashlib import md5
 
@@ -209,14 +210,12 @@ class RepoGuard:
                 self.logger.exception('Got exception during storing results to ES.')
 
     def send_results(self):
-        alert_per_notify_person = {}
+        alert_per_notify_person = defaultdict(list)
         if not self.check_results:
             return False
 
         def add_alert(email):
-            if email not in alert_per_notify_person:
-                alert_per_notify_person[email] = "The following change(s) might introduce new security risks:\n\n"
-            alert_per_notify_person[email] += alert
+            alert_per_notify_person[email].append(alert)
 
         self.logger.info('### SENDING NOTIFICATION EMAIL ###')
 
@@ -251,7 +250,9 @@ class RepoGuard:
         from_addr = self.default_notification_src_address
         smtp_conn_string = self.smtp_host + ":" + str(self.smtp_port)
         self.logger.debug('Notifiying them: %s', repr(alert_per_notify_person))
-        for to_addr, text in alert_per_notify_person.iteritems():
+        for to_addr, details in alert_per_notify_person.iteritems():
+            intro = "The following change(s) might introduce new security risks:\n\n"
+            text = intro + ''.join(details)
             email_notification = EmailNotifier.create_notification(from_addr, to_addr, text, smtp_conn_string,
                                                                    self.smtp_username,
                                                                    self.smtp_password, self.use_tls)
