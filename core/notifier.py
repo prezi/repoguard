@@ -25,9 +25,8 @@ class EmailNotifier:
         self.use_tls = use_tls
 
     @staticmethod
-    def create_notification(from_addr, to_addr, text, connection_string='localhost',
+    def create_notification(from_addr, to_addr, subject, text, connection_string='localhost',
                             smtp_username = None, smtp_password = None, use_tls = None):
-        subject = "[repoguard] possibly vulnerable changes - %s" % datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
         return EmailNotifier(from_addr, to_addr, subject, text, connection_string,
                              smtp_username, smtp_password, use_tls)
 

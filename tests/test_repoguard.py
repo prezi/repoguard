@@ -73,7 +73,10 @@ class AlertSubscriptionTestCase(BaseTestCase):
 
         self.assertTrue(mocks[0].call_count > 0)
         args, kwargs = mocks[0].call_args
-        self.assertTrue(args[2].startswith("The following change(s) might introduce new security risks:\n\n"))
+        subject = args[2]
+        body = args[3]
+        self.assertTrue(subject.startswith("[repoguard] possibly vulnerable changes"))
+        self.assertTrue(body.startswith("The following change(s) might introduce new security risks:"))
 
 
     @patch('core.notifier.EmailNotifier.create_notification')
@@ -108,5 +111,5 @@ class AlertSubscriptionTestCase(BaseTestCase):
         self.assertEqual(1, len(relevant_calls)) # each recipient should be notified exactly once
         args = relevant_calls[0]
         self.assertEqual(expected_recipient, args[1])
-        email_body = args[2]
+        email_body = args[3]
         self.assertEqual(expected_rule_count, email_body.count("check_id:"))
