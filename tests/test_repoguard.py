@@ -54,10 +54,7 @@ class AlertSubscriptionTestCase(BaseTestCase):
         self.assertNotIn("C", users)
         self.assertIn("D", users)
 
-
-    @patch('core.notifier.EmailNotifier.create_notification')
-    def test_send_results_email_text(self, *mocks):
-        rule1 = Rule("xxe::test", Mock(), {'description': 'descr1'})
+    def setup_repoguard_with_rule(self, rule1):
         repo = Mock()
         repo.name = "repo"
         repo.private = True
@@ -66,8 +63,11 @@ class AlertSubscriptionTestCase(BaseTestCase):
             Alert(rule1, "file", repo, "1231commit", "line1", 0, "author1", 'commit_descr1')
         ]
 
-        mock_notification = Mock()
-        mocks[0].return_value = mock_notification
+    @patch('core.notifier.EmailNotifier.create_notification')
+    def test_send_results_email_text(self, *mocks):
+        rule1 = Rule("xxe::test", Mock(), {'description': 'descr1'})
+        self.setup_repoguard_with_rule(rule1)
+        mocks[0].return_value = Mock()
 
         self.rg.send_results()
 
@@ -78,6 +78,35 @@ class AlertSubscriptionTestCase(BaseTestCase):
         self.assertTrue(subject.startswith("[repoguard] possibly vulnerable changes"))
         self.assertTrue(body.startswith("The following change(s) might introduce new security risks:"))
 
+    @patch('core.notifier.EmailNotifier.create_notification')
+    def test_send_results_good_email_template(self, *mocks):
+        rule1 = Rule("xxe::test", Mock(), {'description': 'descr1', 'preferred_email_template': 'guidelines'})
+        self.setup_repoguard_with_rule(rule1)
+        mocks[0].return_value = Mock()
+
+        self.rg.send_results()
+
+        self.assertTrue(mocks[0].call_count > 0)
+        args, kwargs = mocks[0].call_args
+        subject = args[2]
+        body = args[3]
+        self.assertTrue(subject.startswith("[repoguard] possible guideline violation"))
+        self.assertTrue(body.startswith("The following change(s) might not follow the repo's guidelines:"))
+
+    @patch('core.notifier.EmailNotifier.create_notification')
+    def test_send_results_bad_email_template(self, *mocks):
+        rule1 = Rule("xxe::test", Mock(), {'description': 'descr1', 'preferred_email_template': 'does_not_exist'})
+        self.setup_repoguard_with_rule(rule1)
+        mocks[0].return_value = Mock()
+
+        self.rg.send_results()
+
+        self.assertTrue(mocks[0].call_count > 0)
+        args, kwargs = mocks[0].call_args
+        subject = args[2]
+        body = args[3]
+        self.assertTrue(subject.startswith("[repoguard] possibly vulnerable changes"))
+        self.assertTrue(body.startswith("The following change(s) might introduce new security risks:"))
 
     @patch('core.notifier.EmailNotifier.create_notification')
     def test_send_alerts(self, *mocks):
@@ -100,12 +129,12 @@ class AlertSubscriptionTestCase(BaseTestCase):
         self.assertEqual(4, mocks[0].call_count)
         call_args = mocks[0].call_args_list
 
-        self.assertRecipientNotified(call_args, 'A', 3)
-        self.assertRecipientNotified(call_args, 'B', 1)
-        self.assertRecipientNotified(call_args, 'C', 1)
-        self.assertRecipientNotified(call_args, 'D', 3)
+        self.assert_recipient_notified(call_args, 'A', 3)
+        self.assert_recipient_notified(call_args, 'B', 1)
+        self.assert_recipient_notified(call_args, 'C', 1)
+        self.assert_recipient_notified(call_args, 'D', 3)
 
-    def assertRecipientNotified(self, call_args_list, expected_recipient, expected_rule_count):
+    def assert_recipient_notified(self, call_args_list, expected_recipient, expected_rule_count):
         relevant_calls = [args for (args, kwargs) in call_args_list if args[1] == expected_recipient]
 
         self.assertEqual(1, len(relevant_calls)) # each recipient should be notified exactly once

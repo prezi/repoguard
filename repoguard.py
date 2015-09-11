@@ -30,11 +30,14 @@ from core.repository_handler import RepositoryHandler, git_clone_or_pull
 
 DEFAULT_EMAIL_TEMPLATE = None
 EMAIL_TEMPLATES = {
-    DEFAULT_EMAIL_TEMPLATE:
-        (
-            "[repoguard] possibly vulnerable changes - %(date)s",
-            "The following change(s) might introduce new security risks:\n\n"
-        )
+    DEFAULT_EMAIL_TEMPLATE: (
+        "[repoguard] possibly vulnerable changes - %(date)s",
+        "The following change(s) might introduce new security risks:\n\n"
+    ),
+    'guidelines': (
+        "[repoguard] possible guideline violation - %(date)s",
+        "The following change(s) might not follow the repo's guidelines:"
+    )
 }
 
 class RepoGuard:
