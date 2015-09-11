@@ -209,8 +209,29 @@ class RepoGuard:
             except DataStoreException:
                 self.logger.exception('Got exception during storing results to ES.')
 
+    def alert_details_text(self, alert):
+        check_id = alert.rule.name
+        filename = alert.filename
+        commit_id = alert.commit
+        matching_line = alert.line[0:200].replace("\t", " ").decode('utf-8', 'replace')
+        description = alert.rule.description
+
+        return (u"check_id: %s \n"
+                 "path: %s \n"
+                 "commit: https://github.com/%s/%s/commit/%s?diff=split#diff-%sR%s\n"
+                 "matching line: %s\n"
+                 "description: %s\n"
+                 "repo name: %s\n"
+                 "repo is private: %s\n"
+                 "repo is fork: %s\n"
+                 "\n" % (check_id, filename, self.org_name, alert.repo.name,
+                         commit_id, md5(filename).hexdigest(), alert.line_number, matching_line, description,
+                         alert.repo.name, alert.repo.private, alert.repo.fork))
+
+
     def send_results(self):
         alert_per_notify_person = defaultdict(list)
+
         if not self.check_results:
             return False
 
@@ -218,22 +239,6 @@ class RepoGuard:
 
         for alert in self.check_results:
             check_id = alert.rule.name
-            filename = alert.filename
-            commit_id = alert.commit
-            matching_line = alert.line[0:200].replace("\t", " ").decode('utf-8', 'replace')
-            description = alert.rule.description
-
-            alert = (u"check_id: %s \n"
-                     "path: %s \n"
-                     "commit: https://github.com/%s/%s/commit/%s?diff=split#diff-%sR%s\n"
-                     "matching line: %s\n"
-                     "description: %s\n"
-                     "repo name: %s\n"
-                     "repo is private: %s\n"
-                     "repo is fork: %s\n"
-                     "\n" % (check_id, filename, self.org_name, alert.repo.name,
-                             commit_id, md5(filename).hexdigest(), alert.line_number, matching_line, description,
-                             alert.repo.name, alert.repo.private, alert.repo.fork))
 
             notify_users = self.find_subscribed_users(check_id)
             self.logger.debug('notify_users %s' % repr(notify_users))
@@ -246,11 +251,14 @@ class RepoGuard:
 
         from_addr = self.default_notification_src_address
         smtp_conn_string = self.smtp_host + ":" + str(self.smtp_port)
-        self.logger.debug('Notifiying them: %s', repr(alert_per_notify_person))
-        for to_addr, details in alert_per_notify_person.iteritems():
+        self.logger.debug('Notifiying them: %s', repr(alert_per_notify_person.keys()))
+        for to_addr, alerts in alert_per_notify_person.iteritems():
             subject = "[repoguard] possibly vulnerable changes - %s" % datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
             body_intro = "The following change(s) might introduce new security risks:\n\n"
-            body_text = body_intro + ''.join(details)
+
+            body_details = ''.join(self.alert_details_text(x) for x in alerts)
+            body_text = body_intro + body_details
+
             email_notification = EmailNotifier.create_notification(from_addr, to_addr, subject, body_text,
                                                                    smtp_conn_string,
                                                                    self.smtp_username,
