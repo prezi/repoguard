@@ -90,7 +90,8 @@ class AlertSubscriptionTestCase(BaseTestCase):
         args, kwargs = mocks[0].call_args
         subject = args[2]
         body = args[3]
-        self.assertTrue(subject.startswith("[repoguard] possible guideline violation"))
+        print subject
+        self.assertTrue(subject.startswith("[repoguard] guidelines might have been violated"))
         self.assertTrue(body.startswith("The following change(s) might not follow the repo's guidelines:"))
 
     @patch('core.notifier.EmailNotifier.create_notification')
