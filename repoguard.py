@@ -32,7 +32,7 @@ DEFAULT_EMAIL_TEMPLATE = None
 EMAIL_TEMPLATES = {
     DEFAULT_EMAIL_TEMPLATE: (
         "[repoguard] possibly vulnerable changes - %(date)s",
-        "The following change(s) might introduce new security risks:\n\n"
+        "The following change(s) might introduce new security risks:"
     ),
     'guidelines': (
         "[repoguard] guidelines might have been violated - %(date)s",
@@ -276,7 +276,7 @@ class RepoGuard:
             subject = subject % {'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}
 
             body_details = ''.join(self.alert_details_text(x) for x in alerts)
-            body_text = body_intro + body_details
+            body_text = body_intro + "\n\n" + body_details
 
             email_notification = EmailNotifier.create_notification(from_addr, to_addr, subject, body_text,
                                                                    smtp_conn_string,
