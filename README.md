@@ -20,10 +20,13 @@ It uses the same ruleset and configuration.
 Installing and running the project is pretty simple:
 
 ```
-$ virtualenv virtualenv
-$ . virtualenv/bin/activate
-$ pip install -r requirements.txt
-$ python repoguard.py --config <file> --working-dir '../repos' --since '2014-08-01 00:00:00' --refresh
+git clone https://github.com/prezi/repoguard.git
+cd repoguard
+virtualenv virtualenv
+. virtualenv/bin/activate
+pip install -r requirements.txt
+mkdir repos
+python repoguard.py --config <file> --working-dir './repos' --since '2014-08-01 00:00:00' --refresh
 ```
 
 And setup a cron job which calls this script periodically.
