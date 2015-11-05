@@ -1,0 +1,21 @@
+--- #!~base
+description: C++ specific rules
+extends: whitelisted_files::whitelisted_files,comments::comments
+
+--- #!cpp_format_string
+extends: base
+diff: add
+line:
+    - match: (v?s?n?f?printf|f?s?scanf)\(".*".*,.*
+    - match: (syslog)\(.*
+file:
+    - match: .*\.(cpp|cxx|h|hpp|c)$
+description: "Possible Format String attack https://www.owasp.org/index.php/Format_string_attack"
+tests:
+    - fail: 'printf("Error: invalid aspect mode\n");'
+    - fail: 'printf("  -a  --aspect=ASPECT_MODE    screenshot aspect ratio mode: fit(default), crop, auto\n");'
+    - pass: 'printf("Error: invalid aspect mode\n", a, b, c);'
+    - pass: 'printf("  -a  --aspect=ASPECT_MODE    screenshot aspect ratio mode: fit(default)", "crop", "auto");'
+    - pass: 'syslog("Error: invalid aspect mode\n");'
+    - fail: 'syslog used for logging'
+    - pass: 'syslog(LOG_ERR | LOG_USER, "First fork failed: %m");'
