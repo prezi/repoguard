@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import json
 import re
+import os
 
 import requests
 import requests.exceptions
@@ -59,7 +60,8 @@ class GitRepoUpdater:
                 # TODO (KR): this is too broad. figure out what needs to be caught.
                 except:
                     self.logger.debug("... finished (PAGE: %s)" % self.actpage)
-                    self.logger.debug("(rate limit: %s / %s)" % (r.headers['X-RateLimit-Remaining'], r.headers['X-RateLimit-Limit']))
+                    self.logger.debug(
+                        "(rate limit: %s / %s)" % (r.headers['X-RateLimit-Remaining'], r.headers['X-RateLimit-Limit']))
                 self.store_repo_attributes_from_response_json(json.loads(r.text or r.content))
             else:
                 self.logger.error('github.com returned non-200 status code: %s' % r.text)
@@ -72,6 +74,8 @@ class GitRepoUpdater:
             json.dump(self.repo_list_cache, repo_file, indent=4, sort_keys=True)
 
     def read_repo_list_from_file(self):
+        if not os.path.exists(self.REPO_LIST_PATH):
+            return []
         with open(self.REPO_LIST_PATH, 'r') as repo_file:
             return json.load(repo_file)
 
@@ -85,6 +89,7 @@ class GitRepoUpdater:
                     self.logger.debug("Totally new public repo %s" % self.repo_list_cache[repo_id]["name"])
                     new_public_repos.append(self.repo_list_cache[repo_id])
                 elif original_repo_status[repo_id]["private"] == True:
-                    self.logger.debug("Previously private repo set to public %s" % self.repo_list_cache[repo_id]["name"])
+                    self.logger.debug(
+                        "Previously private repo set to public %s" % self.repo_list_cache[repo_id]["name"])
                     new_public_repos.append(self.repo_list_cache[repo_id])
         return new_public_repos
