@@ -141,3 +141,15 @@ file:
     - match: '\.py$'
 tests:
     - pass: 'return HttpResponse(req, "template.html", context={"data": json.dumps(tained_data)})'
+
+--- #!django_mark_safe
+extends: base
+diff: add
+case_sensitive: false
+description: "make sure this is not unescaped user input"
+line:
+    - match: '[^\w]mark_safe\('
+file:
+    - match: '\.py$'
+tests:
+    - pass: 'mystr = mark_safe(mystr)'
