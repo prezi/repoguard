@@ -34,6 +34,7 @@ tests:
 --- #!django_json_no_content_type
 extends: base
 diff: add
+description: Some old browsers parse anything as html if it looks html (ie html tags in json)
 line:
     - match: '(HttpResponse|render_to_response|render)\('
     - except: '(simplejson|json).+application/json'
@@ -105,9 +106,12 @@ tests:
 --- #!http_response
 extends: base
 diff: add
+description: Some old browsers parse anything as html if it looks html (ie html tags in json)
 line:
     - match: ' HttpResponse\('
     - except: content_type\s*=\s*['"]application/json['"]
+previously:
+    - except: "from prezi.django_utils.json_response import HttpResponse"
 file:
     - match: '\.py$'
 tests:
