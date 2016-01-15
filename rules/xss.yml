@@ -129,3 +129,15 @@ line:
 tests:
     - pass: " d.span({dangerouslySetInnerHTML:{__html: item.description}}));"
     - fail: "DangerouslySetInnerHTML"
+
+--- #!json_dumped_to_map
+extends: base
+diff: add
+case_sensitive: false
+description: "Dont dump json into <script> tag (it will be a valid javascript, but html parser runs first)"
+line:
+    - match: '[''"]\w+[''"]\s*:\s*[^,''"]*json\.dumps'
+file:
+    - match: '\.py$'
+tests:
+    - pass: 'return HttpResponse(req, "template.html", context={"data": json.dumps(tained_data)})'
