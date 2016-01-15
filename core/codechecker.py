@@ -86,7 +86,7 @@ class CodeCheckerFactory:
 
     def create(self, mode=LineEvalFactory.MODE_DIFF):
         factories = [LineEvalFactory(mode), InScriptEvalFactory(), FileEvalFactory(),
-                     CommitMessageEvalFactory(), AuthorEvalFactory()]
+                     CommitMessageEvalFactory(), AuthorEvalFactory(), PreviousLineEvaluatorFactory()]
         context_processors = [InScriptEvalFactory.ContextProcessor()]
         rules = [self.create_single(rn, factories) for rn in self.ruleset]
         return CodeChecker(context_processors, rules, self.repo_groups, self.rules_to_groups)

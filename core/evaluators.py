@@ -167,3 +167,35 @@ class AuthorEvalFactory:
 class AuthorEvaluator(ContextBasedPatternEvaluator):
     def __init__(self, rule):
         ContextBasedPatternEvaluator.__init__(rule, "author", "author")
+
+
+class PreviousLineEvaluatorFactory:
+    def __init__(self):
+        pass
+
+    def create(self, rule):
+        if "previously" not in rule:
+            return None
+
+        if any("match" in r for r in rule["previously"]):
+            raise ValueError("Only negative (except:) matches implemented yet")
+
+        negative_patterns = [re.compile(r["except"]) for r in rule["previously"] if "except" in r]
+
+        return self.PreviousLineEvaluator(negative_patterns)
+
+    class PreviousLineEvaluator:
+        key = "previously"
+
+        def __init__(self, negative_patterns):
+            self.negative_patterns = negative_patterns
+
+        def matches(self, line_context, line):
+            rolled_negative = line_context.get("previously_negative", False)  # Was there a negative pattern match?
+            if rolled_negative:
+                return False  # As there was already a negative match so far, no need to check further
+
+            is_negative_match = any(p.search(line) is not None for p in self.negative_patterns)
+            line_context["previously_negative"] = is_negative_match
+
+            return True  # Same reasoning: this may be a negative match, but it affects this line, not a previous

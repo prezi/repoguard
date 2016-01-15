@@ -39,6 +39,8 @@ line:
     - except: '(simplejson|json).+application/json'
     - except: 'JsonHttpResponse'
     - except: "render\\(request, '[^']*', context\\)"
+previously:
+    - except: "from prezi.django_utils.json_response import HttpResponse"
 file:
     - match: '\.py$'
 tests:

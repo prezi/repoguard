@@ -1,6 +1,6 @@
 import unittest
 
-from core.evaluators import LineEvalFactory, FileEvalFactory
+from core.evaluators import LineEvalFactory, FileEvalFactory, PreviousLineEvaluatorFactory
 
 
 class LineEvaluatorTestCase(unittest.TestCase):
@@ -148,3 +148,19 @@ class FileEvaluatorTestCase(unittest.TestCase):
         fef = FileEvalFactory()
         evaluator = fef.create(self.rule)
         self.assertEquals(evaluator, None)
+
+class PreviousLineEvaluatorTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.rule = {
+            "previously": [
+                {"except": "foobar"}
+            ]
+        }
+
+    def test_simple(self):
+        ctx = {}
+        ple = PreviousLineEvaluatorFactory().create(self.rule)
+        self.assertTrue(ple.matches(ctx, "a simple test line"))
+        self.assertTrue(ple.matches(ctx, "a simple test line containing foobar"))
+        self.assertFalse(ple.matches(ctx, "a line after suspicious token"))
