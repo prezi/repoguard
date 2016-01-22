@@ -43,11 +43,13 @@ diff: add
 line:
     - match: (request\.(GET|POST|FILES|META)(\[|\.get)).*
     - except: "['\"]REMOTE_ADDR['\"]"
+    - except: 'int\s*\(\s*request\.'
 tests:
-    - pass: "request.META.get('next')"
+    - pass: "request.META.get ( 'next')"
     - pass: "request.META[ 'next' ]"
     - fail: "request.META.get('REMOTE_ADDR')"
     - fail: "request.META[ 'REMOTE_ADDR' ]"
+    - fail: "int ( request.GET.get('owner_id', ''))"
 
 --- #!security_fix
 description: Someone committed - or reverted? - a security fix, worth to check
