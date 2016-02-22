@@ -49,7 +49,7 @@ class CodeCheckerTestCase(unittest.TestCase):
         rule.evaluators = [file_evaluator, line_evaluator]
         code_checker = CodeChecker([], [rule])
 
-        alert = code_checker.check(self.code, {"filename": "macbeth.txt"})
+        alert = code_checker.check(self.code, {"filename": "foo/macbeth.txt"})
 
         self.assertEquals(1, file_evaluator.matches.call_count)
         self.assertEquals(0, line_evaluator.matches.call_count)
