@@ -110,6 +110,7 @@ diff: add
 description: Some old browsers parse anything as html if it looks html (ie html tags in json)
 line:
     - match: ' HttpResponse\('
+    - except: ' HttpResponse\([''"][^''"]*[''"]\s*(,[^)]*)?\)'
     - except: content_type\s*=\s*['"]application/json['"]
 previously:
     - except: "from prezi.django_utils.json_response import HttpResponse"
@@ -117,9 +118,18 @@ file:
     - match: '\.py$'
 tests:
     - pass: " HttpResponse($_GET['to'])"
+    - pass: "return HttpResponse('Healthcheck failed %s' % (var'), status=500)"
+    - pass: "return HttpResponse('Healthcheck failed ' + var + 'wtf', status=500)"
+    - pass: 'return HttpResponse(variable, status=500)'
+    - pass: 'return HttpResponse("abc{}".format(var), status=500)'
     - fail: "HttpResponse('OK')"
     - fail: 'HttpResponse("OK")'
     - fail: "HttpResponse('OK', content_type = \"application/json\")"
+    - fail: "return HttpResponse('Out of service (admin down)', status=503)"
+    - fail: "return HttpResponse('Healthcheck failed', status=500)"
+    - fail: "return HttpResponse('Out of service (admin down)', status=503)"
+    - fail: "return HttpResponse('OK', status=123)"
+    - fail: "return HttpResponse('Healthcheck failed', status=500)"
 
 --- #!react_js
 extends: base
