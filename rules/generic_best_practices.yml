@@ -30,7 +30,7 @@ line:
     - match: (HttpResponseRedirect|HttpResponsePermanentRedirect|redirect)(?!\(["'][^"']+["']\))
     - except: <bindingRedirect
 file:
-    - except: '(\.config|\.po|\.po\.json|\.md|\.rb|\.xml)$'
+    - except: '(\.config|\.po|\.po\.json|\.md|\.rb|\.xml|\.cfg)$'
 tests:
     - pass: " HttpResponseRedirect($_GET['to'])"
     - fail: "HttpResponseRedirect('OK')"
