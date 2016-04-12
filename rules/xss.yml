@@ -22,7 +22,7 @@ line:
     - match: "{{.+}}"
     - except: '.+\|\s*urlencode'
     - except: '{{\s*STATIC_URL\s*}}'
-    - except: '{{.+\|\s*yesno.*}}'
+    - except: '{{.+\|\s*(yesno|escapejs).*}}'
 inscripttag: true
 tests:
     - pass: "{{xss|safe}}"
@@ -30,6 +30,7 @@ tests:
     - fail: "{{ xss|urlencode }}"
     - fail: "var CITY_JS = '{{ STATIC_URL }}campaigns/';"
     - fail: "deviceIsMobile: {{ mobile|yesno:'true,false' }}"
+    - fail: "foo = JSON.parse('{{ data_for_js | escapejs }}');"
 
 --- #!django_json_no_content_type
 extends: base
