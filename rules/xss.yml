@@ -41,6 +41,7 @@ line:
     - except: '(simplejson|json).+application/json'
     - except: 'JsonHttpResponse'
     - except: "render\\(request, '[^']*', context\\)"
+    - except: 'HttpResponse\([''"][^''"<>]*[''"]\s*(,[^)]*)?\)'
 previously:
     - except: "from prezi.django_utils.json_response import HttpResponse"
 file:
@@ -48,9 +49,17 @@ file:
 tests:
     - pass: "return HttpResponse({'access_token': access_token})"
     - pass: "return render_to_response('js_tests/index.html', {'files_to_list': files_to_list})"
+    - pass: "return HttpResponse('<div>Healthcheck failed wtf</div>', status=500)"
     - fail: 'return HttpResponse(simplejson.dumps({"status": "FEATURED CACHE ERROR"}), content_type="application/json")'
     - fail: "return render(request, 'support/landing/support_landing_v1.html', context)"
     - fail: "return JsonHttpResponse({'is_business_user': is_business_user})"
+    - fail: 'HttpResponse("OK")'
+    - fail: "HttpResponse('OK', content_type = \"application/json\")"
+    - fail: "return HttpResponse('Out of service (admin down)', status=503)"
+    - fail: "return HttpResponse('Healthcheck failed', status=500)"
+    - fail: "return HttpResponse('Out of service (admin down)', status=503)"
+    - fail: "return HttpResponse('OK', status=123)"
+    - fail: "return HttpResponse('Healthcheck failed', status=500)"
 
 --- #!haskell
 description: "error messages and responses should be sanitized"
@@ -110,7 +119,7 @@ diff: add
 description: Some old browsers parse anything as html if it looks html (ie html tags in json)
 line:
     - match: ' HttpResponse\('
-    - except: ' HttpResponse\([''"][^''"]*[''"]\s*(,[^)]*)?\)'
+    - except: 'HttpResponse\([''"][^''"<>]*[''"]\s*(,[^)]*)?\)'
     - except: content_type\s*=\s*['"]application/json['"]
 previously:
     - except: "from prezi.django_utils.json_response import HttpResponse"
@@ -122,6 +131,7 @@ tests:
     - pass: "return HttpResponse('Healthcheck failed ' + var + 'wtf', status=500)"
     - pass: 'return HttpResponse(variable, status=500)'
     - pass: 'return HttpResponse("abc{}".format(var), status=500)'
+    - pass: "return HttpResponse('Healthcheck failed <span></span>', status=500)"
     - fail: "HttpResponse('OK')"
     - fail: 'HttpResponse("OK")'
     - fail: "HttpResponse('OK', content_type = \"application/json\")"
