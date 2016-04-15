@@ -14,6 +14,22 @@ line:
 file:
     - match: '\.py$'
 
+--- #!python_eval
+extends: base
+description: Eval is evil.
+diff: add
+line:
+    - match: '(eval|execfile|compile|literal_eval)\s*\('
+    - match: import ast
+    - match: from ast
+file:
+    - match: '\.py$'
+tests:
+    - pass: 'a = literal_eval(user_input)'
+    - pass: "import ast, sys"
+    - pass: "from ast import parse"
+    - fail: 'evaluation()'
+
 --- #!java
 extends: base
 diff: add
