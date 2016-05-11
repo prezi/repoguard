@@ -29,6 +29,7 @@ diff: add
 line:
     - match: (HttpResponseRedirect|HttpResponsePermanentRedirect|redirect)(?!\(["'][^"']+["']\))
     - except: <bindingRedirect
+    - except: ^(from|import) .*HttpResponseRedirect.*
 file:
     - except: '(\.config|\.po|\.po\.json|\.md|\.rb|\.xml|\.cfg)$'
 tests:
@@ -36,6 +37,9 @@ tests:
     - fail: "HttpResponseRedirect('OK')"
     - fail: 'HttpResponseRedirect("OK")'
     - fail: '<bindingRedirect foobar'
+    - fail: "from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect"
+    - fail: "import something.HttpResponseRedirect"
+
 
 --- #!http_variable_used
 extends: base
