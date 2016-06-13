@@ -59,3 +59,15 @@ tests:
 description: Someone committed - or reverted? - a security fix, worth to check
 message:
     - match: "security"
+
+--- #!oauth_string
+extends: base
+diff: add
+line:
+    - match: "[^N]oauth.*"
+    - except: "django-oauth-toolkit"
+file:
+    - except: 'requirements.*\.txt$'
+tests:
+    - pass: "?oauth=foobar"
+    - fail: "django-oauth-toolkit==0.5.0"

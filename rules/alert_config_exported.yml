@@ -16,14 +16,6 @@ diff: add
 line:
     - match: request.*\.get\(('next'|redirect_field).*
 
---- #!oauth_string
-extends: base
-diff: add
-line:
-    - match: "[^N]oauth.*"
-file:
-    - except: 'requirements.*\.txt'
-
 --- #!unsafe_as_htmlText
 extends: base
 diff: add
