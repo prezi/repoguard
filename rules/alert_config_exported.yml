@@ -2,14 +2,6 @@
 description: Alert configs exported from the previous format
 extends: whitelisted_files::whitelisted_files,comments::comments
 
---- #!django_middleware_classes
-extends: base
-diff: add
-line:
-    - match: middleware\_classes.*
-file:
-    - match: .*\.cfg
-
 --- #!redirect_field_usage
 extends: base
 diff: add
