@@ -22,6 +22,7 @@ line:
     - match: '(eval|execfile|compile|literal_eval)\s*\('
     - match: import ast
     - match: from ast
+    - except: 're\.compile'
 file:
     - match: '\.py$'
 tests:
@@ -29,6 +30,7 @@ tests:
     - pass: "import ast, sys"
     - pass: "from ast import parse"
     - fail: 'evaluation()'
+    - fail: 're.compile()'
 
 --- #!java
 extends: base
