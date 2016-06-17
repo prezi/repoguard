@@ -312,6 +312,8 @@ class RepoGuard:
                 matches_in_repo = matches_in_repo + rev_result
         if len(rev_list_to_check) > 0:
             self.logger.info("checked commits %s %s" % (repo.name, len(rev_list_to_check)))
+        if len(matches_in_repo) > 0:
+            self.logger.info("found matches %s %s" % (repo.name, len(matches_in_repo)))
 
         return matches_in_repo
 
