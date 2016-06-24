@@ -118,7 +118,7 @@ extends: base
 diff: add
 description: Some old browsers parse anything as html if it looks html (ie html tags in json)
 line:
-    - match: ' HttpResponse\('
+    - match: ' HttpResponse\([^)]+'
     - except: 'HttpResponse\([''"][^''"<>]*[''"]\s*(,[^)]*)?\)'
     - except: content_type\s*=\s*['"]application/json['"]
 previously:
@@ -132,6 +132,7 @@ tests:
     - pass: 'return HttpResponse(variable, status=500)'
     - pass: 'return HttpResponse("abc{}".format(var), status=500)'
     - pass: "return HttpResponse('Healthcheck failed <span></span>', status=500)"
+    - pass: "return HttpResponse(_var_)"
     - fail: "HttpResponse('OK')"
     - fail: 'HttpResponse("OK")'
     - fail: "HttpResponse('OK', content_type = \"application/json\")"
@@ -140,6 +141,7 @@ tests:
     - fail: "return HttpResponse('Out of service (admin down)', status=503)"
     - fail: "return HttpResponse('OK', status=123)"
     - fail: "return HttpResponse('Healthcheck failed', status=500)"
+    - fail: "return HttpResponse()"
 
 --- #!react_js
 extends: base
