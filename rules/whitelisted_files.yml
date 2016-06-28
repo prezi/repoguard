@@ -7,4 +7,3 @@ file:
     - except: '\.(po|pyc|pbxproj)$'
     - except: '^scripts/'
     - except: 'PKG-INFO$'
-    - except: '\.md$'
