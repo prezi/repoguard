@@ -74,18 +74,20 @@ tests:
     - pass: "return haltWithMessage()"
 
 --- #!jquery_html
-description: "Please HTML escape *everything* passed to the .html() and .append() function!"
+description: "Please HTML escape *everything* passed to the .html() and .append() function! Or just use a safer method instead of them (e.g. text)."
 extends: base
 diff: add
 line:
-    - match: '=.+?\.html\('
+    - match: '\.html\('
     - match: '\$\(.+?\.append\('
 file:
     - match: '\.(js|html|ts)$'
 tests:
     - pass: " var a = el.html()"
+    - pass: " $twin.html(value)"
     - pass: ' $("#player-js-iframe").append("<iframe src=f.html?oid="'
     - fail: 'list.append({})'
+    - fail: 'custom_method_html("hello")'
 
 --- #!html
 description: "Please HTML escape *everything* passed to the .innerHTML attribute!"
