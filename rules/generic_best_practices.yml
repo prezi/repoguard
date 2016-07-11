@@ -27,18 +27,19 @@ tests:
 extends: base
 diff: add
 line:
-    - match: (HttpResponseRedirect|HttpResponsePermanentRedirect|redirect)(?!\(["'][^"']+["']\))
+    - match: (HttpResponseRedirect|HttpResponsePermanentRedirect|redirect)\((?!["'][^"']+["'])
     - except: <bindingRedirect
     - except: ^(from|import) .*HttpResponseRedirect.*
 file:
     - except: '(\.config|\.po|\.po\.json|\.md|\.rb|\.xml|\.cfg)$'
 tests:
-    - pass: " HttpResponseRedirect($_GET['to'])"
+    - pass: " HttpResponseRedirect( $_GET['to'] )"
     - fail: "HttpResponseRedirect('OK')"
     - fail: 'HttpResponseRedirect("OK")'
     - fail: '<bindingRedirect foobar'
     - fail: "from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect"
     - fail: "import something.HttpResponseRedirect"
+    - fail: "jsonLoggingService.log(logMessages.redirectDialogShow);"
 
 
 --- #!http_variable_used
