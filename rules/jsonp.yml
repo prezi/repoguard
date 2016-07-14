@@ -11,7 +11,7 @@ line:
     - except: JSONParser
     - except: jsonPath
 file:
-    - except: ^.*\.(md|txt|conf|xml|yaml|json)$
+    - except: ^.*\.(md|txt|conf|xml|yaml|json|cpp|m|h|hpp)$
 tests:
     - pass: ' format="jsonp"'
     - pass: " JSONP()"
