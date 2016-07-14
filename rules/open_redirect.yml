@@ -24,7 +24,7 @@ extends: base
 diff: add
 line:
     - match: 'href\s*=\s*["'']\s*javascript:'
-    - except: 'javascript:\s*void\(0\)'
+    - except: 'javascript:\s*void\(.?\)'
 file:
     - except: '\.css$'
 tests:
