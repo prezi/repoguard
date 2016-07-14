@@ -23,9 +23,11 @@ tests:
 extends: base
 diff: add
 line:
-    - match: 'javascript:'
+    - match: 'href\s*=\s*["'']\s*javascript:'
+    - except: 'javascript:\s*void\(0\)'
 file:
     - except: '\.css$'
 tests:
     - pass: ' <a href="javascript:alert(1)">'
     - fail: "javascript"
+    - fail: '<a href="javascript: void(0)" />'
