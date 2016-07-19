@@ -18,6 +18,7 @@ tests:
 --- #!django_inscripttags
 extends: base
 diff: add
+description: Django templates inside script tag should have the "| escapejs" filter applied
 line:
     - match: "{{.+}}"
     - except: '.+\|\s*urlencode'
