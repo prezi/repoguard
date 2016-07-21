@@ -20,3 +20,14 @@ line:
 ## FIXME: diff:del never passes
 #tests:
 #    - pass: "- somewhere something with csrf string in it"
+
+--- #!get_method_allowed
+extends: base
+diff: add
+line:
+    - match: "@require_http_methods.*GET.*"
+tests:
+    - pass: "@require_http_methods(['GET', 'POST'])"
+    - pass: " @require_http_methods(['GET'])"
+    - fail: "@require_http_methods(['POST'])"
+    - fail: "require_http_methods = "
