@@ -31,7 +31,7 @@ line:
     - except: <bindingRedirect
     - except: ^(from|import) .*HttpResponseRedirect.*
 file:
-    - except: '(\.config|\.po|\.po\.json|\.md|\.rb|\.xml|\.cfg)$'
+    - except: '(\.config|\.po|\.po\.json|\.md|\.rb|\.xml|\.cfg|urls\.py)$'
 tests:
     - pass: " HttpResponseRedirect( $_GET['to'] )"
     - fail: "HttpResponseRedirect('OK')"
