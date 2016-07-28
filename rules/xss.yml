@@ -81,14 +81,15 @@ diff: add
 line:
     - match: '\.html\('
     - match: '\$\(.+?\.append\('
+    - except: 'Mustache\.render\(\$\('#'
 file:
     - match: '\.(js|html|ts)$'
 tests:
     - pass: " var a = el.html()"
     - pass: " $twin.html(value)"
     - pass: ' $("#player-js-iframe").append("<iframe src=f.html?oid="'
-    - fail: 'list.append({})'
-    - fail: 'custom_method_html("hello")'
+    - fail: "list.append({})"
+    - fail: "var html = Mustache.render($('#foo').html(), bar);"
 
 --- #!html
 description: "Please HTML escape *everything* passed to the .innerHTML attribute!"
