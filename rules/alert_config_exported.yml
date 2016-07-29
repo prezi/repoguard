@@ -227,14 +227,6 @@ line:
 file:
     - match: .*\.(cpp|cxx|h|hpp|c)$
 
---- #!dom_event_parameter
-extends: base
-diff: add
-line:
-    - match: \son\w+=\s*('|").*
-file:
-    - except: .*\.(xml)
-
 --- #!python_password_form
 extends: base
 diff: add

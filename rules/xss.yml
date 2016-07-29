@@ -180,3 +180,15 @@ file:
     - match: '\.py$'
 tests:
     - pass: 'mystr = mark_safe(mystr)'
+
+--- #!dom_event_parameter
+extends: base
+diff: add
+line:
+    - match: on(Click|Mouse\w+|Change|Context|DblClick)\s*=\s*('|")
+
+tests:
+    - pass: ' <a onmouseover = "foobar"/>'
+    - fail: '<window oneShot="NO"'
+file:
+    - except: .*\.(xml)
