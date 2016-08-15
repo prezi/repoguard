@@ -9,6 +9,7 @@ line:
     - match: '\(\?P<user_id>(\[0-9]|\\d)\+\)'
 file:
     - match: '\.py$'
+    - except: 'urls.py$'
 tests:
     - pass: " (?P<presentation_id>[0-9]+)"
     - pass: " (?P<prezi_id>[0-9]+)"

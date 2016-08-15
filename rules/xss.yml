@@ -43,6 +43,7 @@ line:
     - except: 'JsonHttpResponse'
     - except: "render\\(request, '[^']*', context\\)"
     - except: 'HttpResponse\([''"][^''"<>]*[''"]\s*(,[^)]*)?\)'
+    - except: 'HttpResponse\(\)'
 previously:
     - except: "from prezi.django_utils.json_response import HttpResponse"
 file:
@@ -61,6 +62,7 @@ tests:
     - fail: "return HttpResponse('Out of service (admin down)', status=503)"
     - fail: "return HttpResponse('OK', status=123)"
     - fail: "return HttpResponse('Healthcheck failed', status=500)"
+    - fail: "return HttpResponse()"
 
 --- #!haskell
 description: "error messages and responses should be sanitized"
