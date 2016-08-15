@@ -44,6 +44,7 @@ line:
     - except: "render\\(request, '[^']*', context\\)"
     - except: 'HttpResponse\([''"][^''"<>]*[''"]\s*(,[^)]*)?\)'
     - except: 'HttpResponse\(\)'
+    - except: 'render\(request, [''"].*\.html[''"], context\)'
 previously:
     - except: "from prezi.django_utils.json_response import HttpResponse"
 file:
@@ -63,6 +64,8 @@ tests:
     - fail: "return HttpResponse('OK', status=123)"
     - fail: "return HttpResponse('Healthcheck failed', status=500)"
     - fail: "return HttpResponse()"
+    - fail: "response = render(request, 'android_open.html', context)"
+
 
 --- #!haskell
 description: "error messages and responses should be sanitized"
