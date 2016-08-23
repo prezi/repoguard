@@ -331,7 +331,7 @@ class RepoGuard:
 
             def create_alert(rule, vuln_line, diff, diff_first_line):
                 def get_vuln_line_number():
-                    curr_line = diff_first_line
+                    curr_line = 0
                     for line in diff.splitlines():
                         if line == vuln_line:
                             return curr_line
@@ -347,7 +347,7 @@ class RepoGuard:
                 match = re.split(r'^@@ -\d+(?:|,\d+) \+(?P<line_no>\d+)(?:|,\d+) @@.*\n', raw_diff, maxsplit=1,
                                  flags=re.MULTILINE)
                 if match and len(match) == 3:
-                    diff_first_line = i + 1
+                    diff_first_line = int(match[1])
                     diff = match[2]
                 else:
                     if 'Binary files ' not in raw_diff and 'rename from' not in raw_diff and 'new file mode' not in raw_diff:
