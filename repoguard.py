@@ -331,7 +331,7 @@ class RepoGuard:
 
             def create_alert(rule, vuln_line, diff, diff_first_line):
                 def get_vuln_line_number():
-                    curr_line = 0
+                    curr_line = diff_first_line
                     for line in diff.splitlines():
                         if line == vuln_line:
                             return curr_line
