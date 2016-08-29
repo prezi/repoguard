@@ -130,6 +130,7 @@ line:
     - match: ' HttpResponse\([^)]+'
     - except: 'HttpResponse\([''"][^''"<>]*[''"]\s*(,[^)]*)?\)'
     - except: content_type\s*=\s*['"]application/json['"]
+    - except: 'HttpResponse\(status=\w+\)'
 previously:
     - except: "from prezi.django_utils.json_response import HttpResponse"
 file:
@@ -151,6 +152,8 @@ tests:
     - fail: "return HttpResponse('OK', status=123)"
     - fail: "return HttpResponse('Healthcheck failed', status=500)"
     - fail: "return HttpResponse()"
+    - fail: "return HttpResponse(status=status_code)"
+    - fail: "return HttpResponse(status=403)"
 
 --- #!react_js
 extends: base
