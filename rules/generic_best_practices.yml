@@ -64,14 +64,17 @@ message:
 
 --- #!oauth_string
 extends: base
+case_sensitive: true
 diff: add
 line:
-    - match: "[^N]oauth.*"
+    - match: "[^N]OAuth"
     - except: "django-oauth-toolkit"
     - except: "with_oauth2_access_token"
+    - except: "OAuthToken.objects"
 file:
     - except: 'requirements.*\.txt$'
 tests:
-    - pass: "?oauth=foobar"
+    - pass: "oauth_token = OAuthToken.get()"
+    - fail: "oauth_token = OAuthToken.objects.get()"
     - fail: "django-oauth-toolkit==0.5.0"
     - fail: "@with_oauth2_access_token"
