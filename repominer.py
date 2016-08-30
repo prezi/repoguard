@@ -90,6 +90,7 @@ for path in args.files:
                     "commit_id": alert.commit,
                     "matching_line": alert.line[0:200].replace("\t", " ").decode('utf-8', 'replace'),
                     "line_number": alert.line_number,
+                    "diff_line_number": alert.diff_line_number,
                     "repo_name": alert.repo,
                     "@timestamp": datetime.datetime.utcnow().isoformat() + 'Z',
                     "type": "repoguard",

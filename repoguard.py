@@ -40,6 +40,7 @@ EMAIL_TEMPLATES = {
     )
 }
 
+
 class RepoGuard:
     def __init__(self, instance_id="repoguard-app"):
         self.repo_list = {}
@@ -206,6 +207,7 @@ class RepoGuard:
                     "commit_id": alert.commit,
                     "matching_line": alert.line[0:200].replace("\t", " ").decode('utf-8', 'replace'),
                     "line_number": alert.line_number,
+                    "diff_line_number": alert.diff_line_number,
                     "repo_name": alert.repo.name,
                     "repo_private": alert.repo.private,
                     "repo_fork": alert.repo.fork,
@@ -229,17 +231,16 @@ class RepoGuard:
         description = alert.rule.description
 
         return (u"check_id: %s \n"
-                 "path: %s \n"
-                 "commit: https://github.com/%s/%s/commit/%s?diff=split#diff-%sR%s\n"
-                 "matching line: %s\n"
-                 "description: %s\n"
-                 "repo name: %s\n"
-                 "repo is private: %s\n"
-                 "repo is fork: %s\n"
-                 "\n" % (check_id, filename, self.org_name, alert.repo.name,
-                         commit_id, md5(filename).hexdigest(), alert.line_number, matching_line, description,
-                         alert.repo.name, alert.repo.private, alert.repo.fork))
-
+                "path: %s \n"
+                "commit: https://github.com/%s/%s/commit/%s?diff=split#diff-%sR%s\n"
+                "matching line: %s\n"
+                "description: %s\n"
+                "repo name: %s\n"
+                "repo is private: %s\n"
+                "repo is fork: %s\n"
+                "\n" % (check_id, filename, self.org_name, alert.repo.name,
+                        commit_id, md5(filename).hexdigest(), alert.line_number, matching_line, description,
+                        alert.repo.name, alert.repo.private, alert.repo.fork))
 
     def send_results(self):
         alert_per_notify_person = defaultdict(list)
@@ -332,14 +333,16 @@ class RepoGuard:
             def create_alert(rule, vuln_line, diff, diff_first_line):
                 def get_vuln_line_number():
                     curr_line = diff_first_line
-                    for line in diff.splitlines():
+                    for idx, line in enumerate(diff.splitlines()):
                         if line == vuln_line:
-                            return curr_line
+                            return idx, curr_line
                         if len(line) > 0 and line[0] != '-':
                             curr_line += 1
-                    return 0
+                    return 0, 0
 
-                return Alert(rule, filename, repo, rev_hash, line, get_vuln_line_number(), author, commit_description)
+                diff_line_number, file_line_number = get_vuln_line_number()
+                return Alert(rule, filename, repo, rev_hash, line=line, diff_line_number=diff_line_number,
+                             line_number=file_line_number, author=author, commit_description=commit_description)
 
             for i in xrange(len(splitted) / 2):
                 filename = splitted[i * 2]
@@ -410,8 +413,7 @@ class RepoGuard:
             repo_obj.private = new_public_repo_json['private']
             repo_obj.fork = new_public_repo_json['fork']
             self.launch_full_repoguard_scan_on_repo(repo_obj.name)
-            self.check_results += [
-                Alert(rule=new_public_rule, filename='', repo=repo_obj, commit='', line='', line_number=0)]
+            self.check_results += [Alert(rule=new_public_rule, filename='', repo=repo_obj, commit='', line='')]
 
     def try_to_lock(self):
         try:
