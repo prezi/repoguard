@@ -16,12 +16,14 @@ class InScriptEvalFactory:
     def create(self, rule):
         return self.evaluator if "inscripttag" in rule else None
 
+
     class InScriptEvaluator:
         key = "inscripttag"
 
         def matches(self, line_context, line):
             value = line_context["inside_script_tag"]
             return value is not None and value > 0
+
 
     class ContextProcessor:
         def __init__(self):
@@ -56,7 +58,7 @@ class LineEvalFactory:
             diff_mode = rule["diff"] if "diff" in rule else "all"
             diff_mode = diff_mode if diff_mode in ("add", "del", "mod") else "all"
             if self.mode == self.MODE_DIFF:
-                diff_mode_prefixes = {"add": ("+", ), "del": ("-",), "mod": ("+", "-")}
+                diff_mode_prefixes = {"add": ("+",), "del": ("-",), "mod": ("+", "-")}
                 must_begin_with = diff_mode_prefixes.get(diff_mode, None)
                 return self.DiffLineEvaluator(positive_patterns, negative_patterns, must_begin_with)
             else:
@@ -64,6 +66,7 @@ class LineEvalFactory:
                     return self.SimpleLineEvaluator(positive_patterns, negative_patterns)
                 else:
                     return self.AlwaysFalseLineEvaluator()
+
 
     class SimpleLineEvaluator:
         key = "line"
@@ -77,6 +80,7 @@ class LineEvalFactory:
                 return False
             ctx = reduce(lambda ctx, p: ctx or p.search(line) is not None, self.positive_patterns, False)
             return ctx and reduce(lambda ctx, p: ctx and p.search(line) is None, self.negative_patterns, ctx)
+
 
     class DiffLineEvaluator:
         key = "line"
@@ -96,6 +100,7 @@ class LineEvalFactory:
                 line = line[1:]
             ctx = ctx and reduce(lambda ctx, p: ctx or p.search(line) is not None, self.positive_patterns, False)
             return ctx and reduce(lambda ctx, p: ctx and p.search(line) is None, self.negative_patterns, ctx)
+
 
     class AlwaysFalseLineEvaluator:
         key = "line"
@@ -123,6 +128,10 @@ class ContextBasedPatternEvaluator(object):
 
     def matches(self, line_context, line):
         if line is not None:
+            if self.context_key in ['commit_message']:
+                # another hacky way to prevent alerting on every line if commit message matches
+                return False
+
             # bit ugly, but this is a speed improvement: we check first if a "file"-keyed
             # evaluator matches to the key ("file"), and at that point the line is None. When
             # it's not None, we don't need to run the costly checks, since once it was
@@ -156,7 +165,7 @@ class CommitMessageEvalFactory:
 
 class CommitMessageEvaluator(ContextBasedPatternEvaluator):
     def __init__(self, rule):
-        super(CommitMessageEvaluator, self).__init__(rule, "message", "commit_message")
+        super(CommitMessageEvaluator, self).__init__(rule=rule, rule_key="message", context_key="commit_message")
 
 
 class AuthorEvalFactory:
@@ -183,6 +192,7 @@ class PreviousLineEvaluatorFactory:
         negative_patterns = [re.compile(r["except"]) for r in rule["previously"] if "except" in r]
 
         return self.PreviousLineEvaluator(negative_patterns)
+
 
     class PreviousLineEvaluator:
         key = "previously"
