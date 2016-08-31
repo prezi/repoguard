@@ -43,7 +43,7 @@ line:
 extends: base
 diff: add
 line:
-    - match: "@xframe_options_exempt.*"
+    - match: "@xframe_options_exempt"
 file:
     - match: .*\.py
 
@@ -51,13 +51,13 @@ file:
 extends: base
 diff: add
 line:
-    - match: (SHA|MD|sha|md)[0-9]+\(.*
+    - match: (sha|md)\d+\(
 
 --- #!jsonp_usage
 extends: base
 diff: add
 line:
-    - match: \$\.jsonp\(.*
+    - match: \$\.jsonp\(
 
 --- #!direct_prezi_access_helpers
 extends: base
