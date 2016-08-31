@@ -127,14 +127,7 @@ class ContextBasedPatternEvaluator(object):
                 raise EvaluatorException("Unknown key in %s" % str(rule))
 
     def matches(self, line_context, line):
-        if line is not None:
-            # bit ugly, but this is a speed improvement: we check first if a "file"-keyed
-            # evaluator matches to the key ("file"), and at that point the line is None. When
-            # it's not None, we don't need to run the costly checks, since once it was
-            # matching already
-            return True
-
-        if line and self.context_key in ['commit_message']:
+        if self.context_key in ['commit_message'] and line_context.get('line_idx') > 0:
             # another hacky way to prevent alerting on every line if commit message matches
             return False
 
@@ -175,7 +168,7 @@ class AuthorEvalFactory:
 
 class AuthorEvaluator(ContextBasedPatternEvaluator):
     def __init__(self, rule):
-        ContextBasedPatternEvaluator.__init__(rule, "author", "author")
+        super(AuthorEvaluator, self).__init__(rule, "author", "author")
 
 
 class PreviousLineEvaluatorFactory:

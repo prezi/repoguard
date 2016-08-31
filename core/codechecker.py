@@ -13,8 +13,10 @@ class CodeChecker:
         # pre-filter rules with line-invariant rules:
         applicable_rules = filter(self._check_line_invariants(context), rules_applied_for_this_repo)
         # check each line
-        alerts, line_ctx = reduce(self._check_all(applicable_rules), lines, (list(), context))
-        # we do not use line_ctx at alerting, so we drop it
+        alerts = []
+        for idx, line in enumerate(lines):
+            context['line_idx'] = idx
+            alerts.extend(self.check_line(applicable_rules, context, line))
         return alerts
 
     def _filter_rules(self, repo_name):
@@ -34,25 +36,23 @@ class CodeChecker:
 
     def _check_line_invariants(self, context):
         def filename_filter(rule):
-            return all(e.matches(context, None) for e in rule.evaluators if e.key in ["file", "message", "author"])
+            return all(e.matches(context, None) for e in rule.evaluators if e.key in ["file", "author"])
 
         return filename_filter
 
-    def _check_all(self, rules):
-        def check_line(check_ctx, line):
-            if len(line) > 512:
-                # probably not readable source, but it's hard to match regexes at least
-                # TODO: logging
-                return check_ctx
-            alerts, line_ctx = check_ctx
-            line_ctx = reduce(lambda ctx, cp: cp.preprocess(ctx, line), self.context_processors, line_ctx)
-            for rule in rules:
-                matches = [e.matches(line_ctx, line) for e in rule.evaluators]
-                if len(matches) > 0 and all(matches):
-                    alerts.append((rule, line))
-            return (alerts, line_ctx)
+    def check_line(self, rules, line_ctx, line):
+        if len(line) > 512:
+            # probably not readable source, but it's hard to match regexes at least
+            # TODO: logging
+            return
 
-        return check_line
+        for cp in self.context_processors:
+            line_ctx = cp.preprocess(line_ctx, line)
+
+        for rule in rules:
+            matches = [e.matches(line_ctx, line) for e in rule.evaluators]
+            if len(matches) > 0 and all(matches):
+                yield (rule, line)
 
 
 class Alert:

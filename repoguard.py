@@ -1,31 +1,30 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import subprocess
-import datetime
 import argparse
-import logging
-import sys
-from copy import deepcopy
-from multiprocessing import Pool
-import re
-import os
+import datetime
 import fnmatch
 import itertools
+import logging
+import os
+import re
+import subprocess
+import sys
 from collections import defaultdict
+from copy import deepcopy
 from functools import partial
 from hashlib import md5
+from multiprocessing import Pool
 
 import yaml
+from lockfile import LockFile, LockTimeout
 from mock import Mock
 
-from lockfile import LockFile, LockTimeout
-
+from core.codechecker import CodeCheckerFactory, Alert
 from core.datastore import DataStore, DataStoreException
 from core.git_repo_updater import GitRepoUpdater
-from core.codechecker import CodeCheckerFactory, Alert
-from core.ruleparser import build_resolved_ruleset, load_rules
 from core.notifier import EmailNotifier, EmailNotifierException
 from core.repository_handler import RepositoryHandler, git_clone_or_pull
+from core.ruleparser import build_resolved_ruleset, load_rules
 
 
 DEFAULT_EMAIL_TEMPLATE = None
@@ -188,7 +187,8 @@ class RepoGuard:
             for alert in self.check_results:
                 try:
                     print '\t'.join([
-                        alert.rule.name, alert.repo.name, alert.commit, '%s:%d' % (alert.filename, alert.line_number),
+                        alert.rule.name, alert.repo.name, alert.commit,
+                        '%s:%d' % (alert.filename, alert.diff_line_number),
                         alert.rule.description, alert.line[0:200].replace("\t", " ").decode('utf-8', 'replace')
                     ])
                 except UnicodeEncodeError:
@@ -234,13 +234,14 @@ class RepoGuard:
                 "path: %s \n"
                 "commit: https://github.com/%s/%s/commit/%s?diff=split#diff-%sR%s\n"
                 "matching line: %s\n"
+                "diff linenumber: %s\n"
                 "description: %s\n"
                 "repo name: %s\n"
                 "repo is private: %s\n"
                 "repo is fork: %s\n"
                 "\n" % (check_id, filename, self.org_name, alert.repo.name,
-                        commit_id, md5(filename).hexdigest(), alert.line_number, matching_line, description,
-                        alert.repo.name, alert.repo.private, alert.repo.fork))
+                        commit_id, md5(filename).hexdigest(), alert.line_number, matching_line, alert.diff_line_number,
+                        description, alert.repo.name, alert.repo.private, alert.repo.fork))
 
     def send_results(self):
         alert_per_notify_person = defaultdict(list)
@@ -319,23 +320,43 @@ class RepoGuard:
         return matches_in_repo
 
     def check_by_rev_hash(self, rev_hash, repo, detect_rename=False):
+        def extract_diffs_from_git_show(cmd):
+            try:
+                diff_output = subprocess.check_output(cmd.split(), cwd=repo.full_dir_path)
+                author = diff_output.split("Author: ")[1].split("\n")[0]
+                splitted = re.split(r'^diff --git a/\S* b/(\S+)$', diff_output, flags=re.MULTILINE)[1:]
+                commit_description_cmd = "git log --pretty=%s -n 1 " + rev_hash
+                commit_description = subprocess.check_output(commit_description_cmd.split(),
+                                                             cwd=repo.full_dir_path).rstrip()
+
+                for i in xrange(len(splitted) / 2):
+                    filename = splitted[i * 2]
+                    raw_diff = splitted[i * 2 + 1]
+                    match = re.split(r'^@@ -\d+(?:|,\d+) \+(?P<line_no>\d+)(?:|,\d+) @@.*\n', raw_diff, maxsplit=1,
+                                     flags=re.MULTILINE)
+                    if match and len(match) == 3:
+                        diff_first_line = int(match[1])
+                        diff = match[2]
+                    else:
+                        if 'Binary files ' not in raw_diff and 'rename from' not in raw_diff and 'new file mode' not in raw_diff:
+                            self.logger.warning('Was not able to parse unified diff header for diff: %s, match: %s',
+                                                repr(raw_diff), match)
+                        diff = raw_diff
+                        diff_first_line = 0
+                    yield (filename, author, commit_description, diff, diff_first_line)
+            except (subprocess.CalledProcessError, OSError) as e:
+                self.logger.exception('Failed running: %s' % cmd)
+
         matches_in_rev = []
         cmd = "git show --function-context %s%s" % ('-M100% ' if detect_rename else '--no-renames ', rev_hash)
-
-        try:
-            diff_output = subprocess.check_output(cmd.split(), cwd=repo.full_dir_path)
-            author = diff_output.split("Author: ")[1].split("\n")[0]
-            splitted = re.split(r'^diff --git a/\S* b/(\S+)$', diff_output, flags=re.MULTILINE)[1:]
-            commit_description_cmd = "git log --pretty=%s -n 1 " + rev_hash
-            commit_description = subprocess.check_output(commit_description_cmd.split(),
-                                                         cwd=repo.full_dir_path).rstrip()
-
+        for filename, author, commit_description, diff, diff_first_line in extract_diffs_from_git_show(cmd):
             def create_alert(rule, vuln_line, diff, diff_first_line):
                 def get_vuln_line_number():
                     curr_line = diff_first_line
                     for idx, line in enumerate(diff.splitlines()):
                         if line == vuln_line:
-                            return idx, curr_line
+                            # Github diff indexes start from 1
+                            return idx + 1, curr_line
                         if len(line) > 0 and line[0] != '-':
                             curr_line += 1
                     return 0, 0
@@ -344,32 +365,16 @@ class RepoGuard:
                 return Alert(rule, filename, repo, rev_hash, line=line, diff_line_number=diff_line_number,
                              line_number=file_line_number, author=author, commit_description=commit_description)
 
-            for i in xrange(len(splitted) / 2):
-                filename = splitted[i * 2]
-                raw_diff = splitted[i * 2 + 1]
-                match = re.split(r'^@@ -\d+(?:|,\d+) \+(?P<line_no>\d+)(?:|,\d+) @@.*\n', raw_diff, maxsplit=1,
-                                 flags=re.MULTILINE)
-                if match and len(match) == 3:
-                    diff_first_line = int(match[1])
-                    diff = match[2]
-                else:
-                    if 'Binary files ' not in raw_diff and 'rename from' not in raw_diff and 'new file mode' not in raw_diff:
-                        self.logger.warning('Was not able to parse unified diff header for diff: %s, match: %s',
-                                            repr(raw_diff), match)
-                    diff = raw_diff
-                    diff_first_line = 0
-
-                check_context = {
-                    "filename": filename,
-                    "author": author,
-                    "commit_message": commit_description
-                }
-                result = self.code_checker.check(diff.split('\n'), check_context, repo)
+            check_context = {
+                "filename": filename,
+                "author": author,
+                "commit_message": commit_description
+            }
+            result = self.code_checker.check(diff.split('\n'), check_context, repo)
+            cmd = 'git show %s %s' % (rev_hash, filename)
+            for _, _, _, diff, diff_first_line in extract_diffs_from_git_show(cmd):
                 alerts = [create_alert(rule, line, diff, diff_first_line) for rule, line in result]
-
                 matches_in_rev.extend(alerts)
-        except (subprocess.CalledProcessError, OSError) as e:
-            self.logger.exception('Failed running: %s' % cmd)
 
         return matches_in_rev
 
