@@ -31,6 +31,7 @@ diff: add
 line:
     - match: (HttpResponseRedirect|HttpResponsePermanentRedirect|redirect)\((?!["'][^"']+["'])
     - except: <bindingRedirect
+    - except: 'Redirect\(\s*reverse\('
     - except: ^(from|import) .*HttpResponseRedirect.*
 file:
     - except: '(\.config|\.po|\.po\.json|\.md|\.rb|\.xml|\.cfg|urls\.py)$'
@@ -42,6 +43,7 @@ tests:
     - fail: "from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect"
     - fail: "import something.HttpResponseRedirect"
     - fail: "jsonLoggingService.log(logMessages.redirectDialogShow);"
+    - fail: "response = HttpResponseRedirect(reverse('foo'))"
 
 
 --- #!http_variable_used
