@@ -202,6 +202,8 @@ class RepoGuard:
             try:
                 body = {
                     "check_id": alert.rule.name,
+                    "rule_name": alert.rule.localname,
+                    "rule_namespace": alert.rule.namespace,
                     "description": alert.rule.description,
                     "filename": alert.filename,
                     "commit_id": alert.commit,
