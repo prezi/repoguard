@@ -127,7 +127,7 @@ tests:
 --- #!http_response
 extends: base
 diff: add
-description: Some old browsers parse anything as html if it looks html (ie html tags in json)
+description: If user-input is returned, please make sure you did proper HTML escaping, otherwise it can cause XSS vuln
 line:
     - match: ' HttpResponse\([^)]+'
     - except: 'HttpResponse\([''"][^''"<>]*[''"]\s*(,[^)]*)?\)'
