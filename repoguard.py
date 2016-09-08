@@ -349,36 +349,41 @@ class RepoGuard:
             except (subprocess.CalledProcessError, OSError) as e:
                 self.logger.exception('Failed running: %s' % cmd)
 
-        matches_in_rev = []
-        cmd = "git show --function-context %s%s" % ('-M100% ' if detect_rename else '--no-renames ', rev_hash)
-        for filename, author, commit_description, diff, diff_first_line in extract_diffs_from_git_show(cmd):
-            def create_alert(rule, vuln_line, diff, diff_first_line):
-                def get_vuln_line_number():
-                    curr_line = diff_first_line
-                    for idx, line in enumerate(diff.splitlines()):
-                        if line == vuln_line:
-                            # Github diff indexes start from 1
-                            return idx + 1, curr_line
-                        if len(line) > 0 and line[0] != '-':
-                            curr_line += 1
-                    return 0, 0
+        def get_alerts_from_commit_hash():
+            cmd = "git show --function-context %s%s" % ('-M100% ' if detect_rename else '--no-renames ', rev_hash)
+            for filename, author, commit_description, diff, diff_first_line in extract_diffs_from_git_show(cmd):
+                def create_alert(rule, vuln_line, diff, diff_first_line):
+                    def get_vuln_line_number():
+                        curr_line = diff_first_line
+                        for idx, line in enumerate(diff.splitlines()):
+                            if line == vuln_line:
+                                # Github diff indexes start from 1
+                                return idx + 1, curr_line
+                            if len(line) > 0 and line[0] != '-':
+                                curr_line += 1
+                        return 0, 0
 
-                diff_line_number, file_line_number = get_vuln_line_number()
-                return Alert(rule, filename, repo, rev_hash, line=line, diff_line_number=diff_line_number,
-                             line_number=file_line_number, author=author, commit_description=commit_description)
+                    diff_line_number, file_line_number = get_vuln_line_number()
+                    return Alert(rule, filename, repo, rev_hash, line=line, diff_line_number=diff_line_number,
+                                 line_number=file_line_number, author=author, commit_description=commit_description)
 
-            check_context = {
-                "filename": filename,
-                "author": author,
-                "commit_message": commit_description
-            }
-            result = self.code_checker.check(diff.split('\n'), check_context, repo)
-            cmd = 'git show %s %s' % (rev_hash, filename)
-            for _, _, _, diff, diff_first_line in extract_diffs_from_git_show(cmd):
-                alerts = [create_alert(rule, line, diff, diff_first_line) for rule, line in result]
-                matches_in_rev.extend(alerts)
+                check_context = {
+                    "filename": filename,
+                    "author": author,
+                    "commit_message": commit_description
+                }
+                result = self.code_checker.check(diff.split('\n'), check_context, repo)
 
-        return matches_in_rev
+                if result:
+                    # deleted/renamed files won't be shown by this command
+                    # therefore we shouldn't pass the filename as a 4th argument
+                    cmd = 'git show %s' % (rev_hash)
+                    for fname, _, _, diff, diff_first_line in extract_diffs_from_git_show(cmd):
+                        if fname == filename:
+                            for rule, line in result:
+                                yield create_alert(rule, line, diff, diff_first_line)
+
+        return list(get_alerts_from_commit_hash())
 
     def read_alert_config_from_file(self):
         bare_rules = load_rules(self.ALERT_CONFIG_DIR)
