@@ -8,10 +8,10 @@ diff: add
 line:
     - match: '(http|ftp)://.+'
     - except: 'http://(\w+\.)*(localhost|127(\.\d+){3}|apache.org)'
-    - except: '(xmlns|doctype|DOCTYPE|<prezi><documentStyle>|template|createElementNS)'
+    - except: '(xmlns|doctype|DOCTYPE|<prezi><documentStyle>|template|createElementNS|namespace)'
     - except: 'deb\S* http://'
 file:
-    - except: '\.(po|json|html|xml|xaml|ism|markdown|md|txt|csv|doc|rdoc|css|gradle|properties|log|wiki)$'
+    - except: '\.(po|json|html|xml|xaml|ism|markdown|md|txt|csv|doc|rdoc|css|gradle|properties|log|wiki|wsdl)$'
     - except: 'scripts/(build|common|release|bootstrap)'
     - except: '^/cookbooks/.*\.rb$'
     - except: 'templates/'
@@ -24,6 +24,7 @@ tests:
     - fail: '<databases xmlns:db="http://agavi.org/agavi/config/parts/databases/1.0" xmlns:ae="http://agavi.org/agavi/config/global/envelope/1.0">'
     - fail: 'http://www.apache.org/licenses/LICENSE-2.0'
     - fail: 'deb-src http://archive.ubuntu.com/ubuntu/ precise-backports main restricted universe'
+    - fail: '<import namespace="http://api.foo.com/" />'
 
 --- #!dangerous_redirect
 extends: base

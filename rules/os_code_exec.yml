@@ -41,12 +41,15 @@ line:
     - match: ProcessBuilder
     - match: getRuntime
     - except: java\.util\.concurrent
+    - except: '\.executionContext'
 file:
     - match: '\.(java|scala|groovy)$'
     - except: '/gradle/'
 tests:
     - pass: 'Runtime.getRuntime().exec("hostname")'
     - fail: 'import java.util.concurrent.Executors;'
+    - fail: 'import ctx.executionContext'
+    - fail: 'import scala.concurrent.ExecutionContext'
 
 --- #!js
 extends: base
