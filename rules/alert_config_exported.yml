@@ -132,7 +132,7 @@ file:
 extends: base
 diff: add
 line:
-    - match: (urlopen\(|pycurl\.Curl|_make_call\().*
+    - match: (urlopen\(|pycurl\.Curl|_make_call\()
 file:
     - match: .*\.(py)
 
