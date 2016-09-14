@@ -418,6 +418,8 @@ class RepoGuard:
         new_public_rule = Mock()
         new_public_rule.name = 'internal::new_public_repo'
         new_public_rule.description = 'This repository has been made public, please check for sensitive info!'
+        new_public_rule.namespace = 'internal'
+        new_public_rule.localname = 'new_public_repo'
 
         for new_public_repo_json in new_public_repo_list:
             repo_obj = Mock()
