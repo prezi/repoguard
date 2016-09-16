@@ -10,6 +10,7 @@ line:
     - except: 'http://(\w+\.)*(localhost|127(\.\d+){3}|apache.org)'
     - except: '(xmlns|doctype|DOCTYPE|<prezi><documentStyle>|template|createElementNS|namespace)'
     - except: 'deb\S* http://'
+    - except: 'http://169.254.169.254'
 file:
     - except: '\.(po|json|html|xml|xaml|ism|markdown|md|txt|csv|doc|rdoc|css|gradle|properties|log|wiki|wsdl)$'
     - except: 'scripts/(build|common|release|bootstrap)'
@@ -25,6 +26,7 @@ tests:
     - fail: 'http://www.apache.org/licenses/LICENSE-2.0'
     - fail: 'deb-src http://archive.ubuntu.com/ubuntu/ precise-backports main restricted universe'
     - fail: '<import namespace="http://api.foo.com/" />'
+    - fail: 'curl http://169.254.169.254/latest/meta-data/'
 
 --- #!dangerous_redirect
 extends: base
