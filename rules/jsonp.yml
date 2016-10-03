@@ -11,6 +11,7 @@ line:
     - except: JSONParser
     - except: jsonPath
     - except: JsonProcessingException
+    - except: jsonpickle
 file:
     - except: ^.*\.(md|txt|conf|xml|yaml|json|cpp|m|h|hpp)$
 tests:
@@ -23,3 +24,4 @@ tests:
     - fail: 'data = JSONParser().parse()'
     - fail: 'p = jsonPath'
     - fail: 'import com.fasterxml.jackson.core.JsonProcessingException'
+    - fail: 'import jsonpickle'
