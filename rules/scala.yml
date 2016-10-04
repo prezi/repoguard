@@ -17,7 +17,11 @@ extends: base
 diff: add
 line:
     - match: (scala\.io\.|scala\.sys\.process|new File|\.(!|lines\(|run\()|Http\.Bind)
+    - except: import scala.io.Std.*
 file:
     - match: .*\.(scala)
 tests:
     - pass: ' import scala.sys.process.ProcessIO'
+    - fail: " import scala.io.StdIn"
+    - fail: " import scala.io.StdOut"
+
