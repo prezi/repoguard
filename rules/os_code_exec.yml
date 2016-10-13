@@ -5,6 +5,7 @@ extends: whitelisted_files::whitelisted_files,comments::comments
 --- #!python
 extends: base
 diff: add
+description: Please make sure the first argument doesn't come from user-input and that shell=True is NOT passed as argument
 line:
     - match: system\(
     - match: Popen\(
@@ -13,6 +14,9 @@ line:
     - match: from subprocess
 file:
     - match: '\.py$'
+tests:
+    - pass: 'Popen(cmd, shell=True)'
+#    - fail: 'Popen("ping", stdout=PIPE, stderr=STDOUT, shell=False)'
 
 --- #!python_eval
 extends: base
