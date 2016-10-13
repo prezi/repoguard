@@ -5,8 +5,9 @@ extends: whitelisted_files::whitelisted_files,comments::comments
 --- #!new_jsonp
 extends: base
 diff: add
+case_sensitive: true
 line:
-    - match: jsonp
+    - match: '(jsonp|JSONP)'
     - except: JsonProperty
     - except: JSONParser
     - except: jsonPath
@@ -25,3 +26,4 @@ tests:
     - fail: 'p = jsonPath'
     - fail: 'import com.fasterxml.jackson.core.JsonProcessingException'
     - fail: 'import jsonpickle'
+    - fail: 'JsonPrinter.print'
