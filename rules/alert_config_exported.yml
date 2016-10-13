@@ -111,15 +111,6 @@ line:
 file:
     - match: .*\.(py)
 
---- #!js_network_listen
-extends: base
-diff: add
-line:
-    - match: (WebSocket|\.listen\(|http\.request|socket\.io).*
-    - except: EventListener\.
-file:
-    - match: .*\.(hx|js)
-
 --- #!chef_new_vhost
 extends: base
 diff: add
