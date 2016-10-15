@@ -37,6 +37,7 @@ line:
     - match: (HttpResponseRedirect|HttpResponsePermanentRedirect|redirect)\((?!["'][^"']+["'])
     - except: <bindingRedirect
     - except: 'Redirect\(\s*reverse\('
+    - except: '(HttpResponseRedirectSafe|HttpResponsePermanentRedirectSafe)'
     - except: ^(from|import) .*HttpResponseRedirect.*
 file:
     - except: '(\.config|\.po|\.po\.json|\.md|\.rb|\.xml|\.cfg|urls\.py)$'
@@ -49,6 +50,7 @@ tests:
     - fail: "import something.HttpResponseRedirect"
     - fail: "jsonLoggingService.log(logMessages.redirectDialogShow);"
     - fail: "response = HttpResponseRedirect(reverse('foo'))"
+    - fail: "response = HttpResponsePermanentRedirectSafe(request.GET['url'])"
 
 
 --- #!http_variable_used
