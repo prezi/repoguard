@@ -41,11 +41,8 @@ extends: base
 diff: add
 line:
     - match: ProcessUtils
-    - match: \.(exec|execute)
+    - match: '\.(exec|execute)\('
     - match: ProcessBuilder
-    - match: getRuntime
-    - except: java\.util\.concurrent
-    - except: '\.executionContext'
 file:
     - match: '\.(java|scala|groovy)$'
     - except: '/gradle/'
