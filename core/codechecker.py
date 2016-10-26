@@ -72,6 +72,7 @@ class Alert:
 class Rule:
     def __init__(self, name, evaluators, rule_config):
         self.name = name
+        assert "::" in name
         self.namespace, self.localname = name.split("::")
         self.evaluators = evaluators
         self.description = rule_config.get('description', 'no description')
