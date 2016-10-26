@@ -261,9 +261,9 @@ class RepoGuard:
             for u in notify_users:
                 alert_per_notify_person[u].append(alert)
 
-            # no subscribed email, send it to default address
-            if not notify_users:
-                alert_per_notify_person[self.default_notification_to_address].append(alert)
+            # # no subscribed email, send it to default address
+            # if not notify_users:
+            #     alert_per_notify_person[self.default_notification_to_address].append(alert)
 
         from_addr = self.default_notification_src_address
         smtp_conn_string = self.smtp_host + ":" + str(self.smtp_port)

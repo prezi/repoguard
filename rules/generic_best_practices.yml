@@ -37,7 +37,7 @@ line:
     - match: (HttpResponseRedirect|HttpResponsePermanentRedirect|redirect)\((?!["'][^"']+["'])
     - except: <bindingRedirect
     - except: 'Redirect\(\s*reverse\('
-    - except: '(HttpResponseRedirectSafe|HttpResponsePermanentRedirectSafe)'
+    - except: '(HttpResponseRedirectSafe|HttpResponsePermanentRedirectSafe)\('
     - except: ^(from|import) .*HttpResponseRedirect.*
 file:
     - except: '(\.config|\.po|\.po\.json|\.md|\.rb|\.xml|\.cfg|urls\.py)$'
