@@ -48,7 +48,7 @@ line:
     - except: 'HttpResponse\(\)'
     - except: 'render\(request, [''"].*\.html[''"], context\)'
 previously:
-    - except: "from prezi.django_utils.json_response import HttpResponse"
+    - except: 'from prezi\.django_utils\.json_response import (.*, *)?HttpResponse'
 file:
     - match: '\.py$'
 tests:
