@@ -87,7 +87,7 @@ file:
 extends: base
 diff: add
 line:
-    - match: (allow-access-from domain="*").*
+    - match: (allow-access-from domain="\*").*
 
 --- #!s3_set_object_acl
 extends: base
