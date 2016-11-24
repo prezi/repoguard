@@ -89,3 +89,15 @@ tests:
     - fail: "oauth_token = OAuthToken.objects.get()"
     - fail: "django-oauth-toolkit==0.5.0"
     - fail: "@with_oauth2_access_token"
+
+--- #!debug_true
+extends: base
+case_sensitive: false
+diff: add
+line:
+    - match: 'debug\s*=\s*true'
+tests:
+    - pass: "debug = true"
+    - pass: "DEBUG=True"
+    - fail: "debug = false"
+    - fail: "DEBUG=False"
