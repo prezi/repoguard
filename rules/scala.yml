@@ -4,6 +4,7 @@ extends: whitelisted_files::whitelisted_files,comments::comments
 
 --- #!scala_spray_http
 extends: base
+description: Scala HTTP/REST framework (Spray) usage
 diff: add
 line:
     - match: (pathPrefix\(|HttpResponse\()
@@ -14,6 +15,7 @@ tests:
 
 --- #!scala_interesting_calls
 extends: base
+description: Scala file / process IO
 diff: add
 line:
     - match: (scala\.io\.|scala\.sys\.process|new File|\.(!|lines\(|run\()|Http\.Bind)
