@@ -41,6 +41,40 @@ class InScriptEvalFactory:
             return line_context
 
 
+class InAngularControllerEvalFactory:
+    def __init__(self):
+        self.evaluator = self.InAngularControllerEvaluator()
+
+    def create(self, rule):
+        return self.evaluator if "in_angular_controller" in rule else None
+
+
+    class InAngularControllerEvaluator:
+        key = "in_angular_controller"
+
+        def matches(self, line_context, line):
+            value = line_context["inside_ngcontroller_tag"]
+            return value is not None and value > 0
+
+
+    class ContextProcessor:
+        def __init__(self):
+            self.begin_re = re.compile(r'<(\w+) ng-controller=[^>]+>', flags=re.IGNORECASE)
+            self.end_re = re.compile(r'</(\w+)\s*>', flags=re.IGNORECASE)
+
+        def preprocess(self, line_context, line):
+            if "inside_ngcontroller_tag" not in line_context:
+                # initialise
+                line_context["inside_ngcontroller_tag"] = 0
+            begin_matches = self.begin_re.findall(line)
+            tag_start_cnt = len(begin_matches)
+
+            tag_end_cnt = len([m1 for m1, m2 in zip(begin_matches, self.end_re.findall(line))
+                               if tag_start_cnt and m1 == m2])
+            line_context["inside_ngcontroller_tag"] += (tag_start_cnt - tag_end_cnt)
+            return line_context
+
+
 class LineEvalFactory:
     MODE_DIFF = 1
     MODE_SINGLE = 2
