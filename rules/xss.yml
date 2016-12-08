@@ -68,6 +68,15 @@ tests:
     - fail: "return HttpResponse()"
     - fail: "response = render(request, 'android_open.html', context)"
 
+--- #!mustache
+extends: base
+diff: add
+description: Mustache template engine does not HTML escape variables inside "{{{" and "}}}"
+line:
+    - match: "{{{.+}}}"
+tests:
+    - pass: "{{{ foo }}}"
+    - fail: "{{ foo }}"
 
 --- #!haskell
 description: "error messages and responses should be sanitized"
