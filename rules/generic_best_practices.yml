@@ -98,6 +98,8 @@ case_sensitive: false
 diff: add
 line:
     - match: 'debug\s*=\s*true'
+file:
+    - except: 'local\.cfg$'
 tests:
     - pass: "debug = true"
     - pass: "DEBUG=True"
