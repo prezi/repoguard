@@ -82,6 +82,7 @@ line:
     - except: "django-oauth-toolkit"
     - except: "with_oauth2_access_token"
     - except: "OAuthToken.objects"
+    - except: "OAuthAccessManager"
 file:
     - except: 'requirements.*\.txt$'
 tests:
@@ -89,6 +90,7 @@ tests:
     - fail: "oauth_token = OAuthToken.objects.get()"
     - fail: "django-oauth-toolkit==0.5.0"
     - fail: "@with_oauth2_access_token"
+    - fail: "import com.OAuthAccessManager"
 
 --- #!debug_true
 extends: base
