@@ -16,7 +16,7 @@ extends: base
 diff: del
 line:
     - match: 'csrf'
-    - except: csrf_exempt
+    - except: '(csrf_exempt|csrfTokenManager)'
 ## FIXME: diff:del never passes
 #tests:
 #    - pass: "- somewhere something with csrf string in it"
