@@ -56,8 +56,12 @@ tests:
 extends: base
 diff: add
 line:
-    - match: eval\(
+    - match: '(^|\s)eval\('
     - match: child_process
     - match: var command\s*=
 file:
     - match: '\.(hx|js)$'
+tests:
+    - pass: 'eval(user_input)'
+    - pass: ' eval(user_input)'
+    - fail: 'setGlobalEval( getAll( node, "script" ) );'
