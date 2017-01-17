@@ -72,6 +72,7 @@ class Alert:
 class Rule:
     def __init__(self, name, evaluators, rule_config):
         self.name = name
+        assert "::" in name
         self.namespace, self.localname = name.split("::")
         self.evaluators = evaluators
         self.description = rule_config.get('description', 'no description')
@@ -88,9 +89,9 @@ class CodeCheckerFactory:
         self.rules_to_groups = rules_to_groups
 
     def create(self, mode=LineEvalFactory.MODE_DIFF):
-        factories = [LineEvalFactory(mode), InScriptEvalFactory(), FileEvalFactory(),
+        factories = [LineEvalFactory(mode), InScriptEvalFactory(), InAngularControllerEvalFactory(), FileEvalFactory(),
                      CommitMessageEvalFactory(), AuthorEvalFactory(), PreviousLineEvaluatorFactory()]
-        context_processors = [InScriptEvalFactory.ContextProcessor()]
+        context_processors = [InScriptEvalFactory.ContextProcessor(), InAngularControllerEvalFactory.ContextProcessor()]
         rules = [self.create_single(rn, factories) for rn in self.ruleset]
         return CodeChecker(context_processors, rules, self.repo_groups, self.rules_to_groups)
 

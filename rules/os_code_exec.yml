@@ -5,6 +5,7 @@ extends: whitelisted_files::whitelisted_files,comments::comments
 --- #!python
 extends: base
 diff: add
+description: Please make sure the first argument doesn't come from user-input and that shell=True is NOT passed as argument
 line:
     - match: system\(
     - match: Popen\(
@@ -13,6 +14,9 @@ line:
     - match: from subprocess
 file:
     - match: '\.py$'
+tests:
+    - pass: 'Popen(cmd, shell=True)'
+#    - fail: 'Popen("ping", stdout=PIPE, stderr=STDOUT, shell=False)'
 
 --- #!python_eval
 extends: base
@@ -37,11 +41,8 @@ extends: base
 diff: add
 line:
     - match: ProcessUtils
-    - match: \.(exec|execute)
+    - match: '\.(exec|execute)\('
     - match: ProcessBuilder
-    - match: getRuntime
-    - except: java\.util\.concurrent
-    - except: '\.executionContext'
 file:
     - match: '\.(java|scala|groovy)$'
     - except: '/gradle/'
@@ -55,8 +56,12 @@ tests:
 extends: base
 diff: add
 line:
-    - match: eval\(
+    - match: '(^|\s)eval\('
     - match: child_process
     - match: var command\s*=
 file:
     - match: '\.(hx|js)$'
+tests:
+    - pass: 'eval(user_input)'
+    - pass: ' eval(user_input)'
+    - fail: 'setGlobalEval( getAll( node, "script" ) );'

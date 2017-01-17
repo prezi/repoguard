@@ -15,6 +15,19 @@ tests:
     - pass: " 'context' : mark_safe(json.dumps(context)),"
     - fail: "{{xss|urlencode}}"
 
+--- #!django_in_angular_controller
+extends: base
+diff: add
+description: Django template variables inside ng-controller HTML tag should have ng-non-bindable attribute set to avoid XSS
+line:
+    - match: "{{.+}}"
+    - except: 'ng-non-bindable=.+'
+    - except: '{% blocktrans .*{% endblocktrans %}'
+in_angular_controller: true
+tests:
+    - pass: '<div ng-controller="SearchResultsCtrl" class="section"> {{ foo }} '
+    - fail: '<div ng-controller="SearchResultsCtrl" class="section"><span ng-non-bindable="">{{ foo }}</span>'
+
 --- #!django_inscripttags
 extends: base
 diff: add
@@ -24,7 +37,7 @@ line:
     - except: '.+\|\s*urlencode'
     - except: '{{\s*STATIC_URL\s*}}'
     - except: '{{.+\|\s*(yesno|escapejs).*}}'
-    - except: '{% blocktrans %}.*{% endblocktrans %}'
+    - except: '{% blocktrans .*{% endblocktrans %}'
 inscripttag: true
 tests:
     - pass: "{{xss|safe}}"
@@ -48,7 +61,7 @@ line:
     - except: 'HttpResponse\(\)'
     - except: 'render\(request, [''"].*\.html[''"], context\)'
 previously:
-    - except: "from prezi.django_utils.json_response import HttpResponse"
+    - except: 'from prezi\.django_utils\.json_response import (.*, *)?HttpResponse'
 file:
     - match: '\.py$'
 tests:
@@ -68,6 +81,15 @@ tests:
     - fail: "return HttpResponse()"
     - fail: "response = render(request, 'android_open.html', context)"
 
+--- #!mustache
+extends: base
+diff: add
+description: Mustache template engine does not HTML escape variables inside "{{{" and "}}}"
+line:
+    - match: "{{{.+}}}"
+tests:
+    - pass: "{{{ foo }}}"
+    - fail: "{{ foo }}"
 
 --- #!haskell
 description: "error messages and responses should be sanitized"

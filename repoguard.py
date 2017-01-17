@@ -261,10 +261,6 @@ class RepoGuard:
             for u in notify_users:
                 alert_per_notify_person[u].append(alert)
 
-            # no subscribed email, send it to default address
-            if not notify_users:
-                alert_per_notify_person[self.default_notification_to_address].append(alert)
-
         from_addr = self.default_notification_src_address
         smtp_conn_string = self.smtp_host + ":" + str(self.smtp_port)
         self.logger.debug('Notifiying them: %s', repr(alert_per_notify_person.keys()))
@@ -435,14 +431,6 @@ class RepoGuard:
             self.logger.debug("Pid file not found, creating %s..." % self.lock_handler.path)
         except LockTimeout as e:
             self.logger.critical('Locked, script running... exiting.')
-            if self.notifications:
-                email_notification = EmailNotifier(
-                    self.default_notification_src_address,
-                    self.default_notification_to_address,
-                    "[repoguard] lock file found (another process is runnning?)",
-                    str(e))
-
-                email_notification.send_if_fine()
             sys.exit()
 
     def run(self):

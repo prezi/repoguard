@@ -87,7 +87,7 @@ file:
 extends: base
 diff: add
 line:
-    - match: (allow-access-from domain="*").*
+    - match: (allow-access-from domain="\*").*
 
 --- #!s3_set_object_acl
 extends: base
@@ -110,15 +110,6 @@ line:
     - match: Presentation\.objects\.(all|get_by_id_or_oid).*
 file:
     - match: .*\.(py)
-
---- #!js_network_listen
-extends: base
-diff: add
-line:
-    - match: (WebSocket|\.listen\(|http\.request|socket\.io).*
-    - except: EventListener\.
-file:
-    - match: .*\.(hx|js)
 
 --- #!chef_new_vhost
 extends: base

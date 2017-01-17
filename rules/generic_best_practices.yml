@@ -11,6 +11,7 @@ line:
     - except: '(xmlns|doctype|DOCTYPE|<prezi><documentStyle>|template|createElementNS|namespace)'
     - except: 'deb\S* http://'
     - except: 'http://169.254.169.254'
+    - except: 'http://cloudinit.readthedocs.io'
 file:
     - except: '\.(po|json|html|xml|xaml|ism|markdown|md|txt|csv|doc|rdoc|css|gradle|properties|log|wiki|wsdl)$'
     - except: 'scripts/(build|common|release|bootstrap)'
@@ -27,6 +28,7 @@ tests:
     - fail: 'deb-src http://archive.ubuntu.com/ubuntu/ precise-backports main restricted universe'
     - fail: '<import namespace="http://api.foo.com/" />'
     - fail: 'curl http://169.254.169.254/latest/meta-data/'
+    - fail: '# http://cloudinit.readthedocs.io/en/latest/to'
 
 --- #!dangerous_redirect
 extends: base
@@ -35,6 +37,7 @@ line:
     - match: (HttpResponseRedirect|HttpResponsePermanentRedirect|redirect)\((?!["'][^"']+["'])
     - except: <bindingRedirect
     - except: 'Redirect\(\s*reverse\('
+    - except: '(HttpResponseRedirectSafe|HttpResponsePermanentRedirectSafe)\('
     - except: ^(from|import) .*HttpResponseRedirect.*
 file:
     - except: '(\.config|\.po|\.po\.json|\.md|\.rb|\.xml|\.cfg|urls\.py)$'
@@ -47,6 +50,7 @@ tests:
     - fail: "import something.HttpResponseRedirect"
     - fail: "jsonLoggingService.log(logMessages.redirectDialogShow);"
     - fail: "response = HttpResponseRedirect(reverse('foo'))"
+    - fail: "response = HttpResponsePermanentRedirectSafe(request.GET['url'])"
 
 
 --- #!http_variable_used
@@ -78,6 +82,7 @@ line:
     - except: "django-oauth-toolkit"
     - except: "with_oauth2_access_token"
     - except: "OAuthToken.objects"
+    - except: "OAuthAccessManager"
 file:
     - except: 'requirements.*\.txt$'
 tests:
@@ -85,3 +90,18 @@ tests:
     - fail: "oauth_token = OAuthToken.objects.get()"
     - fail: "django-oauth-toolkit==0.5.0"
     - fail: "@with_oauth2_access_token"
+    - fail: "import com.OAuthAccessManager"
+
+--- #!debug_true
+extends: base
+case_sensitive: false
+diff: add
+line:
+    - match: 'debug\s*=\s*true'
+file:
+    - except: 'local\.cfg$'
+tests:
+    - pass: "debug = true"
+    - pass: "DEBUG=True"
+    - fail: "debug = false"
+    - fail: "DEBUG=False"
